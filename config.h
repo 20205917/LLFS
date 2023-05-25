@@ -37,7 +37,8 @@ struct dinode{
 typedef struct inode{
     struct inode *i_forw;
     struct inode *i_back;
-    char i_flag;
+    char i_flag;                 // 是否修改
+    char* f_content;             // 文件内容
     unsigned int i_id;           // 硬盘i节点id
     unsigned int i_count;        // 打开次数
     struct dinode dinode;
@@ -101,7 +102,7 @@ extern struct fd system_openfiles[SYSOPENFILE];  //系统打开表
 extern struct super_block file_system;           //超级块
 extern struct PWD pwds[PWDNUM];                  //用户数组
 extern struct user user[USERNUM];                //登录用户
-extern FILE *disk;                             //系统磁盘文件
+extern FILE *disk;                               //系统磁盘文件
 extern struct inode *cur_path_inode;             //当前目录
 
 

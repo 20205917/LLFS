@@ -3,4 +3,4 @@ project(LLFS)
 
 set(CMAKE_CXX_STANDARD 14)
 
-add_executable(LLFS main.cpp config.h)
+add_executable(LLFS main.cpp config.h fileOperation.cpp userManagement.cpp memoryManagement.cpp storageManagement.cpp)
