@@ -25,6 +25,7 @@
 #define DINODESTART 2*BLOCKSIZ                //i节点起始地址
 #define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
 
+
 struct dinode{
     unsigned short di_number;    // 硬连接次数
     unsigned short di_mode;      // 文件类型，目录和文件
@@ -37,41 +38,12 @@ struct dinode{
 typedef struct inode{
     struct inode *i_forw;
     struct inode *i_back;
-    char i_flag;                 // 是否修改
-    char* f_content;             // 文件内容
-    unsigned int i_id;           // 硬盘i节点id
-    unsigned int i_count;        // 打开次数
+    char i_flag;                //
+    char ifChange;              //脏位 0未修改/1修改过
+    unsigned int i_id;          // 硬盘i节点id
     struct dinode dinode;
 }*hinode;
 
-
-
-struct direct{
-    char d_name[DIRSIZ];
-    unsigned int d_ino;            // 硬盘i节点id
-};
-
-struct dir{
-    //direct[0]父目录
-    //direct[1]当前目录
-    struct direct direct[DIRNUM];
-    int size;
-};
-
-//口令字
-struct PWD{
-    unsigned short p_uid;
-    unsigned short p_gid;
-    char password[PWDSIZ];
-};
-
-//文件标识符
-struct fd{
-    char f_flag;            //打开方式
-    unsigned int f_count;   //使用进程数
-    struct inode *f_inode;  //内存i节点指针
-    unsigned long f_offset;    //文件偏移量（文件指针）
-};
 
 struct super_block{
     unsigned short s_dinode_size;        //磁盘索引节点表总块数
@@ -87,23 +59,40 @@ struct super_block{
     char s_fmod;                         //超级块修改标志
 };
 
-
-//用户打开表
-struct user{
-    unsigned short u_default_mode;
-    unsigned short u_uid;           // 用户标识符
-    unsigned short u_gid;           // 所在组标识符
-    unsigned short u_ofile[NOFILE]; //用户打开表
+//口令字
+struct PWD{
+    unsigned short p_uid;
+    unsigned short p_gid;
+    char password[PWDSIZ];
 };
 
-extern hinode hinodes[NHINO];
-extern struct dir root;                          //root目录
-extern struct fd system_openfiles[SYSOPENFILE];  //系统打开表
-extern struct super_block file_system;           //超级块
-extern struct PWD pwds[PWDNUM];                  //用户数组
-extern struct user user[USERNUM];                //登录用户
-extern FILE *disk;                               //系统磁盘文件
-extern struct inode *cur_path_inode;             //当前目录
+struct FCB{
+    char d_name[DIRSIZ];
+    unsigned int d_ino;            // 硬盘i节点id
+};
+
+//目录的逻辑结构
+struct dir{
+    //direct[0]父目录
+    //direct[1]当前目录
+    struct FCB files[DIRNUM];
+    int size;
+};
+
+//用户打开表项
+struct user_open_item{
+    unsigned int f_count;               //使用进程数
+    unsigned short u_default_mode;      //打开方式
+    struct inode *f_inode;              //内存i节点指针
+    unsigned long f_offset;             //文件偏移量（文件指针）
+    unsigned short id_to_sysopen;       //系统打开表索引
+};
+
+//系统打开表项
+struct sys_open_item{
+    FCB fcb;                     // FCB
+    unsigned int i_count;        // 打开次数
+};
 
 
 // 打开文件
