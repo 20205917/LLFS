@@ -101,7 +101,7 @@ extern struct fd system_openfiles[SYSOPENFILE];  //系统打开表
 extern struct super_block file_system;           //超级块
 extern struct PWD pwds[PWDNUM];                  //用户数组
 extern struct user user[USERNUM];                //登录用户
-extern        FILE *diskfd;                      //系统磁盘文件
+extern FILE *disk;                             //系统磁盘文件
 extern struct inode *cur_path_inode;             //当前目录
 
 
