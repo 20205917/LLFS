@@ -8,13 +8,7 @@
 #include "config.h"
 
 class RunningSystem {
-public:
-    RunningSystem* runningSystem = runningSystem;
-    static RunningSystem* getSystem(){
-        return runningSystem;
-    }
-    RunningSystem();
-    ~RunningSystem();
+
 
 private:
     struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
@@ -25,46 +19,32 @@ private:
     struct PWD pwds[PWDNUM];                  //用户数组
     FILE *disk;                               //系统磁盘文件
     struct inode *cur_path_inode;             //当前目录
+
+public:
+    RunningSystem();
+    ~RunningSystem();
+    // 打开文件
+    unsigned short openFile();
+    // 关闭文件
+    void closeFile();
+    // 读取文件
+    unsigned int readFile();
+    // 写文件
+    unsigned int writeFile();
+    // 创建新文件
+    bool createFile();
+    // 删除文件
+    bool deleteFile();
+    // 从磁盘文件加载系统
+    void install();
+    // 格式化系统
+    void format();
+    // 退出系统
+    void halt();
+
 };
-
+unsigned short openFile();
 /*
-
-//file descriptor table
-typedef struct fd_table {
-    fd *fds[MAX_FD_COUNT]; //file descriptor table
-} FdTable;
-
-//util function
-File *find_file(const char *pathname);
-
-File *create_file(const char *pathname, int type);
-
-//justify if the pathname is valid
-int justify_path(const char *pathname);
-
-char *clean_path(const char *pathname);
-
-//file system
-FdTable fd_table;
-File *root;
-
-//init file system
-void init_ramfs() {
-    //init file descriptor table
-    for (int i = 0; i < MAX_FD_COUNT; i++) {
-        fd_table.fds[i] = NULL;
-    }
-    //create root directory
-    root = (File *) malloc(sizeof(File));
-    root->type = DIRECTORY;
-    root->name = "/";
-    root->size = 0;
-    root->parent = NULL;
-    root->child = NULL;
-    root->link_count=0;
-    root->sibling = NULL;
-    root->content = NULL;
-}
 
 //open file or directory
 int ropen(const char *pathname, int flags) {

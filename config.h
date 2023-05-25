@@ -142,12 +142,6 @@ extern int login();
 // 用户注销
 extern void logout();
 
-// 从磁盘文件加载系统
-extern void install();
-// 格式化系统
-extern void format();
-// 退出系统
-extern void halt();
 
 // 额外
 // 删除指定目录
