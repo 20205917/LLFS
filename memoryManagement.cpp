@@ -5,7 +5,7 @@
 // 在内存i节点散列表根据硬盘i节点id查找
 // 找不到就创建内存i节点
 // 申请了额外空间
-hinode iget(int dinode_id , hinode (&hinodes)[10], FILE* disk){
+hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
     int inode_id = dinode_id % NHINO;
     if(hinodes[inode_id]->i_forw != NULL){
         hinode tmp = hinodes[inode_id]->i_forw;
@@ -18,7 +18,6 @@ hinode iget(int dinode_id , hinode (&hinodes)[10], FILE* disk){
                 tmp = tmp->i_forw;
         }
     }
-
     // 内存中不存在,需要创建
     long addr = DINODESTART + dinode_id * DINODESIZ;
     hinode newinode = (hinode)malloc(sizeof(struct inode));
@@ -67,3 +66,80 @@ void iput(int inode, FILE* disk, struct super_block &file_system){
     free(inode);
 }
 
+// 从当前目录查找name对应的i节点
+// 将会返回在数组中的下标，若为DIRNUM表明没找到
+// 可能有问题
+unsigned int namei(char* name, hinode cur_path_inode, FILE* disk){
+    // 从内存加载目录
+    int size = cur_path_inode->dinode.di_size;
+    int block_num = size / BLOCKSIZ;
+    struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
+    unsigned int id;
+    long addr;
+    int i;
+    for(i = 0; i < block_num; i++){
+        id = cur_path_inode->dinode.di_addr[i];
+        addr = DINODESTART + id * DINODESIZ;
+        fseek(disk, addr, SEEK_SET);
+        fread(tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+    }
+    id = cur_path_inode->dinode.di_addr[block_num];
+    addr = DINODESTART + id * DINODESIZ;
+    fseek(disk, addr, SEEK_SET);
+    fread(tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+
+    // 开始查找
+    bool found = false;
+
+    for(i = 0; i < tmp->size; i++){
+        if(!strcmp(tmp->files[i].d_name, name) && tmp->files[i].d_ino != 0){
+            found = true;
+            break;
+        }
+    }
+    free(tmp);
+    if(found)
+        return i;
+    else
+        return DIRNUM;
+}
+
+// 从当前目录找到下一个空的位置
+// 将会返回在数组中的下标，若为DIRNUM表明没找到
+unsigned short iname(char* name, hinode cur_path_inode, FILE* disk){
+    // 从内存加载目录
+    int size = cur_path_inode->dinode.di_size;
+    int block_num = size / BLOCKSIZ;
+    struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
+    unsigned int id;
+    long addr;
+    int i;
+    for(i = 0; i < block_num; i++){
+        id = cur_path_inode->dinode.di_addr[i];
+        addr = DINODESTART + id * DINODESIZ;
+        fseek(disk, addr, SEEK_SET);
+        fread(tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+    }
+    id = cur_path_inode->dinode.di_addr[block_num];
+    addr = DINODESTART + id * DINODESIZ;
+    fseek(disk, addr, SEEK_SET);
+    fread(tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+
+    // 开始查找
+    bool found = false;
+
+    for(i = 0; i < tmp->size; i++){
+        if(tmp->files[i].d_ino == 0){
+            found = true;
+            break;
+        }
+    }
+    free(tmp);
+    if(found){
+        // 这里先把名字占了
+        strcpy(tmp->files[i].d_name, name);
+        return i;
+    }
+    else
+        return DIRNUM;
+}
