@@ -26,7 +26,7 @@ struct RunningSystem {
     // 打开文件
     int openFile(const char *pathname, int flags);
     // 关闭文件
-    void closeFile();
+    void closeFile(const char *pathname);
     // 读取文件
     unsigned int readFile();
     // 写文件
@@ -34,7 +34,7 @@ struct RunningSystem {
     // 创建新文件
     inode* createFile(const char *pathname, unsigned short di_mode);
     // 删除文件
-    bool deleteFile();
+    bool deleteFile(const char *pathname);
     // 从磁盘文件加载系统
     void install();
     // 格式化系统
@@ -56,7 +56,7 @@ struct RunningSystem {
     // 文件夹路径相关
     bool mkdir(const char *pathname,char *name);
 };
-
+struct inode *ialloc(RunningSystem &runningSystem);
 
 
 #endif //LLFS_RUNNINGSYSTEM_H

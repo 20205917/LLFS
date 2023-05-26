@@ -5,9 +5,11 @@
 #include <string>
 #include "RunningSystem.h"
 
+
+
 RunningSystem::RunningSystem(){
     // 读硬盘
-    disk = fopen("disk", "wb+");
+    disk = fopen("disk", "rb+");
 
     // 初始化file_system
     fseek(disk, BLOCKSIZ, SEEK_SET);
@@ -180,4 +182,105 @@ bool RunningSystem::mkdir(const char *pathname, char *name)
 RunningSystem::~RunningSystem(){
     fclose(disk);
 }
+// 目录文件数据区是否有空闲，是否在父目录数据区里有已存在文件(findfile()实现)，有空闲
+// 申请磁盘i结点，初始化磁盘i结点，磁盘i结点写回磁盘，父目录数据区写回磁盘。
+// 申请磁盘i节点未实现
+inode* RunningSystem::createFile(const char *pathname, unsigned short di_mode)
+{
+    // 判断文件名是否合法
+    if(!is_file(pathname)){
+        return nullptr;
+    }
+    hinode res_inode = (hinode)malloc(sizeof(struct inode));
+    res_inode->i_id = 0;
+    // 是否在父目录数据区里有已存在文件
+    if(find_file(const_cast<char *>(pathname))->i_id != 0){
+        return res_inode;
+    }
+    // 是否有空闲
+    int index = iname(const_cast<char *>(pathname), cur_path_inode, disk);
+    if(index == DIRNUM)
+        return nullptr;
+    // 申请磁盘i结点
+    struct inode* new_inode = ialloc();
+    // 初始化磁盘i节点
+    new_inode->dinode.di_mode = di_mode;
+    new_inode->dinode.di_size = 0;
 
+
+    // 磁盘i节点写回磁盘
+    long addr = DINODESTART + new_inode->i_id * DINODESIZ;
+    fseek(disk, addr, SEEK_SET);
+    fwrite(&(new_inode->dinode), DINODESIZ, 1, disk);
+    // 父目录写回磁盘数据区
+    // 从磁盘加载目录文件
+    int size = cur_path_inode->dinode.di_size;
+    int block_num = size / BLOCKSIZ;
+    struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
+    unsigned int id;
+    int i;
+    for(i = 0; i < block_num; i++){
+        id = cur_path_inode->dinode.di_addr[i];
+        addr = DINODESTART + id * DINODESIZ;
+        fseek(disk, addr, SEEK_SET);
+        fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+    }
+    id = cur_path_inode->dinode.di_addr[block_num];
+    addr = DINODESTART + id * DINODESIZ;
+    fseek(disk, addr, SEEK_SET);
+    fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+    // 新增目录项写回
+    tmp->files[index].d_ino = new_inode->i_id;
+    write_data_back((void*)tmp, cur_path_inode->dinode.di_addr, sizeof(struct dir), disk);
+    free(tmp);
+    return new_inode;
+}
+
+// 文件名是否合法，需要findfile，判断是否有权限
+// 修改父目录数据区并写入磁盘，iput()删除文件
+// false删除失败 true删除成功
+// 权限未实现 iput未实现
+bool RunningSystem::deleteFile(const char *pathname){
+    // 判断文件名是否合法
+    if(!is_file(pathname)){
+        return false;
+    }
+    hinode res_inode = find_file(const_cast<char *>(pathname));
+    // 是否在父目录数据区里有该文件
+    if(res_inode->i_id == 0){
+        return false;
+    }
+    // 判断用户对父目录有写权限和执行权限是否
+    // if(access())
+
+    // 修改父目录数据区并写入磁盘
+    int size = cur_path_inode->dinode.di_size;
+    long addr;
+    int block_num = size / BLOCKSIZ;
+    struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
+    unsigned int id;
+    int i;
+    for(i = 0; i < block_num; i++){
+        id = cur_path_inode->dinode.di_addr[i];
+        addr = DINODESTART + id * DINODESIZ;
+        fseek(disk, addr, SEEK_SET);
+        fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+    }
+    id = cur_path_inode->dinode.di_addr[block_num];
+    addr = DINODESTART + id * DINODESIZ;
+    fseek(disk, addr, SEEK_SET);
+    fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+    // 新增目录项写回
+    unsigned int index = namei(const_cast<char *>(pathname), cur_path_inode, disk);
+    tmp->files[index].d_ino = 0;
+    write_data_back((void*)tmp, cur_path_inode->dinode.di_addr, sizeof(struct dir), disk);
+    // iput()删除文件
+    // iput(res_inode);
+
+    free(tmp);
+    return true;
+}
+
+void RunningSystem::closeFile(const char *pathname){
+
+}
