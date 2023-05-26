@@ -177,6 +177,10 @@ bool RunningSystem::mkdir(const char *pathname, char *name)
     return false;
 }
 
+//显示当前用户
+string RunningSystem::whoami(){
+    return cur_user;
+}
 RunningSystem::~RunningSystem(){
     fclose(disk);
 }
