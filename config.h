@@ -58,7 +58,7 @@ struct dinode{
     unsigned short di_uid;       // 所有者标识符
     unsigned short di_gid;       // 所在组标识符
     unsigned short di_size;      // 文件的字节数
-    unsigned int di_addr[NADDR]; // 文件的硬盘索引表
+    unsigned int di_addr[NADDR]; // 文件的硬盘索引表，即各硬盘节点的id
 };
 
 typedef struct inode{
@@ -157,7 +157,7 @@ extern bool hard_link(); //硬链接
 extern bool soft_link(); //软连接
 
 // 获取内存i节点
-extern struct inode *iget(int dinode_id , hinode* &hinodes, FILE* disk);
+extern struct inode *iget(int dinode_id , hinode* hinodes, FILE* disk);
 // 释放内存i节点
 extern void iput(hinode inode, FILE* disk, struct super_block &file_system);
 // 磁盘i节点分配
@@ -165,11 +165,13 @@ extern struct dinode * ialloc();
 // 磁盘i节点释放
 extern void ifree(int dinode_id, struct super_block &file_system);
 // 实现对文件的存取搜索，将给定的路径名转换成所要搜索的文件的内存i结点指针（在目录数组中的位置）
-extern unsigned int namei();
+// 将会返回在数组中的下标，若为DIRNUM表明没找到
+extern unsigned int namei(char* name, hinode cur_path_inode, FILE* disk);
 // 在当前目录下搜索到一个空的目录数组，以便建立新的目录或文件时使用
+// 将会返回在数组中的下标，若为DIRNUM表明没找到
 extern unsigned short iname();
 // 磁盘块分配
-extern unsigned int balloc();
+extern unsigned int balloc(struct super_block &file_system, FILE *disk);
 // 磁盘块释放
 extern void bfree(int block_num, struct super_block &file_system, FILE* disk);
 

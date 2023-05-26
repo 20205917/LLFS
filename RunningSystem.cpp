@@ -37,10 +37,23 @@ RunningSystem::RunningSystem(){
 
     // 读取root目录
     // 即第一个i节点
-    // TODO
     // 初始化cur_path_inode
-    cur_path_inode = (inode*)malloc(sizeof(struct inode));
-    // TODO
+    cur_path_inode = iget(1, hinodes, disk);
+    int size = cur_path_inode->dinode.di_size;
+    int block_num = size / BLOCKSIZ;
+    unsigned int id;
+    long addr;
+    int i;
+    for(i = 0; i < block_num; i++){
+        id = cur_path_inode->dinode.di_addr[i];
+        addr = DINODESTART + id * DINODESIZ;
+        fseek(disk, addr, SEEK_SET);
+        fread(&root+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+    }
+    id = cur_path_inode->dinode.di_addr[block_num];
+    addr = DINODESTART + id * DINODESIZ;
+    fseek(disk, addr, SEEK_SET);
+    fread(&root+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
 
 };
 
