@@ -44,7 +44,7 @@ struct inode *ialloc(RunningSystem &runningSystem) {
     }
 
     //申请内存i节点
-    temp_inode = iget(file_system.s_dinodes[file_system.s_pdinode]);
+    //temp_inode = iget(file_system.s_dinodes[file_system.s_pdinode]);
     //写入初始化内容
     fseek(runningSystem.disk, DINODESTART + file_system.s_dinodes[file_system.s_pdinode] * DINODESIZ, SEEK_SET);
     fwrite(&temp_inode->dinode, 1, sizeof(struct dinode), runningSystem.disk);
@@ -57,11 +57,8 @@ struct inode *ialloc(RunningSystem &runningSystem) {
 
 
 // 根据对应的硬盘i节点id从系统打开表中释放
-// 然后判断该i节点是否应加入空闲i节点数组
+//
 void ifree(int dinode_id, struct super_block &file_system) {
-    {
-        //??????当空闲数组满时，应写回释放的dinode,防止下次搜索时类型没有覆盖。未满时不用写回，
-    }
     file_system.s_free_dinode_num++;
     if (file_system.s_pdinode > 0 ) {
         // 未达到最大空闲块数
@@ -72,6 +69,15 @@ void ifree(int dinode_id, struct super_block &file_system) {
             file_system.s_rdinode = dinode_id;
         }
     }
+}
+
+//
+void iwirte_back(struct dinode* dinode, RunningSystem &runningSystem){
+    if(dinode == nullptr)
+        return;
+    //写入初始化内容
+    fseek(runningSystem.disk, DINODESTART + dinode->di_number * DINODESIZ, SEEK_SET);
+    fwrite(dinode, 1, sizeof(struct dinode), runningSystem.disk);
 }
 
 // 释放磁盘块

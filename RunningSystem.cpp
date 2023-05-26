@@ -2,6 +2,7 @@
 // Created by 86136 on 2023/5/25.
 //
 
+#include <string>
 #include "RunningSystem.h"
 
 RunningSystem::RunningSystem(){
@@ -27,13 +28,8 @@ RunningSystem::RunningSystem(){
     fread(&pwds, sizeof(PWD), PWDNUM, disk);
 
     // 初始化user_openfiles
-    for(int i = 0; i < USERNUM; i++){
-        user_openfiles->p_gid = 0;
-        user_openfiles->p_uid = 0;
-        for(int j = 0; j < NOFILE; j++){
-            user_openfiles->items[j].f_count = 0;
-        }
-    }
+    user_openfiles.clear();
+
 
     // 读取root目录
     // 即第一个i节点
@@ -44,58 +40,119 @@ RunningSystem::RunningSystem(){
 
 };
 
-int  RunningSystem::login(char* pwd){
+int  RunningSystem::login(string pwd){
     int i,j;
     //检查是否有匹配的PWD
-    for(i = 0; i  < PWDNUM &&strcmp(pwd,pwds[PWDNUM].password); i++);
+    for(i = 0; i  < PWDNUM &&strcmp(pwd.c_str(),pwds[PWDNUM].password); i++);
     if(i==PWDNUM)
         return -1;
 
     //检查是否已经登录
-    for(j = 0;j < USERNUM;j++){
-        if(pwds[i].p_uid==user_openfiles[j].p_uid){
-            return -2;
-        }
+    if(user_openfiles.find(pwd) != user_openfiles.end()){
+        return -2;
     }
 
-    //找到空位置
-    for(j = 0;j < USERNUM;j++){
-        if(0==user_openfiles[j].p_uid){
-            //用户打开表初始化
-            user_openfiles[j].p_uid = pwds[i].p_uid;
-            user_openfiles[j].p_gid = pwds[i].p_gid;
-            memset(user_openfiles[j].items,0,sizeof (user_open_item) * NOFILE);
-            //设置当前文件为根目录
+    //是否还有空位
+    if(user_openfiles.size()<USERNUM){
+        user_open_table* openTable = new user_open_table;
+        openTable->p_uid = pwds[i].p_uid;
+        openTable->p_gid = pwds[i].p_gid;
+        memset(openTable->items,0,sizeof (user_open_item) * NOFILE);
+        user_openfiles.insert(pair<string,user_open_table*>(pwd,openTable));
+        //设置当前文件为根目录
 
-            //cur_path_inode = iget(1);
-
-            return i;
-        }
+        //cur_path_inode = iget(1);
     }
     return -3;
 }
-void RunningSystem::logout(char* pwd){
-    int i,j;
-    //检查是否有匹配的PWD
-    for(int i = 0; i  < PWDNUM &&strcmp(pwd,pwds[PWDNUM].password); i++);
-    if(i==PWDNUM)
-        return;
-
-    //检查是否已经登录
-    for(j = 0;j < USERNUM;j++){
-        if(pwds[i].p_uid==user_openfiles[j].p_uid){
-            //重置打开表
-            user_openfiles[j].p_uid = 0;
-            user_openfiles[j].p_gid = 0;
-            //关闭所有打开文件
-            for(int k = 0 ; k < NOFILE; k++){
-                closeFile();
-            }
-            memset(user_openfiles[j].items,0,sizeof (user_open_item) * NOFILE);
-            return;
-        }
+void RunningSystem::logout(string pwd){
+    user_open_table* u = user_openfiles.find(pwd)->second;
+    for (int i = 0; i < NOFILE; ++i) {
+        //关闭每个文件
+        unsigned short id_to_sysopen = u->items[i].id_to_sysopen;
+        if(--system_openfiles[id_to_sysopen].i_count == 0){
+            iput(system_openfiles[id_to_sysopen].fcb.d_ino,disk,file_system);
+        };
     }
+    user_openfiles.erase(pwd);
     return;
+}
+
+//判断基础合法性，存在，长度，位于根目录
+//清理多余合法符号
+//具体待修改.(暂定）
+char *clean_path(const char *path){
+
+    if (path == NULL || strlen(path) < 1 || strlen(path) > 1024 || path[0] != '/')
+        return NULL;
+
+    for (int i = 0; i < strlen(path); i++) {
+        if (!((path[i] >= '0' && path[i] <= '9')
+              ||(path[i] >= 'a' && path[i] <= 'z')
+              || (path[i] >= 'A' && path[i] <= 'Z')
+              ||path[i] == '.' || path[i] == '/'))    return NULL;
+    }
+    char *old_path = (char *) malloc(strlen(path) + 1);
+    strcpy(old_path, path);
+    char *new_path = (char *) malloc(strlen(path) + 1);
+    memset(new_path, 0, strlen(path) + 1);
+    int i = 0;
+
+    int k = 0;
+//    单个文件和目录名长度 <= 32 字节
+    char *temp = strtok(old_path, "/");
+    while (temp != NULL) {
+        if (strlen(temp) > 32) {
+            k = 1;
+            break;
+        }
+        new_path[i++] = '/';
+        for(int j = 0;j < strlen(temp); j++)
+            new_path[i++] = temp[j];
+        temp = strtok(NULL, "/");
+    }
+    free(old_path);
+    if(k == 1){
+        //free(new_path);
+        new_path =NULL;
+        return NULL;
+    }
+    return new_path;
+}
+
+int RunningSystem::openFile(const char *pathname, int flags) {
+    //判断合法性
+    char *path = NULL;
+    //clean_path清除
+    if ((path = clean_path(pathname)) == NULL)
+        return -1;
+    //寻找文件
+    inode* in = find_file(path);
+
+    if(in == nullptr){
+        free(path);
+        return -2;
+    }
+    //存在则查找访问权限
+    if(access(cur_user, in)){
+        free(path);
+        return -3;
+    }
+    iget(1,hinodes,disk);
+
+    struct user_open_item{
+        unsigned int f_count;               //使用进程数
+        unsigned short u_default_mode;      //打开方式
+        struct inode *f_inode;              //内存i节点指针
+        unsigned long f_offset;             //文件偏移量（文件指针）
+        unsigned short id_to_sysopen;       //系统打开表索引
+    };
+
+    user_open_table* u = user_openfiles.find(cur_user)->second;
+    int fd = 0;
+    while (u->items[++fd]. != NULL) ;
+
+    return fd;
 }
 
 RunningSystem::~RunningSystem(){

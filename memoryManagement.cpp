@@ -5,7 +5,7 @@
 // 在内存i节点散列表根据硬盘i节点id查找
 // 找不到就创建内存i节点
 // 申请了额外空间
-hinode iget(int dinode_id , hinode* &hinodes, FILE* disk){
+hinode iget(int dinode_id , hinode (&hinodes)[10], FILE* disk){
     int inode_id = dinode_id % NHINO;
     if(hinodes[inode_id]->i_forw != NULL){
         hinode tmp = hinodes[inode_id]->i_forw;
@@ -18,6 +18,7 @@ hinode iget(int dinode_id , hinode* &hinodes, FILE* disk){
                 tmp = tmp->i_forw;
         }
     }
+
     // 内存中不存在,需要创建
     long addr = DINODESTART + dinode_id * DINODESIZ;
     hinode newinode = (hinode)malloc(sizeof(struct inode));
@@ -36,8 +37,8 @@ hinode iget(int dinode_id , hinode* &hinodes, FILE* disk){
 
 // 释放i节点回磁盘
 // 如果被更改需要写回
-// 如果被删除则在磁盘抹除
-void iput(hinode inode, FILE* disk, struct super_block &file_system){
+// 如果被删除则在磁盘抹除(需要重构)
+void iput(int inode, FILE* disk, struct super_block &file_system){
     if(inode->dinode.di_number != 0){
         // 需要写回
         if(inode->i_flag != 0){
