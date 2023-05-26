@@ -76,19 +76,42 @@ void ifree(int dinode_id, struct super_block &file_system) {
 
 // 释放磁盘块
 // 成组链法的空间回收
+// 要注意第一个组长块只有49块有效，其首位为0
 void bfree(int block_num, struct super_block &file_system, FILE* disk){
-    if(file_system.s_free_block_size == NICFREE){
+    if(file_system.s_pfree_block == NICFREE){
         // 栈满已经成组
         // 先写回磁盘
         fseek(disk, block_num * BLOCKSIZ, SEEK_SET);
         fwrite(file_system.s_free_blocks, 1, BLOCKSIZ, disk);
-        file_system.s_free_block_size = 1;
-        file_system.s_free_blocks[file_system.s_free_block_size] = block_num;
-
+        // 然后视为栈空重新开始
+        file_system.s_pfree_block = 1;
+        file_system.s_free_blocks[0] = block_num;
+        file_system.s_free_block_size++;
     }
     else{
         // 栈未满
-        file_system.s_free_blocks[file_system.s_free_block_size++] = block_num;
+        file_system.s_free_blocks[file_system.s_pfree_block++] = block_num;
+        file_system.s_free_block_size++;
     }
 }
 
+// 分配磁盘块
+unsigned int balloc(struct super_block &file_system, FILE *disk){
+    if(file_system.s_free_block_size == 0){
+        // 空间不足
+        return DISKFULL;
+    }
+    unsigned int block_num = file_system.s_free_blocks[file_system.s_pfree_block-1];
+    if(file_system.s_free_block_size == 1){
+        // 若再分配则栈空，需要从磁盘加载组长块
+        fseek(disk, block_num * BLOCKSIZ, SEEK_SET);
+        fread(&file_system.s_free_blocks, BLOCKSIZ, 1, disk);
+        file_system.s_free_block_size--;
+        file_system.s_pfree_block = NICFREE;
+    }
+    else{
+        file_system.s_free_block_size--;
+        file_system.s_pfree_block--;
+    }
+    return block_num;
+}
