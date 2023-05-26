@@ -15,7 +15,8 @@ RunningSystem::RunningSystem(){
 
     // 初始化hinodes
     for(int i = 0; i < NHINO; i++){
-        hinodes[i] == nullptr;
+        hinodes[i] = (hinode)malloc(sizeof(struct inode));
+        hinodes[i]->i_forw = nullptr;
     }
 
     // 初始化system_openfiles
