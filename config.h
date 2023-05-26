@@ -20,11 +20,35 @@
 #define DINODESIZ  32   //每个磁盘i节点所占字节
 #define DINODEBLK  32   //所有磁盘i节点共占32个物理块
 #define FILEBLK  512    //共有512个目录文件物理块
-#define NICFREE  50     //超级块中空闲块数组的最大块数
-#define NICINOD  50     //超级块中空闲节点的最大块数
+#define NICFREE  50     //超级块中空闲块数组的最大块数  ????????待定
+#define NICINOD  50     //超级块中空闲节点的最大块数  ??????待定
 #define DINODESTART 2*BLOCKSIZ                //i节点起始地址
 #define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
 
+
+#define DIEMPTY     00000
+#define DIFILE      01000
+#define DIDIR       02000
+#define UDIREAD     00001
+#define UDIWRITE    00002
+#define UDIEXICUTE  00004
+#define GDIREAD     00010
+#define GDIWRITE    00020
+#define GDIEXICUTE  00040
+#define ODIREAD     00100
+#define ODIWRITE    00200
+#define ODIEXICUTE  00400
+#define READ        1
+#define WRITE       2
+#define EXICUTE     3
+#define DEFAULTMODE 00777
+#define IUPDATE     00002
+#define SUPDATE     00001
+#define FREAD       00001
+#define FWRITE      00002
+#define FAPPEND     00004
+#define DISKFULL    65535
+#define SEEK_SET    0
 
 struct dinode{
     unsigned short di_number;    // 硬连接次数
@@ -46,15 +70,16 @@ typedef struct inode{
 
 
 struct super_block{
-    unsigned short s_dinode_size;        //磁盘索引节点表总块数
     unsigned long  s_block_size;         //数据块块数
 
+    unsigned int s_dinode_size;          //i节点总数
     unsigned int s_free_dinode_num;      //空闲i节点数
-    unsigned int s_dinodes[NICINOD];     //空闲i节点数组
-    unsigned int s_rdinode;              //铭记i节点，由它决定从索引节点区搜索空闲i节点的起始位置。
+    unsigned int s_dinodes[NICINOD];     //暂时记录的i节点数组
+    unsigned int s_pdinode;              //铭记i节点.第一个空的i节点下标
+    unsigned int s_rdinode;             //磁盘索引节点搜索记录节点
 
     unsigned long  s_free_block_size;    //空闲数据块块数
-    unsigned int s_free_blocks[NICFREE]; //空闲块栈,用于成组连接
+    unsigned int   s_free_blocks[NICFREE]; //空闲块栈,用于成组连接
     unsigned short s_pfree_block;        //空闲块栈栈顶
     char s_fmod;                         //超级块修改标志
 };
@@ -86,6 +111,16 @@ struct user_open_item{
     struct inode *f_inode;              //内存i节点指针
     unsigned long f_offset;             //文件偏移量（文件指针）
     unsigned short id_to_sysopen;       //系统打开表索引
+};
+
+/*
+ * 用户打开表
+ * 初始化全0
+ */
+struct user_open_table{
+    unsigned short p_uid;
+    unsigned short p_gid;
+    struct user_open_item items[NOFILE];
 };
 
 //系统打开表项
@@ -123,7 +158,7 @@ extern struct inode *iget();
 // 释放内存i节点
 extern void iput();
 // 磁盘i节点分配
-extern struct inode * ialloc();
+extern struct dinode * ialloc();
 // 磁盘i节点释放
 extern void ifree();
 // 实现对文件的存取搜索，将给定的路径名转换成所要搜索的文件的内存i结点指针（在目录数组中的位置）
@@ -133,14 +168,7 @@ extern unsigned short iname();
 // 磁盘块分配
 extern unsigned int balloc();
 // 磁盘块释放
-extern void bfree();
-
-// 确定是否有权限
-extern unsigned int access();
-// 用户登录
-extern int login();
-// 用户注销
-extern void logout();
+extern void bfree(int block_num, struct super_block &file_system, FILE* disk);
 
 
 // 额外

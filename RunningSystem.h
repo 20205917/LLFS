@@ -7,20 +7,18 @@
 
 #include "config.h"
 
-class RunningSystem {
+struct RunningSystem {
 
-
-private:
     struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
-    struct user_open_item user_openfiles[USERNUM][NOFILE];
+    struct user_open_table user_openfiles[USERNUM];      //用户打开表组
     struct dir root;                          //root目录
     hinode hinodes[NHINO];                    //内存节点缓存
     struct super_block file_system;           //超级块
     struct PWD pwds[PWDNUM];                  //用户数组
-    FILE *disk;                               //系统磁盘文件
+
     struct inode *cur_path_inode;             //当前目录
 
-public:
+    FILE *disk;                               //系统磁盘文件
     RunningSystem();
     ~RunningSystem();
     // 打开文件
@@ -42,73 +40,18 @@ public:
     // 退出系统
     void halt();
 
+
+
+    // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值位用户打开表下标)
+    int login(char* pwd);
+    // 用户注销
+    void logout(char* pwd);
+
 };
-unsigned short openFile();
+
+
 /*
 
-//open file or directory
-int ropen(const char *pathname, int flags) {
-    //invalid path
-    if (justify_path(pathname) == -1) {
-        return -1;
-    }
-    char end = pathname[strlen(pathname) - 1];//get end char
-    char *path = clean_path(pathname);
-    //find file or directory
-    File *file = find_file(path);
-    if (file == NULL) {//没找到默认是文件,并且不合法
-        if (end == '/') {
-            free(path);
-            return -1;
-        }
-        //file or directory not found
-        if (flags & O_CREAT) {
-            //create file or directory
-            file = create_file(path, FILE);
-            if (file == NULL) {
-                //create file or directory failed
-                free(path);
-                return -1;
-            }
-        } else {
-            //file or directory not found
-            free(path);
-            return -1;
-        }
-    }
-    //find the first empty file descriptor
-    int fd = 1;
-    while (fd_table.fds[fd] != NULL) {
-        fd++;
-    }
-    //create file descriptor
-    Fd *fd1 = (Fd *) malloc(sizeof(Fd));
-
-    fd1->flags = flags;
-    fd1->file = file;
-    fd1->offset = 0;
-    //add file descriptor to file descriptor table
-    fd_table.fds[fd] = fd1;
-    file->link_count++;//link count +1
-
-    if (file->type == FILE) {
-        if (flags & O_APPEND) {
-            fd1->offset = file->size;
-        }
-        else {
-            fd1->offset = 0;
-        }
-        //check flags
-        if ((flags & O_TRUNC) && ((flags & O_WRONLY) || (flags & O_RDWR))) {
-            //truncate file
-            file->size = 0;
-            free(file->content);
-            file->content = NULL;
-        }
-    }
-    free(path);
-    return fd;
-}
 
 //create file or directory ,choose type FILE or DIRECTORY
 File *create_file(const char *pathname, int type) {
