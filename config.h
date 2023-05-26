@@ -26,7 +26,7 @@
 #define NICINOD  50     //超级块中空闲节点的最大块数  ??????待定
 #define DINODESTART 2*BLOCKSIZ                //i节点起始地址
 #define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
-
+enum operation{Open,Read,Write};       //定义操作 打开 读 写
 
 #define DIEMPTY     00000
 #define DIFILE      01000
@@ -70,7 +70,7 @@ struct dinode{
     unsigned short di_uid;       // 所有者标识符
     unsigned short di_gid;       // 所在组标识符
     unsigned short di_size;      // 文件的字节数
-    unsigned int di_addr[NADDR]; // 文件的硬盘索引表，即各硬盘节点的id
+    unsigned int di_addr[NADDR]; // 文件的硬盘索引数组，即各硬盘节点的id
 };
 
 typedef struct inode{
@@ -113,8 +113,8 @@ struct FCB{
 
 //目录的逻辑结构
 struct dir{
-    //direct[0]父目录
-    //direct[1]当前目录
+    //files[0]根目录
+    //files[1]父目录
     struct FCB files[DIRNUM];
     int size;
 };
