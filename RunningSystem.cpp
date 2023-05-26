@@ -7,6 +7,7 @@
 RunningSystem::RunningSystem(){
     // 读硬盘
     disk = fopen("disk", "wb+");
+
     // 初始化file_system
     fseek(disk, BLOCKSIZ, SEEK_SET);
     fread(&file_system, sizeof(file_system), 1, disk);
@@ -23,11 +24,23 @@ RunningSystem::RunningSystem(){
     }
 
     // 初始化pwds
+    fread(&pwds, sizeof(PWD), PWDNUM, disk);
 
+    // 初始化user_openfiles
+    for(int i = 0; i < USERNUM; i++){
+        user_openfiles->p_gid = 0;
+        user_openfiles->p_uid = 0;
+        for(int j = 0; j < NOFILE; j++){
+            user_openfiles->items[j].f_count = 0;
+        }
+    }
 
-
+    // 读取root目录
+    // 即第一个i节点
+    // TODO
     // 初始化cur_path_inode
     cur_path_inode = (inode*)malloc(sizeof(struct inode));
+    // TODO
 
 };
 

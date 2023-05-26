@@ -6,6 +6,8 @@
 #define LLFS_CONFIG_H
 
 #include <cstdio>
+#include <malloc.h>
+#include <cstring>
 
 #define BLOCKSIZ  512   //每块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
@@ -69,6 +71,7 @@ typedef struct inode{
 }*hinode;
 
 
+// 先暂定32块 4块索引 26块数据
 struct super_block{
     unsigned long  s_block_size;         //数据块块数
 
@@ -154,13 +157,13 @@ extern bool hard_link(); //硬链接
 extern bool soft_link(); //软连接
 
 // 获取内存i节点
-extern struct inode *iget();
+extern struct inode *iget(int dinode_id , hinode* &hinodes, FILE* disk);
 // 释放内存i节点
-extern void iput();
+extern void iput(hinode inode, FILE* disk, struct super_block &file_system);
 // 磁盘i节点分配
 extern struct dinode * ialloc();
 // 磁盘i节点释放
-extern void ifree();
+extern void ifree(int dinode_id, struct super_block &file_system);
 // 实现对文件的存取搜索，将给定的路径名转换成所要搜索的文件的内存i结点指针（在目录数组中的位置）
 extern unsigned int namei();
 // 在当前目录下搜索到一个空的目录数组，以便建立新的目录或文件时使用
