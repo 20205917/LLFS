@@ -46,7 +46,7 @@ struct RunningSystem {
     struct inode* find_file(char* addr);
 
 
-    // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值位用户打开表下标)
+    // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值为用户打开表下标)
     int login(string pwd);
     // 用户注销
     void logout(string pwd);
@@ -55,6 +55,12 @@ struct RunningSystem {
 
     // 文件夹路径相关
     bool mkdir(const char *pathname,char *name);
+
+    //显示所有用户
+    void user();
+
+    //显示当前用户
+    string whoami();
 };
 struct inode *ialloc(RunningSystem &runningSystem);
 
