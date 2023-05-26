@@ -177,7 +177,7 @@ bool RunningSystem::mkdir(const char *pathname, char *name)
     return false;
 }
 
-//显示当前用户
+//显示当前用户ss
 string RunningSystem::whoami(){
     return cur_user;
 }
