@@ -24,10 +24,16 @@ hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
     fseek(disk, addr, SEEK_SET);
     fread(&(newinode->dinode.di_number), DINODESIZ, 1, disk);
     // 加入内存散列表，作为hinodes[inode_id]的下一个节点
-    newinode->i_forw = hinodes[inode_id]->i_forw;
-    newinode->i_back = hinodes[inode_id];
-    newinode->i_forw->i_back = newinode;
-    hinodes[inode_id]->i_forw = newinode;
+    if(hinodes[inode_id]->i_forw != NULL){
+        newinode->i_forw = hinodes[inode_id]->i_forw;
+        newinode->i_back = hinodes[inode_id];
+        newinode->i_forw->i_back = newinode;
+        hinodes[inode_id]->i_forw = newinode;
+    }
+    else{
+        newinode->i_forw = hinodes[inode_id]->i_forw;
+        newinode->i_back = hinodes[inode_id];
+    }
     // 补充初始化
     newinode->i_flag = 0;
     newinode->i_id = dinode_id;
@@ -70,7 +76,7 @@ void iput(int inode, FILE* disk, struct super_block &file_system){
 // 将会返回在数组中的下标，若为DIRNUM表明没找到
 // 可能有问题
 unsigned int namei(char* name, hinode cur_path_inode, FILE* disk){
-    // 从内存加载目录
+    // 从磁盘加载目录文件
     int size = cur_path_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
     struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
@@ -107,7 +113,7 @@ unsigned int namei(char* name, hinode cur_path_inode, FILE* disk){
 // 从当前目录找到下一个空的位置
 // 将会返回在数组中的下标，若为DIRNUM表明没找到
 unsigned short iname(char* name, hinode cur_path_inode, FILE* disk){
-    // 从内存加载目录
+    // 从磁盘加载目录
     int size = cur_path_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
     struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
