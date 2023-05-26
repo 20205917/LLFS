@@ -92,6 +92,8 @@ void RunningSystem::logout(string pwd){
     return;
 }
 
+
+
 //判断基础合法性，存在，长度，位于根目录
 //清理多余合法符号
 //具体待修改.(暂定）
@@ -167,6 +169,12 @@ int RunningSystem::openFile(const char *pathname, int flags) {
     while (u->items[++fd]. != NULL) ;
 
     return fd;
+}
+//创建文件夹，输入是文件路径和文件夹名
+bool RunningSystem::mkdir(const char *pathname, char *name)
+{
+    
+    return false;
 }
 
 RunningSystem::~RunningSystem(){

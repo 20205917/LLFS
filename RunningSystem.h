@@ -50,8 +50,11 @@ struct RunningSystem {
     int login(string pwd);
     // 用户注销
     void logout(string pwd);
+    //判断用户权限是否足够某操作
+    bool access(unsigned short p_uid,unsigned short p_gid,int operation,inode* file_inode);
 
-    bool access(string PWD,inode* file_inode);
+    // 文件夹路径相关
+    bool mkdir(const char *pathname,char *name);
 };
 
 
