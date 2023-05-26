@@ -36,8 +36,8 @@ hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
 
 // 释放i节点回磁盘
 // 如果被更改需要写回
-// 如果被删除则在磁盘抹除
-void iput(hinode inode, FILE* disk, struct super_block &file_system){
+// 如果被删除则在磁盘抹除(需要重构)
+void iput(int inode, FILE* disk, struct super_block &file_system){
     if(inode->dinode.di_number != 0){
         // 需要写回
         if(inode->i_flag != 0){
