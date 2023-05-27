@@ -58,8 +58,8 @@ struct RunningSystem {
     string whoami();
 
     // 文件夹路径相关
-    bool mkdir(const char *pathname,char *name);
-
+    int mkdir(string pathname);
+    struct dir get_dir(int d_index);
 
 };
 struct inode *ialloc(RunningSystem &runningSystem);
