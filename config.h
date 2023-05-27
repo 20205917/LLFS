@@ -194,9 +194,9 @@ bool is_dir(const char *pathname);
 // 文件名是否合法
 bool is_file(const char *filename);
 // 将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
-bool write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
-
-
+void write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
+// 从磁盘数据区读取内容 内存地址，硬盘索引数组，数据长度，文件指针
+void read_data_from(void *data_address, unsigned int *di_addr, int size, FILE *fp);
 // 额外
 // 删除指定目录
 extern void rmdir();
