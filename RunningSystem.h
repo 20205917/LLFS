@@ -72,6 +72,8 @@ struct RunningSystem {
     // 未打开返回USER_UNOPENED
     bool isOpened(const char *pathname);
 
+    //内存节点缓存区满换出
+    void exchange_hinodes();
 
 };
 struct inode *ialloc(RunningSystem &runningSystem);
