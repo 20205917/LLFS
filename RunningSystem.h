@@ -26,7 +26,7 @@ struct RunningSystem {
     RunningSystem();
     ~RunningSystem();
     // 打开文件
-    int openFile(const char *pathname, int flags);
+    int openFile(string pathname, unsigned short flags);
     // 关闭文件
     void closeFile(const char *pathname);
     // 读取文件
@@ -37,7 +37,7 @@ struct RunningSystem {
     // 返回值false写失败 true写成功
     bool writeFile(const char *pathname, int write_mode, std::string content);
     // 创建新文件
-    inode* createFile(const char *pathname, unsigned short di_mode);
+    inode* createFile(string pathname, unsigned short di_mode);
     // 删除文件
     bool deleteFile(const char *pathname);
     // 从磁盘文件加载系统

@@ -8,6 +8,9 @@
 #include <cstdio>
 #include <malloc.h>
 #include <cstring>
+#include "RunningSystem.h"
+
+#define BLOCKSIZ  512   //每块大小
 #include <iostream>
 using namespace std;
 #define BLOCKSIZ  512   //每个物理块大小
@@ -131,8 +134,9 @@ struct user_open_item{
     unsigned short u_default_mode;      //打开方式
     struct inode *f_inode;              //内存i节点指针
     unsigned long f_offset;             //文件偏移量（文件指针）
-    unsigned short id_to_sysopen;       //系统打开表索引
+    unsigned short index_to_sysopen;       //系统打开表索引
 };
+
 
 /*
  * 用户打开表
