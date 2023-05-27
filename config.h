@@ -8,7 +8,8 @@
 #include <cstdio>
 #include <malloc.h>
 #include <cstring>
-
+#include <iostream>
+using namespace std;
 #define BLOCKSIZ  512   //每个物理块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
 #define DIRNUM  128     //每个目录所包含的最大目录项数（文件数）
@@ -111,7 +112,7 @@ struct FCB{
     unsigned int d_ino;            // 硬盘i节点id
 };
 
-//目录的逻辑结构
+//目录的逻辑结构,即目录文件的数据区内容
 struct dir{
     //files[0]根目录
     //files[1]父目录
@@ -193,9 +194,9 @@ bool is_dir(const char *pathname);
 // 文件名是否合法
 bool is_file(const char *filename);
 // 将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
-bool write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
-
-
+void write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
+// 从磁盘数据区读取内容 内存地址，硬盘索引数组，数据长度，文件指针
+void read_data_from(void *data_address, unsigned int *di_addr, int size, FILE *fp);
 // 额外
 // 删除指定目录
 extern void rmdir();

@@ -109,10 +109,9 @@ unsigned int namei(char* name, hinode cur_path_inode, FILE* disk){
     else
         return DIRNUM;
 }
-
 // 从当前目录找到下一个空的位置
-// 将会返回在数组中的下标，若为DIRNUM表明没找到
-unsigned short iname(char* name, hinode cur_path_inode, FILE* disk){
+// 将会返回在数组中的下标，若为-1表明没找到
+int seek_catalog_leisure(inode* cur_path_inode, FILE* disk){//原来是iname
     // 从磁盘加载目录
     int size = cur_path_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
@@ -142,10 +141,8 @@ unsigned short iname(char* name, hinode cur_path_inode, FILE* disk){
     }
     free(tmp);
     if(found){
-        // 这里先把名字占了
-        strcpy(tmp->files[i].d_name, name);
         return i;
     }
     else
-        return DIRNUM;
+        return -1;
 }
