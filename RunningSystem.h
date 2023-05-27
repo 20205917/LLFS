@@ -7,7 +7,8 @@
 
 #include <map>
 #include "config.h"
-
+#include "tool.cpp"
+#include "memoryManagement.cpp"
 using namespace std;
 struct RunningSystem {
 
@@ -18,7 +19,8 @@ struct RunningSystem {
     struct super_block file_system;           //超级块
     struct PWD pwds[PWDNUM];                  //用户数组
 
-    struct inode *cur_path_inode;             //当前目录
+    struct inode *cur_dir_inode;             //当前目录的索引结点
+    struct dir cur_dir;                       //当前目录的数据
     string cur_user;                          //当前用户
     FILE *disk;                               //系统磁盘文件
     RunningSystem();
@@ -43,7 +45,7 @@ struct RunningSystem {
     void halt();
 
     //根据地址寻找并读入索引节点
-    struct inode* find_file(char* addr);
+    struct inode* find_file(string addr);
 
 
     // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值位用户打开表下标)
@@ -54,7 +56,8 @@ struct RunningSystem {
     bool access(unsigned short p_uid,unsigned short p_gid,int operation,inode* file_inode);
 
     // 文件夹路径相关
-    bool mkdir(const char *pathname,char *name);
+    struct dir get_dir(int i_index);
+    int mkdir(string pathname,char *name);
 };
 
 

@@ -170,13 +170,43 @@ int RunningSystem::openFile(const char *pathname, int flags) {
 
     return fd;
 }
-//创建文件夹，输入是文件路径和文件夹名
-bool RunningSystem::mkdir(const char *pathname, char *name)
+struct dir RunningSystem::get_dir(int d_index)
 {
-    
-    return false;
+    inode *dir_inode = iget(d_index,hinodes,disk);
+    // 从磁盘加载目录
+    struct dir work_dir;
+    work_dir.size=dir_inode->dinode.di_size/(DIRSIZ+2);
+    int i=0;
+    for(i= 0; i<work_dir.size/(BLOCKSIZ/(DIRSIZ+2));i++)
+    {
+        fseek(disk,DATASTART+BLOCKSIZ * dir_inode->dinode.di_addr[i],SEEK_SET);
+        fread(&work_dir.files[(BLOCKSIZ/(DIRSIZ+2)) * i],1, BLOCKSIZ,disk);
+    }
+    fseek(disk, DATASTART+BLOCKSIZ * dir_inode->dinode.di_addr[i],SEEK_SET);
+    fread(&work_dir.files[(BLOCKSIZ)/(DIRSIZ+2) * i], 1,dir_inode->dinode.di_size % BLOCKSIZ, disk);
+    return work_dir;
 }
-
+// 创建文件夹，输入是文件路径和文件夹名
+int RunningSystem::mkdir(string pathname, char *name)
+{
+    if(!is_dir(pathname)){
+        return false;
+    }
+    else{
+        int pos = pathname.find_last_of('/') + 1;
+        string father_path = pathname.substr(0,pos-1);
+        string file = pathname.substr(pos);
+        inode* catalog =  find_file(pathname);
+        //判断目录文件数据区是否有空闲
+        if(seek_catalog_leisure(catalog,disk)!=-1){
+            //判断是否重复
+            
+        }
+        else{//没有空闲，失败
+            return -1;
+        }
+    }
+}
 RunningSystem::~RunningSystem(){
     fclose(disk);
 }

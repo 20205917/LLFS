@@ -10,7 +10,7 @@ int main() {
 //    fseek(diskFile,BLOCKSIZ,SEEK_SET);
 //    fwrite(sb, sizeof(struct super_block), 1, diskFile);
 //    fclose(diskFile);
-
-
+    string a = "desktop/a/b/c/d";
+    cout<<a[a.find_last_of('/')];
     return 0;
 }
