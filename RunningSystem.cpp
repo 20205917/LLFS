@@ -334,7 +334,7 @@ int RunningSystem::rmdir(string pathname){
         return -1;
     }
     else{
-int pos = pathname.find_last_of('/') + 1;
+        int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0,pos-1);
         string file = pathname.substr(pos);
         inode* catalog =  find_file(pathname);
