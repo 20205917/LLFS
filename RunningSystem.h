@@ -9,6 +9,11 @@
 #include "config.h"
 #include "tool.cpp"
 #include "memoryManagement.cpp"
+//定义操作码operation,在access函数中体现
+#define MAKEDIR 1
+#define CHDIR   2
+#define SHOWDIR 3
+#define RMDIR   4
 using namespace std;
 struct RunningSystem {
 
@@ -56,7 +61,7 @@ struct RunningSystem {
     // 用户注销
     void logout(string pwd);
     //判断用户权限是否足够某操作
-    bool access(unsigned short p_uid,unsigned short p_gid,int operation,inode* file_inode);
+    bool access(int operation,inode* file_inode);
     // 返回当前用户ss
     string whoami();
 

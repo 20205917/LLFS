@@ -96,7 +96,46 @@ void RunningSystem::logout(string pwd){
     return;
 }
 
-
+bool RunningSystem::access(int operation, inode *file_inode)
+{
+    if(user_openfiles.find(cur_user) == user_openfiles.end()){
+        return -1;//没找到该用户
+    }
+    user_open_table *T = user_openfiles.find(cur_user)->second;
+    bool creat = file_inode->dinode.di_uid == T->p_uid;//文件的uid等于用户的uid 说明是创建者
+    bool group = file_inode->dinode.di_gid == T->p_gid;//文件的gid等于用户的gid 说明是组内成员
+    bool other = !creat&&!group;
+    switch (operation)
+    {
+    case MAKEDIR:
+        if(creat)
+            return 1;
+        else
+            return -1;
+        break;
+    case CHDIR:
+        if(creat&&group)
+            return 1;
+        else
+            return -1;
+        break;
+    case SHOWDIR:
+        if(true)
+            return 1;
+        else
+            return -1;
+        break;
+    case RMDIR:
+        if(creat)
+            return 1;
+        else
+            return -1;
+        break;
+    default:
+        break;
+    }
+    return false;
+}
 
 //判断基础合法性，存在，长度，位于根目录
 //清理多余合法符号
@@ -201,6 +240,8 @@ int RunningSystem::mkdir(string pathname)
         string father_path = pathname.substr(0,pos-1);
         string file = pathname.substr(pos);
         inode* catalog =  find_file(father_path);
+        if(access(MAKEDIR,catalog)==-1)
+            return -1;//权限不足，返回错误码
         if(catalog==NULL){
             return -1;//无该路径，返回错误码
         }
@@ -220,6 +261,7 @@ int RunningSystem::mkdir(string pathname)
                     int block_amount = sizeof(dir)/BLOCKSIZ + 1;
                     for(int j=0;j<block_amount;j++){
                         new_inode->dinode.di_addr[j] = balloc(file_system,disk);
+                        new_inode->dinode.di_mode = DIDIR;
                     }
                     //初始化硬盘数据区(索引结点区在ialloc中初始化)
                     struct dir new_dir = get_dir(new_d_index);
@@ -231,6 +273,9 @@ int RunningSystem::mkdir(string pathname)
                     int leisure = seek_catalog_leisure(catalog,disk);
                     string_char(file,catalog_dir.files[leisure].d_name,file.length());
                     catalog_dir.files[leisure].d_index = new_d_index;
+                    catalog_dir.size++;
+                    catalog->ifChange=1;
+                    new_inode->ifChange=1;
                     //将父目录的内存i结点写入磁盘i结点，将新文件夹的内存i结点写入磁盘i结点
                     iput(catalog,disk,file_system);
                     iput(new_inode,disk,file_system);
@@ -251,8 +296,14 @@ int RunningSystem::chdir(string pathname)
     }
     else{
         inode* catalog =  find_file(pathname);
+        if(access(CHDIR,catalog)==-1)
+            return -1;//权限不足，返回错误码
         if(catalog==NULL){
             return -1;//无该路径，返回错误码
+        }
+       
+        if(catalog->dinode.di_uid!=T->p_uid&&catalog->dinode.di_gid!=T->p_gid){
+            return -1;//该用户为组外用户，无权限
         }
         cur_dir = get_dir(catalog->d_index);
         cur_dir_inode = catalog;
@@ -260,6 +311,8 @@ int RunningSystem::chdir(string pathname)
     return 1;
 }
 int RunningSystem::show_dir(){
+    if(access(SHOWDIR,cur_dir_inode)==-1)
+        return -1;//权限不足，返回错误码
     for(int i=0;i<DIRNUM;i++){
         if(cur_dir.files[i].d_index!=0){
             cout<<cur_dir.files[i].d_name<<endl;//输出当前路径下的文件内容
@@ -271,7 +324,39 @@ int RunningSystem::rmdir(string pathname){
         return -1;
     }
     else{
-        
+        int pos = pathname.find_last_of('/') + 1;
+        string father_path = pathname.substr(0,pos-1);
+        string file = pathname.substr(pos);
+        inode* catalog =  find_file(pathname);
+        inode* father_catalog = find_file(father_path);
+        if(access(RMDIR,father_catalog))
+            return -1;//权限不足，返回错误码
+        if(catalog==NULL){
+            return -1;//无该路径，返回错误码
+        }
+        struct dir catalog_dir = get_dir(catalog->d_index);//得到路径的目录dir数据
+        struct dir father_dir = get_dir(father_catalog->d_index);//得到父目录的dir数据
+        if(catalog_dir.size!=0){
+            return -1;//该路径的目录有内容，失败。
+        }
+        else{
+            //将父目录里该项内容删除
+            for(int i=0;i<DIRNUM;i++){
+                if(father_dir.files[i].d_index==catalog->d_index){//查找该文件的下标
+                    father_dir.files[i].d_index=0;
+                    memset(father_dir.files[i].d_name,0,DIRSIZ);
+                    father_dir.size--;
+                    catalog->ifChange=1;
+                    father_catalog->ifChange=1;
+                    catalog->dinode.di_mode=DIEMPTY;
+                    break;
+                }
+            }
+            //将子目录磁盘i结点删除，释放该结点所指的数据区
+            iput(catalog,disk,file_system);
+            //将父目录数据写回磁盘数据区
+            iput(father_catalog,disk,file_system);
+        }
     }
 }
 //显示当前用户ss
