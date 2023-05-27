@@ -28,7 +28,7 @@ struct RunningSystem {
     // 打开文件
     int openFile(const char *pathname, int flags);
     // 关闭文件
-    void closeFile();
+    void closeFile(const char *pathname);
     // 读取文件
     unsigned int readFile();
     // 写文件
@@ -36,7 +36,7 @@ struct RunningSystem {
     // 创建新文件
     inode* createFile(const char *pathname, unsigned short di_mode);
     // 删除文件
-    bool deleteFile();
+    bool deleteFile(const char *pathname);
     // 从磁盘文件加载系统
     void install();
     // 格式化系统
@@ -48,7 +48,7 @@ struct RunningSystem {
     struct inode* find_file(string addr);
 
 
-    // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值位用户打开表下标)
+    // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值为用户打开表下标)
     int login(string pwd);
     // 用户注销
     void logout(string pwd);
@@ -56,10 +56,9 @@ struct RunningSystem {
     bool access(unsigned short p_uid,unsigned short p_gid,int operation,inode* file_inode);
 
     // 文件夹路径相关
-    struct dir get_dir(int i_index);
-    int mkdir(string pathname,char *name);
+    bool mkdir(const char *pathname,char *name);
 };
-
+struct inode *ialloc(RunningSystem &runningSystem);
 
 
 #endif //LLFS_RUNNINGSYSTEM_H

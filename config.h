@@ -182,11 +182,19 @@ extern void ifree(int dinode_id, struct super_block &file_system);
 extern unsigned int namei(char* name, hinode cur_path_inode, FILE* disk);
 // 在当前目录下搜索到一个空的目录数组，以便建立新的目录或文件时使用
 // 将会返回在数组中的下标，若为DIRNUM表明没找到
-extern unsigned short iname();
+extern unsigned short iname(char* name, hinode cur_path_inode, FILE* disk);
 // 磁盘块分配
 extern unsigned int balloc(struct super_block &file_system, FILE *disk);
 // 磁盘块释放
 extern void bfree(int block_num, struct super_block &file_system, FILE* disk);
+
+// tool
+// 路径是否合法
+bool is_dir(const char *pathname);
+// 文件名是否合法
+bool is_file(const char *filename);
+// 将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
+bool write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
 
 
 // 额外

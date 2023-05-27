@@ -87,12 +87,12 @@ unsigned int namei(char* name, hinode cur_path_inode, FILE* disk){
         id = cur_path_inode->dinode.di_addr[i];
         addr = DINODESTART + id * DINODESIZ;
         fseek(disk, addr, SEEK_SET);
-        fread(tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+        fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
     id = cur_path_inode->dinode.di_addr[block_num];
     addr = DINODESTART + id * DINODESIZ;
     fseek(disk, addr, SEEK_SET);
-    fread(tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+    fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
 
     // 开始查找
     bool found = false;
@@ -123,12 +123,12 @@ int seek_catalog_leisure(inode* cur_path_inode, FILE* disk){//原来是iname
         id = cur_path_inode->dinode.di_addr[i];
         addr = DINODESTART + id * DINODESIZ;
         fseek(disk, addr, SEEK_SET);
-        fread(tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+        fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
     id = cur_path_inode->dinode.di_addr[block_num];
     addr = DINODESTART + id * DINODESIZ;
     fseek(disk, addr, SEEK_SET);
-    fread(tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+    fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
 
     // 开始查找
     bool found = false;
