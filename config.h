@@ -65,6 +65,11 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 #define DISKFULL    65535
 #define SEEK_SET    0
 
+// 写文件方式
+#define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
+#define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
+
+#define USER_UNOPENED (-1)      // 当前用户未打开
 struct dinode{
     unsigned short di_number;    // 硬连接次数
     unsigned short di_mode;      // 文件类型，目录和文件

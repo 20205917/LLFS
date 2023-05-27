@@ -32,7 +32,10 @@ struct RunningSystem {
     // 读取文件
     std::string readFile(const char *pathname);
     // 写文件
-    unsigned int writeFile();
+    // write_mode可为W_APPEND W_TRUNC 或其他任意值
+    // W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写
+    // 返回值false写失败 true写成功
+    bool writeFile(const char *pathname, int write_mode, std::string content);
     // 创建新文件
     inode* createFile(const char *pathname, unsigned short di_mode);
     // 删除文件
@@ -59,6 +62,11 @@ struct RunningSystem {
 
     // 文件夹路径相关
     bool mkdir(const char *pathname,char *name);
+
+    // 判断是否被当前用户打开
+    // 若打开返回用户打开表下表
+    // 未打开返回USER_UNOPENED
+    bool isOpened(const char *pathname);
 
 
 };

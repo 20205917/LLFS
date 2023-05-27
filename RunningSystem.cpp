@@ -386,3 +386,39 @@ std::string RunningSystem::readFile(const char *pathname){
     fread(res+i*BLOCKSIZ, size-block_num*BLOCKSIZ, 1, disk);
     return res;
 }
+
+// 权限未实现
+bool RunningSystem::writeFile(const char *pathname, int write_mode, std::string content){
+    // 判断文件名是否合法
+    if(!is_file(pathname)){
+        return {};
+    }
+    // 判断用户对该文件是否有写权限
+    // if(access())
+
+    // 判断文件是否被用户打开
+    // 获取用户的打开表
+    user_open_table* userOpenTable = user_openfiles[cur_user];
+    // 获取用户uid
+    unsigned short p_uid = userOpenTable->p_uid;
+
+    // 遍历查询该文件
+    unsigned short id;
+    bool found = false;
+    int i;
+    for(i = 0; i < NOFILE; i++){
+        if(userOpenTable->items[i].f_inode == nullptr){
+            continue;
+        }
+        id = userOpenTable->items[i].id_to_sysopen;
+        if(!strcmp(system_openfiles[id].fcb.d_name, pathname) && system_openfiles[id].i_count != 0){
+            found = true;
+            break;
+        }
+    }
+    // 用户没有打开该文件
+    if(!found)
+        return false;
+
+    // 三种模式
+}
