@@ -13,7 +13,7 @@ using namespace std;
 struct RunningSystem {
 
     struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
-    map<string ,user_open_table*> user_openfiles;        //用户打开表组
+    map<string, user_open_table*> user_openfiles;        //用户打开表组
     struct dir root;                          //root目录
     hinode hinodes[NHINO];                    //内存节点缓存
     struct super_block file_system;           //超级块
@@ -30,7 +30,7 @@ struct RunningSystem {
     // 关闭文件
     void closeFile(const char *pathname);
     // 读取文件
-    unsigned int readFile();
+    std::string readFile(const char *pathname);
     // 写文件
     unsigned int writeFile();
     // 创建新文件
@@ -54,9 +54,13 @@ struct RunningSystem {
     void logout(string pwd);
     //判断用户权限是否足够某操作
     bool access(unsigned short p_uid,unsigned short p_gid,int operation,inode* file_inode);
+    // 返回当前用户ss
+    string whoami();
 
     // 文件夹路径相关
     bool mkdir(const char *pathname,char *name);
+
+
 };
 struct inode *ialloc(RunningSystem &runningSystem);
 

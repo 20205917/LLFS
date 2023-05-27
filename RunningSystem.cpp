@@ -34,25 +34,27 @@ RunningSystem::RunningSystem(){
     user_openfiles.clear();
 
 
-    // 读取root目录
+    // 读取root目录和cur_dir当前目录
     // 即第一个i节点
-    // 初始化cur_path_inode
-    cur_path_inode = iget(1, hinodes, disk);
-    int size = cur_path_inode->dinode.di_size;
+    // 初始化cur_dir_inode
+    cur_dir_inode = iget(1, hinodes, disk);
+    int size = cur_dir_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
     unsigned int id;
     long addr;
     int i;
     for(i = 0; i < block_num; i++){
-        id = cur_path_inode->dinode.di_addr[i];
+        id = cur_dir_inode->dinode.di_addr[i];
         addr = DINODESTART + id * DINODESIZ;
         fseek(disk, addr, SEEK_SET);
-        fread(&root+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+        fread((char*)(&root)+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+        fread((char*)(&cur_dir)+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
-    id = cur_path_inode->dinode.di_addr[block_num];
+    id = cur_dir_inode->dinode.di_addr[block_num];
     addr = DINODESTART + id * DINODESIZ;
     fseek(disk, addr, SEEK_SET);
-    fread(&root+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+    fread((char*)(&root)+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+    fread((char*)(&cur_dir)+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
 
 };
 
@@ -209,14 +211,13 @@ int RunningSystem::mkdir(string pathname, char *name)
         }
     }
 }
-<<<<<<< HEAD
-=======
+
 
 //显示当前用户ss
 string RunningSystem::whoami(){
     return cur_user;
 }
->>>>>>> 170709d266a9d2f2fc2f0e45474316ed091c9fab
+
 RunningSystem::~RunningSystem(){
     fclose(disk);
 }
@@ -236,7 +237,7 @@ inode* RunningSystem::createFile(const char *pathname, unsigned short di_mode)
         return res_inode;
     }
     // 是否有空闲
-    int index = iname(const_cast<char *>(pathname), cur_path_inode, disk);
+    int index = iname(const_cast<char *>(pathname), cur_dir_inode, disk);
     if(index == DIRNUM)
         return nullptr;
     // 申请磁盘i结点
@@ -244,33 +245,15 @@ inode* RunningSystem::createFile(const char *pathname, unsigned short di_mode)
     // 初始化磁盘i节点
     new_inode->dinode.di_mode = di_mode;
     new_inode->dinode.di_size = 0;
-
-
     // 磁盘i节点写回磁盘
     long addr = DINODESTART + new_inode->i_id * DINODESIZ;
     fseek(disk, addr, SEEK_SET);
     fwrite(&(new_inode->dinode), DINODESIZ, 1, disk);
+    // 新增目录项
+    cur_dir.files[index].d_ino = new_inode->i_id;
+    cur_dir.size++;
     // 父目录写回磁盘数据区
-    // 从磁盘加载目录文件
-    int size = cur_path_inode->dinode.di_size;
-    int block_num = size / BLOCKSIZ;
-    struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
-    unsigned int id;
-    int i;
-    for(i = 0; i < block_num; i++){
-        id = cur_path_inode->dinode.di_addr[i];
-        addr = DINODESTART + id * DINODESIZ;
-        fseek(disk, addr, SEEK_SET);
-        fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
-    }
-    id = cur_path_inode->dinode.di_addr[block_num];
-    addr = DINODESTART + id * DINODESIZ;
-    fseek(disk, addr, SEEK_SET);
-    fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
-    // 新增目录项写回
-    tmp->files[index].d_ino = new_inode->i_id;
-    write_data_back((void*)tmp, cur_path_inode->dinode.di_addr, sizeof(struct dir), disk);
-    free(tmp);
+    write_data_back((void*)(&cur_dir), cur_dir_inode->dinode.di_addr, sizeof(struct dir), disk);
     return new_inode;
 }
 
@@ -291,34 +274,115 @@ bool RunningSystem::deleteFile(const char *pathname){
     // 判断用户对父目录有写权限和执行权限是否
     // if(access())
 
-    // 修改父目录数据区并写入磁盘
-    int size = cur_path_inode->dinode.di_size;
-    long addr;
-    int block_num = size / BLOCKSIZ;
-    struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
-    unsigned int id;
-    int i;
-    for(i = 0; i < block_num; i++){
-        id = cur_path_inode->dinode.di_addr[i];
-        addr = DINODESTART + id * DINODESIZ;
-        fseek(disk, addr, SEEK_SET);
-        fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
-    }
-    id = cur_path_inode->dinode.di_addr[block_num];
-    addr = DINODESTART + id * DINODESIZ;
-    fseek(disk, addr, SEEK_SET);
-    fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
-    // 新增目录项写回
-    unsigned int index = namei(const_cast<char *>(pathname), cur_path_inode, disk);
-    tmp->files[index].d_ino = 0;
-    write_data_back((void*)tmp, cur_path_inode->dinode.di_addr, sizeof(struct dir), disk);
+    // 修改父目录数据区
+    // 更改目录项
+    unsigned int index = namei(const_cast<char *>(pathname), cur_dir_inode, disk);
+    cur_dir.files[index].d_ino = 0;
+    cur_dir.size--;
+    // 写入磁盘
+    write_data_back((void*)(&cur_dir), cur_dir_inode->dinode.di_addr, sizeof(struct dir), disk);
     // iput()删除文件
     // iput(res_inode);
 
-    free(tmp);
     return true;
 }
 
-void RunningSystem::closeFile(const char *pathname){
+// 关闭一个已经被用户打开了的文件
 
+void RunningSystem::closeFile(const char *pathname){
+    // 判断文件名是否合法
+    if(!is_file(pathname)){
+        return;
+    }
+    // 获取用户的打开表
+    user_open_table* userOpenTable = user_openfiles[cur_user];
+    // 获取用户uid
+    unsigned short p_uid = userOpenTable->p_uid;
+
+    // 遍历查询该文件
+    unsigned short id;
+    bool found = false;
+    int i;
+    for(i = 0; i < NOFILE; i++){
+        if(userOpenTable->items[i].f_inode == nullptr){
+            continue;
+        }
+        id = userOpenTable->items[i].id_to_sysopen;
+        if(!strcmp(system_openfiles[id].fcb.d_name, pathname) && system_openfiles[id].i_count != 0){
+            found = true;
+            break;
+        }
+    }
+    // 用户没有打开该文件
+    if(!found)
+        return;
+
+    // 确定打开了
+    // 释放该文件的内存i节点
+    iput(userOpenTable->items[i].f_inode, disk, file_system);
+    userOpenTable->items[i].f_inode = nullptr;
+    // 系统打开表判断是否需要关闭
+    system_openfiles[id].i_count--;
+    if(system_openfiles[id].i_count == 0){
+        // 将这个文件从系统打开表中关闭
+        system_openfiles[id].fcb.d_ino = 0;
+    }
+}
+
+// 从用户以打开的文件中读取内容
+// 以字符形式返回内容
+// 没有实现权限判断
+std::string RunningSystem::readFile(const char *pathname){
+    // 判断文件名是否合法
+    if(!is_file(pathname)){
+        return {};
+    }
+
+    // 判断用户对该文件是否有读权限
+    // if(access())
+
+    // 判断文件是否被用户打开
+    // 获取用户的打开表
+    user_open_table* userOpenTable = user_openfiles[cur_user];
+    // 获取用户uid
+    unsigned short p_uid = userOpenTable->p_uid;
+
+    // 遍历查询该文件
+    unsigned short id;
+    bool found = false;
+    int i;
+    for(i = 0; i < NOFILE; i++){
+        if(userOpenTable->items[i].f_inode == nullptr){
+            continue;
+        }
+        id = userOpenTable->items[i].id_to_sysopen;
+        if(!strcmp(system_openfiles[id].fcb.d_name, pathname) && system_openfiles[id].i_count != 0){
+            found = true;
+            break;
+        }
+    }
+    // 用户没有打开该文件
+    if(!found)
+        return {};
+
+    // 确定打开了
+    unsigned int dinode_id = system_openfiles[id].fcb.d_ino;
+    // 加载这个磁盘i节点
+    struct dinode* pdinode = (struct dinode*) malloc(sizeof(struct dinode));
+    long addr = DINODESTART + dinode_id * DINODESIZ;
+    fseek(disk, addr, SEEK_SET);
+    fread(pdinode, DINODESIZ, 1, disk);
+    // 准备读取内容
+    unsigned short size = pdinode->di_size;
+    int block_num = size / BLOCKSIZ;
+    char* res = (char*)malloc(size);
+    for(i = 0; i < block_num; i++){
+        addr = DATASTART + pdinode->di_addr[i] * BLOCKSIZ;
+        fseek(disk, addr, SEEK_SET);
+        fread(res+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+    }
+    addr = DATASTART + pdinode->di_addr[i] * BLOCKSIZ;
+    fseek(disk, addr, SEEK_SET);
+    fread(res+i*BLOCKSIZ, size-block_num*BLOCKSIZ, 1, disk);
+    return res;
 }
