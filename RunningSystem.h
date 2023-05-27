@@ -61,8 +61,11 @@ struct RunningSystem {
     string whoami();
 
     // 文件夹路径相关
-    int mkdir(string pathname);
-    struct dir get_dir(int d_index);
+    int mkdir(string pathname);     //创建文件夹
+    int chdir(string pathname);     //更改系统的当前文件路径
+    int show_dir();                 //展示当前文件路径的内容
+    int rmdir(string pathname);     //删除该路径下的文件夹
+    struct dir get_dir(int d_index);//根据d_index，获取dir
 
     // 判断是否被当前用户打开
     // 若打开返回用户打开表下表

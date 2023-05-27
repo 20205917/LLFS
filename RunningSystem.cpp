@@ -190,8 +190,8 @@ struct dir RunningSystem::get_dir(int d_index)
     fread(&work_dir.files[(BLOCKSIZ)/(DIRSIZ+2) * i], 1,dir_inode->dinode.di_size % BLOCKSIZ, disk);
     return work_dir;
 }
-// 创建文件夹，输入是文件路径和文件夹名
-int RunningSystem::mkdir(string pathname, char *name)
+// 创建文件夹，输入是文件路径
+int RunningSystem::mkdir(string pathname)
 {
     if(!is_dir(pathname)){
         return false;
@@ -200,19 +200,80 @@ int RunningSystem::mkdir(string pathname, char *name)
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0,pos-1);
         string file = pathname.substr(pos);
-        inode* catalog =  find_file(pathname);
+        inode* catalog =  find_file(father_path);
+        if(catalog==NULL){
+            return -1;//无该路径，返回错误码
+        }
+        struct dir catalog_dir = get_dir(catalog->d_index);
         //判断目录文件数据区是否有空闲
-        if(seek_catalog_leisure(catalog,disk)!=-1){
+        //小于最大目录数，说明空闲
+        if(catalog_dir.size<DIRNUM){
             //判断是否重复
-            
+            for(int i=0;i<DIRNUM;i++){
+                if(catalog_dir.files[i].d_name==file){//如果有已经存在的文件夹，则返回错误码
+                    return -1;
+                }
+                else{
+                    //申请索引结点和硬盘数据区
+                    int new_d_index = ialloc();
+                    inode* new_inode = iget(new_d_index,hinodes,disk);
+                    int block_amount = sizeof(dir)/BLOCKSIZ + 1;
+                    for(int j=0;j<block_amount;j++){
+                        new_inode->dinode.di_addr[j] = balloc(file_system,disk);
+                    }
+                    //初始化硬盘数据区(索引结点区在ialloc中初始化)
+                    struct dir new_dir = get_dir(new_d_index);
+                    string tmp = "root";
+                    string_char(tmp,new_dir.files[0].d_name,tmp.length());
+                    new_dir.files[0].d_index = 1;
+                    new_dir.size = 0;
+                    //找到父目录空闲的目录项,写入文件名和文件磁盘结点
+                    int leisure = seek_catalog_leisure(catalog,disk);
+                    string_char(file,catalog_dir.files[leisure].d_name,file.length());
+                    catalog_dir.files[leisure].d_index = new_d_index;
+                    //将父目录的内存i结点写入磁盘i结点，将新文件夹的内存i结点写入磁盘i结点
+                    iput(catalog,disk,file_system);
+                    iput(new_inode,disk,file_system);
+                }
+                return 1;
+            }
         }
         else{//没有空闲，失败
             return -1;
         }
     }
 }
-
-
+//移动系统当前路径
+int RunningSystem::chdir(string pathname)
+{
+    if(!is_dir(pathname)){
+        return -1;
+    }
+    else{
+        inode* catalog =  find_file(pathname);
+        if(catalog==NULL){
+            return -1;//无该路径，返回错误码
+        }
+        cur_dir = get_dir(catalog->d_index);
+        cur_dir_inode = catalog;
+    }
+    return 1;
+}
+int RunningSystem::show_dir(){
+    for(int i=0;i<DIRNUM;i++){
+        if(cur_dir.files[i].d_index!=0){
+            cout<<cur_dir.files[i].d_name<<endl;//输出当前路径下的文件内容
+        }
+    }
+}
+int RunningSystem::rmdir(string pathname){
+    if(!is_dir(pathname)){
+        return -1;
+    }
+    else{
+        
+    }
+}
 //显示当前用户ss
 string RunningSystem::whoami(){
     return cur_user;

@@ -179,7 +179,7 @@ extern struct inode *iget(int dinode_id , hinode* hinodes, FILE* disk);
 // 释放内存i节点
 extern void iput(hinode inode, FILE* disk, struct super_block &file_system);
 // 磁盘i节点分配
-extern struct dinode * ialloc();
+extern int ialloc();
 // 磁盘i节点释放
 extern void ifree(int dinode_id, struct super_block &file_system);
 // 实现对文件的存取搜索，将给定的路径名转换成所要搜索的文件的内存i结点指针（在目录数组中的位置）
