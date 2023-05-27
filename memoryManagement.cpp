@@ -10,7 +10,7 @@ hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
     if(hinodes[inode_id]->i_forw != NULL){
         hinode tmp = hinodes[inode_id]->i_forw;
         while(tmp){
-            if(tmp->i_id == dinode_id){
+            if(tmp->d_index == dinode_id){
                 // 内存中已存在
                 return tmp;
             }
@@ -36,7 +36,7 @@ hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
     }
     // 补充初始化
     newinode->i_flag = 0;
-    newinode->i_id = dinode_id;
+    newinode->d_index = dinode_id;
     return newinode;
 }
 
@@ -47,7 +47,7 @@ void iput(int inode, FILE* disk, struct super_block &file_system){
     if(inode->dinode.di_number != 0){
         // 需要写回
         if(inode->i_flag != 0){
-            long addr = DINODESTART + inode->i_id * DINODESIZ;
+            long addr = DINODESTART + inode->d_index * DINODESIZ;
             fseek(disk, addr, SEEK_SET);
             fwrite(&inode->dinode, DINODESIZ, 1, disk);
         }
@@ -60,7 +60,7 @@ void iput(int inode, FILE* disk, struct super_block &file_system){
             bfree(inode->dinode.di_addr[i], file_system, disk);
         }
         // 从系统打开表中释放
-        ifree(inode->i_id, file_system);
+        ifree(inode->d_index, file_system);
     }
     // 从散列表中释放
     if(inode->i_forw == nullptr)
@@ -98,7 +98,7 @@ unsigned int namei(char* name, hinode cur_path_inode, FILE* disk){
     bool found = false;
 
     for(i = 0; i < tmp->size; i++){
-        if(!strcmp(tmp->files[i].d_name, name) && tmp->files[i].d_ino != 0){
+        if(!strcmp(tmp->files[i].d_name, name) && tmp->files[i].d_index != 0){
             found = true;
             break;
         }
@@ -134,7 +134,7 @@ int seek_catalog_leisure(inode* cur_path_inode, FILE* disk){//原来是iname
     bool found = false;
 
     for(i = 0; i < tmp->size; i++){
-        if(tmp->files[i].d_ino == 0){
+        if(tmp->files[i].d_index == 0){
             found = true;
             break;
         }

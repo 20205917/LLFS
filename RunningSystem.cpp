@@ -24,7 +24,7 @@ RunningSystem::RunningSystem(){
     // 初始化system_openfiles
     for(int i = 0; i < SYSOPENFILE; i++){
         system_openfiles[i].i_count = 0;
-        system_openfiles[i].fcb.d_ino = 0;
+        system_openfiles[i].fcb.d_index = 0;
     }
 
     // 初始化pwds
@@ -89,7 +89,7 @@ void RunningSystem::logout(string pwd){
         //关闭每个文件
         unsigned short id_to_sysopen = u->items[i].id_to_sysopen;
         if(--system_openfiles[id_to_sysopen].i_count == 0){
-            iput(system_openfiles[id_to_sysopen].fcb.d_ino,disk,file_system);
+            iput(system_openfiles[id_to_sysopen].fcb.d_index,disk,file_system);
         };
     }
     user_openfiles.erase(pwd);
@@ -231,9 +231,9 @@ inode* RunningSystem::createFile(const char *pathname, unsigned short di_mode)
         return nullptr;
     }
     hinode res_inode = (hinode)malloc(sizeof(struct inode));
-    res_inode->i_id = 0;
+    res_inode->d_index = 0;
     // 是否在父目录数据区里有已存在文件
-    if(find_file(const_cast<char *>(pathname))->i_id != 0){
+    if(find_file(const_cast<char *>(pathname))->d_index != 0){
         return res_inode;
     }
     // 是否有空闲
@@ -246,11 +246,11 @@ inode* RunningSystem::createFile(const char *pathname, unsigned short di_mode)
     new_inode->dinode.di_mode = di_mode;
     new_inode->dinode.di_size = 0;
     // 磁盘i节点写回磁盘
-    long addr = DINODESTART + new_inode->i_id * DINODESIZ;
+    long addr = DINODESTART + new_inode->d_index * DINODESIZ;
     fseek(disk, addr, SEEK_SET);
     fwrite(&(new_inode->dinode), DINODESIZ, 1, disk);
     // 新增目录项
-    cur_dir.files[index].d_ino = new_inode->i_id;
+    cur_dir.files[index].d_index = new_inode->d_index;
     cur_dir.size++;
     // 父目录写回磁盘数据区
     write_data_back((void*)(&cur_dir), cur_dir_inode->dinode.di_addr, sizeof(struct dir), disk);
@@ -268,7 +268,7 @@ bool RunningSystem::deleteFile(const char *pathname){
     }
     hinode res_inode = find_file(const_cast<char *>(pathname));
     // 是否在父目录数据区里有该文件
-    if(res_inode->i_id == 0){
+    if(res_inode->d_index == 0){
         return false;
     }
     // 判断用户对父目录有写权限和执行权限是否
@@ -277,7 +277,7 @@ bool RunningSystem::deleteFile(const char *pathname){
     // 修改父目录数据区
     // 更改目录项
     unsigned int index = namei(const_cast<char *>(pathname), cur_dir_inode, disk);
-    cur_dir.files[index].d_ino = 0;
+    cur_dir.files[index].d_index = 0;
     cur_dir.size--;
     // 写入磁盘
     write_data_back((void*)(&cur_dir), cur_dir_inode->dinode.di_addr, sizeof(struct dir), disk);
@@ -325,7 +325,7 @@ void RunningSystem::closeFile(const char *pathname){
     system_openfiles[id].i_count--;
     if(system_openfiles[id].i_count == 0){
         // 将这个文件从系统打开表中关闭
-        system_openfiles[id].fcb.d_ino = 0;
+        system_openfiles[id].fcb.d_index = 0;
     }
 }
 
@@ -366,7 +366,7 @@ std::string RunningSystem::readFile(const char *pathname){
         return {};
 
     // 确定打开了
-    unsigned int dinode_id = system_openfiles[id].fcb.d_ino;
+    unsigned int dinode_id = system_openfiles[id].fcb.d_index;
     // 加载这个磁盘i节点
     struct dinode* pdinode = (struct dinode*) malloc(sizeof(struct dinode));
     long addr = DINODESTART + dinode_id * DINODESIZ;

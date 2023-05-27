@@ -84,7 +84,7 @@ typedef struct inode{
     struct inode *i_back;
     char i_flag;                //
     char ifChange;              //脏位 0未修改/1修改过
-    unsigned int i_id;          // 硬盘i节点id
+    unsigned int d_index;          // 硬盘i节点id
     struct dinode dinode;
 }*hinode;
 
@@ -114,7 +114,7 @@ struct PWD{
 
 struct FCB{
     char d_name[DIRSIZ];
-    unsigned int d_ino;            // 硬盘i节点id
+    unsigned int d_index;            // 硬盘i节点id
 };
 
 //目录的逻辑结构,即目录文件的数据区内容
