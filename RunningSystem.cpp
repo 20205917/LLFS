@@ -87,9 +87,10 @@ void RunningSystem::logout(string pwd){
     user_open_table* u = user_openfiles.find(pwd)->second;
     for (int i = 0; i < NOFILE; ++i) {
         //关闭每个文件
-        unsigned short id_to_sysopen = u->items[i].id_to_sysopen;
+        unsigned short id_to_sysopen = u->items[i].index_to_sysopen;
         if(--system_openfiles[id_to_sysopen].i_count == 0){
-            iput(system_openfiles[id_to_sysopen].fcb.d_index,disk,file_system);
+            inode* inode = iget(system_openfiles[id_to_sysopen].fcb.d_ino,hinodes,disk);
+            iput(inode,disk,file_system);
         };
     }
     user_openfiles.erase(pwd);
@@ -142,74 +143,83 @@ bool RunningSystem::access(int operation, inode *file_inode)
 //具体待修改.(暂定）
 char *clean_path(const char *path){
 
-    if (path == NULL || strlen(path) < 1 || strlen(path) > 1024 || path[0] != '/')
-        return NULL;
+inode* RunningSystem::createFile(string pathname, unsigned short di_mode){
+    FCB  fcb;
 
-    for (int i = 0; i < strlen(path); i++) {
-        if (!((path[i] >= '0' && path[i] <= '9')
-              ||(path[i] >= 'a' && path[i] <= 'z')
-              || (path[i] >= 'A' && path[i] <= 'Z')
-              ||path[i] == '.' || path[i] == '/'))    return NULL;
-    }
-    char *old_path = (char *) malloc(strlen(path) + 1);
-    strcpy(old_path, path);
-    char *new_path = (char *) malloc(strlen(path) + 1);
-    memset(new_path, 0, strlen(path) + 1);
-    int i = 0;
-
-    int k = 0;
-//    单个文件和目录名长度 <= 32 字节
-    char *temp = strtok(old_path, "/");
-    while (temp != NULL) {
-        if (strlen(temp) > 32) {
-            k = 1;
-            break;
-        }
-        new_path[i++] = '/';
-        for(int j = 0;j < strlen(temp); j++)
-            new_path[i++] = temp[j];
-        temp = strtok(NULL, "/");
-    }
-    free(old_path);
-    if(k == 1){
-        //free(new_path);
-        new_path =NULL;
+    int i, j;
+    //查找文件
+    fcb = addFile(pathname);
+    //文件已经存在
+    if (fcb.d_ino != 0)
         return NULL;
+    else
+    {
+        struct inode* inode = ialloc(*this);
+        //在目录中加入
+        ;
+        inode->dinode.di_mode = 1;
+        inode->dinode.di_uid = user_openfiles.find(cur_user)->second->p_uid;
+        inode->dinode.di_gid = user_openfiles.find(cur_user)->second->p_gid;
+        inode->dinode.di_size = 0;
+        inode->ifChange = 1;                //需要重新写回
+        return j;
     }
-    return new_path;
 }
 
-int RunningSystem::openFile(const char *pathname, int flags) {
+int RunningSystem::openFile(string pathname,unsigned short flags) {
     //判断合法性
-    char *path = NULL;
+    string path = clean_path(pathname);
     //clean_path清除
-    if ((path = clean_path(pathname)) == NULL)
+    if (path.empty())
         return -1;
     //寻找文件
-    inode* in = find_file(path);
+    FCB fcb = find_file(path);
+    if(fcb.d_ino == 0){
+        return -2;}
 
-    if(in == nullptr){
-        free(path);
-        return -2;
-    }
+    //磁盘节点读入内存
+    inode* inode = iget(fcb.d_ino,hinodes,disk);
+
     //存在则查找访问权限
-    if(access(cur_user, in)){
-        free(path);
+    if(access(cur_user, inode)){
         return -3;
     }
-    iget(1,hinodes,disk);
 
-    struct user_open_item{
-        unsigned int f_count;               //使用进程数
-        unsigned short u_default_mode;      //打开方式
-        struct inode *f_inode;              //内存i节点指针
-        unsigned long f_offset;             //文件偏移量（文件指针）
-        unsigned short id_to_sysopen;       //系统打开表索引
+    //放入系统打开表
+    int index_to_system;
+    for (index_to_system = 0; index_to_system < SYSOPENFILE; index_to_system++)
+        if (system_openfiles[index_to_system].i_count == 0) break;
+    if (index_to_system == SYSOPENFILE) {
+        iput(inode,disk,file_system);
+        return -4;
+    }
+    system_openfiles[index_to_system].i_count = 1;
+    system_openfiles->fcb = fcb;
+
+    //放入用户打开表
+    user_open_table* u = user_openfiles.find(cur_user)->second;
+    int fd;
+    for (int fd = 0;fd < NOFILE;fd++){
+        if(u->items[fd].f_count==0){
+            u->items[fd].f_count = 1;
+            u->items[fd].u_default_mode = flags;
+            u->items[fd].f_offset = 0;
+            u->items[fd].index_to_sysopen = index_to_system;
+            u->items[fd].f_inode = inode;
+            break;
+        }
     };
 
-    user_open_table* u = user_openfiles.find(cur_user)->second;
-    int fd = 0;
-    while (u->items[++fd]. != NULL) ;
+
+    //清空文件
+    //TODO
+//    /*if APPEND, free the block of the file before */
+//    if (openmode & FAPPEND) {
+//        for (index_to_system = 0; index_to_system < inode->di_size / BLOCKSIZ + 1; index_to_system++)
+//            bfree(inode->di_addr[index_to_system]);
+//        inode->di_size = 0;
+//    }
+
 
     return fd;
 }
@@ -324,7 +334,7 @@ int RunningSystem::rmdir(string pathname){
         return -1;
     }
     else{
-        int pos = pathname.find_last_of('/') + 1;
+int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0,pos-1);
         string file = pathname.substr(pos);
         inode* catalog =  find_file(pathname);
