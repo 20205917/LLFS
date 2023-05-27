@@ -65,6 +65,11 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 #define DISKFULL    65535
 #define SEEK_SET    0
 
+// 写文件方式
+#define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
+#define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
+
+#define USER_UNOPENED (-1)      // 当前用户未打开
 struct dinode{
     unsigned short di_number;    // 硬连接次数
     unsigned short di_mode;      // 文件类型，目录和文件
@@ -194,9 +199,9 @@ bool is_dir(const char *pathname);
 // 文件名是否合法
 bool is_file(const char *filename);
 // 将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
-bool write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
-
-
+void write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
+// 从磁盘数据区读取内容 内存地址，硬盘索引数组，数据长度，文件指针
+void read_data_from(void *data_address, unsigned int *di_addr, int size, FILE *fp);
 // 额外
 // 删除指定目录
 extern void rmdir();
