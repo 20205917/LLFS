@@ -387,6 +387,43 @@ std::string RunningSystem::readFile(const char *pathname){
     return res;
 }
 
+inode* RunningSystem::find_file(string addr){
+    string Subaddr;
+    int index;//保存根据文件名找到的FCB的d_index
+    int isInDir=0;//判断是否在目录中
+    int first;//第一次出现'/'的位置
+    if(addr=="")
+        return NULL;
+    if(addr[addr.length()-1]=='/')
+        return NULL;
+    if(addr[0]=='/'){//绝对路径
+        addr=addr.substr(1,addr.length());
+        index=cur_dir.files[0].d_index;
+        cur_dir=get_dir(index);
+    }
+    while(addr.find_first_of('/')!=string::npos){
+        first=addr.find_first_of('/');
+        Subaddr=addr.substr(0,first);
+        addr=addr.substr(first+1,addr.length());
+        for(int i=0;i<DIRNUM;i++){
+            if(strcmp(cur_dir.files[i].d_name,Subaddr.c_str())==0){
+                index=cur_dir.files[i].d_index;
+                cur_dir=get_dir(index);
+                isInDir=1;
+                break;
+            }
+        }
+        if(isInDir==0)
+            return NULL;
+        isInDir=0;
+    }
+    for(int i=0;i<DIRNUM;i++){
+        if(strcmp(cur_dir.files[i].d_name,addr.c_str())==0)
+            return iget(cur_dir.files[i].d_index, hinodes, disk);
+    }
+    return NULL;
+
+}
 // 权限未实现
 bool RunningSystem::writeFile(const char *pathname, int write_mode, std::string content){
     // 判断文件名是否合法
