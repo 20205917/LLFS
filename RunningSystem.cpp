@@ -311,10 +311,6 @@ int RunningSystem::chdir(string pathname)
         if(catalog==NULL){
             return -1;//无该路径，返回错误码
         }
-       
-        if(catalog->dinode.di_uid!=T->p_uid&&catalog->dinode.di_gid!=T->p_gid){
-            return -1;//该用户为组外用户，无权限
-        }
         cur_dir = get_dir(catalog->d_index);
         cur_dir_inode = catalog;
     }
