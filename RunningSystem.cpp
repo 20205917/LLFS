@@ -557,6 +557,7 @@ inode* RunningSystem::find_file(string addr){
         index=cur_dir.files[0].d_index;
         cur_dir=get_dir(index);
     }
+    //依次查找各个目录内的下一级目录
     while(addr.find_first_of('/')!=string::npos){
         first=addr.find_first_of('/');
         Subaddr=addr.substr(0,first);
@@ -573,6 +574,7 @@ inode* RunningSystem::find_file(string addr){
             return NULL;
         isInDir=0;
     }
+    //得到最终文件的内存i结点指针
     for(int i=0;i<DIRNUM;i++){
         if(strcmp(cur_dir.files[i].d_name,addr.c_str())==0)
             return iget(cur_dir.files[i].d_index, hinodes, disk);

@@ -9,11 +9,6 @@
 #include "config.h"
 #include "tool.cpp"
 #include "memoryManagement.cpp"
-//定义操作码operation,在access函数中体现
-#define MAKEDIR 1
-#define CHDIR   2
-#define SHOWDIR 3
-#define RMDIR   4
 using namespace std;
 struct RunningSystem {
 
@@ -31,7 +26,7 @@ struct RunningSystem {
     RunningSystem();
     ~RunningSystem();
     // 打开文件
-    int openFile(string pathname, unsigned short flags);
+    int openFile(const char *pathname, int flags);
     // 关闭文件
     void closeFile(const char *pathname);
     // 读取文件
@@ -42,7 +37,7 @@ struct RunningSystem {
     // 返回值false写失败 true写成功
     bool writeFile(const char *pathname, int write_mode, std::string content);
     // 创建新文件
-    inode* createFile(string pathname, unsigned short di_mode);
+    inode* createFile(const char *pathname, unsigned short di_mode);
     // 删除文件
     bool deleteFile(const char *pathname);
     // 从磁盘文件加载系统
@@ -61,7 +56,7 @@ struct RunningSystem {
     // 用户注销
     void logout(string pwd);
     //判断用户权限是否足够某操作
-    bool access(int operation,inode* file_inode);
+    bool access(unsigned short p_uid,unsigned short p_gid,int operation,inode* file_inode);
     // 返回当前用户ss
     string whoami();
 
@@ -77,8 +72,7 @@ struct RunningSystem {
     // 未打开返回USER_UNOPENED
     bool isOpened(const char *pathname);
 
-    //内存节点缓存区满换出
-    void exchange_hinodes();
+
 
 };
 struct inode *ialloc(RunningSystem &runningSystem);

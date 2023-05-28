@@ -88,6 +88,7 @@ typedef struct inode{
     char i_flag;                //
     char ifChange;              //脏位 0未修改/1修改过
     unsigned int d_index;          // 硬盘i节点id
+    unsigned int s_num;         //位于第几
     struct dinode dinode;
 }*hinode;
 
@@ -178,6 +179,8 @@ extern void show_dir();
 extern bool hard_link(); //硬链接
 extern bool soft_link(); //软连接
 
+//查看某个磁盘i节点id对应的内存i节点是否存在
+inode* IsInHinode(int dinode_id , hinode* hinodes, FILE* disk);
 // 获取内存i节点
 extern struct inode *iget(int dinode_id , hinode* hinodes, FILE* disk);
 // 释放内存i节点
