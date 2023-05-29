@@ -20,7 +20,7 @@ int is_dir(string pathname){
         pathname=pathname.substr(first+1,pathname.length());
         if(Subpathname.find('.')!=string::npos)     //目录名中出现'.'
             return 0;
-    }
+}
     //走出上面循环后的pathname为最后一级的文件名
     if(pathname.find('.')==string::npos)        //说明不含'.'，为目录名
         return 1;
@@ -64,12 +64,4 @@ void read_data_from(void *data_address, unsigned int *di_addr, int size, FILE *f
     addr = DATASTART + di_addr[i] * BLOCKSIZ;
     fseek(fp, addr, SEEK_SET);
     fread((char*)data_address+i*BLOCKSIZ, size-block_num*BLOCKSIZ, 1, fp);
-}
-
-void string_char(string content,char *add,int i){
-    int length = content.length();
-    for(int i=0;i<length;i++){
-        add[i] = content[i];
-    }
-    return;
 }
