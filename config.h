@@ -88,7 +88,6 @@ typedef struct inode{
     char i_flag;                //
     char ifChange;              //脏位 0未修改/1修改过
     unsigned int d_index;          // 硬盘i节点id
-    unsigned int s_num;         //位于第几
     struct dinode dinode;
 }*hinode;
 
