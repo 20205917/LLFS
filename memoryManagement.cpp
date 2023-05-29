@@ -4,18 +4,18 @@
 #include "config.h"
 
 //查看某个磁盘i节点id对应的内存i节点是否存在
-hinode findHinode(int dinode_id , hinode* hinodes, FILE* disk){
+inode* findHinode(int dinode_id , hinode* hinodes, FILE* disk){
     int inode_id = dinode_id % NHINO;
-    if(hinodes[inode_id]->i_forw != NULL){
+    if(hinodes[inode_id]->i_forw != NULL) {
         hinode tmp = hinodes[inode_id]->i_forw;
-        while(tmp){
-            if(tmp->d_index == dinode_id){
+        while (tmp) {
+            if (tmp->d_index == dinode_id) {
                 // 内存中已存在
                 return tmp;
-            }
-            else
+            } else
                 tmp = tmp->i_forw;
-        }  
+        }
+    }
     return NULL; 
 }
 
@@ -23,67 +23,69 @@ hinode findHinode(int dinode_id , hinode* hinodes, FILE* disk){
 // 在内存i节点散列表根据硬盘i节点id查找
 // 找不到就创建内存i节点
 // 申请了额外空间,//插入内存i节点  情况: 1-Hash缓冲区对应桶号已达可容纳i节点数上限7  2-未达上限，直接插入
-hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
-    int inode_id = dinode_id % NHINO;
-    hinode tmp=findHinode(dinode_id,hinodes,disk);
+inode* iget(int dinode_id , hinode* hinodes, FILE* disk){
+
+    hinode tmp= findHinode(dinode_id, hinodes, disk);
     if(tmp!=NULL)
         return tmp;
     // 内存中不存在,需要创建
     long addr = DINODESTART + dinode_id * DINODESIZ;
-    hinode newinode = (hinode)malloc(sizeof(struct inode));
+    inode* newinode = (hinode)malloc(sizeof(struct inode));
     fseek(disk, addr, SEEK_SET);
-    fread(&(newinode->dinode.di_number), DINODESIZ, 1, disk);
-    // 加入内存散列表，作为hinodes[inode_id]的下一个节点
-    // if(hinodes[inode_id]->i_forw != NULL){
-        
-    //     newinode->i_forw = hinodes[inode_id]->i_forw;
-    //     newinode->i_back = hinodes[inode_id];
-    //     newinode->i_forw->i_back = newinode;
-    //     hinodes[inode_id]->i_forw = newinode;
-    // }
-    // else{
-    //     newinode->i_forw = hinodes[inode_id]->i_forw;
-    //     newinode->i_back = hinodes[inode_id];
-    // }
-    hinode temp=hinodes[inode_id];
-    for(int i=0;temp->i_forw!=NULL;i++){
-        if(i==6)            
-            iput(hinodes[inode_id],disk,file_system);
-        temp=temp->i_forw;
+    fread(&(newinode->dinode), DINODESIZ, 1, disk);
+    int inode_id = dinode_id%128;
+
+    hinode temp=hinodes[inode_id]->i_back;
+
+
+    //TODO remake
+    if(temp!=NULL){
+        if(temp->s_num==7)
+            iput(hinodes[inode_id]->i_forw,disk,file_system);
+        temp->form=newinode;
+        newinode->i_back=temp;
+        newinode->i_forw=hinodes[inode_id];
+        hinodes[inode_id]->i_back=newinode;
+        newinode->s_num=temp->s_num+1;
     }
-    temp->i_forw=newinode;
-    newinode->i_forw=NULL;
-    newinode->i_back=temp;
+    else{
+        newinode->i_back=hinodes[inode_id];
+        newinode->i_forw=hinodes[inode_id];
+        hinodes[inode_id]->i_forw=newinode;
+        hinodes[inode_id]->i_back=newinode;
+        newinode->s_num=1;
+    }
+
 
     // 补充初始化
     newinode->i_flag = 0;
+    newinode->ifChange = 0;
     newinode->d_index = dinode_id;
-
     return newinode;
 }
 
 // 释放i节点回磁盘
 // 如果被更改需要写回
-// 如果被删除则在磁盘抹除(需要重构)
-void iput(inode* inode, FILE* disk, struct super_block &file_system){
-    if(inode->dinode.di_number != 0){
-        // 需要写回
-        if(inode->i_flag != 0){
-            long addr = DINODESTART + inode->d_index * DINODESIZ;
-            fseek(disk, addr, SEEK_SET);
-            fwrite(&inode->dinode, DINODESIZ, 1, disk);
+// 如果硬连接数为0
+bool iput(inode* inode){
+    if(inode->dinode.di_number == 0){
+        if(inode->dinode.di_size>0){
+            //TODO 多级索引释放数据区
         }
+        //修改文件类型为空
+        inode->ifChange = 1;
+        inode->dinode.di_mode = ENOTEMPTY;
+
+        // 释放磁盘i节点，只释放点
+        ifree(inode->d_index);
     }
-    else{
-        // 需要抹除所占用的磁盘块
-        int num = inode->dinode.di_size / BLOCKSIZ;
-        for(int i = 0; i < num; i++){
-            // 将对应磁盘块释放
-            bfree(inode->dinode.di_addr[i], file_system, disk);
-        }
-        // 从系统打开表中释放
-        ifree(inode->d_index, file_system);
+
+    if(inode->ifChange != 0){
+        long addr = DINODESTART + inode->d_index * DINODESIZ;
+        fseek(disk, addr, SEEK_SET);
+        fwrite(&inode->dinode, DINODESIZ, 1, disk);
     }
+
     // 从散列表中释放
     if(inode->i_forw == nullptr)
         inode->i_back->i_forw = nullptr;

@@ -7,8 +7,8 @@
 //一个磁盘的i节点
 static struct dinode block_buf[BLOCKSIZ / DINODESIZ];
 
-struct inode *ialloc(RunningSystem &runningSystem) {
-    struct super_block &file_system = runningSystem.file_system;
+struct inode *ialloc() {
+
     struct inode *temp_inode;
 
     unsigned int oneNum = BLOCKSIZ / DINODESIZ;
@@ -20,8 +20,8 @@ struct inode *ialloc(RunningSystem &runningSystem) {
         unsigned int cur_j = file_system.s_rdinode % oneNum;
         while (file_system.s_pdinode > 0 && count <= file_system.s_dinode_size){
             if (block_end_flag) {
-                fseek(runningSystem.disk, DINODESTART + cur_i * DINODESIZ, SEEK_SET);
-                fread(block_buf, 1, BLOCKSIZ,runningSystem.disk);
+                fseek(disk, DINODESTART + cur_i * DINODESIZ, SEEK_SET);
+                fread(block_buf, 1, BLOCKSIZ,disk);
                 block_end_flag = 0;
             }
             //找到空闲块
@@ -46,8 +46,8 @@ struct inode *ialloc(RunningSystem &runningSystem) {
     //申请内存i节点
     //temp_inode = iget(file_system.s_dinodes[file_system.s_pdinode]);
     //写入初始化内容
-    fseek(runningSystem.disk, DINODESTART + file_system.s_dinodes[file_system.s_pdinode] * DINODESIZ, SEEK_SET);
-    fwrite(&temp_inode->dinode, 1, sizeof(struct dinode), runningSystem.disk);
+    fseek(disk, DINODESTART + file_system.s_dinodes[file_system.s_pdinode] * DINODESIZ, SEEK_SET);
+    fwrite(&temp_inode->dinode, 1, sizeof(struct dinode), disk);
 
     file_system.s_free_dinode_num--;
     file_system.s_pdinode++;
@@ -58,7 +58,7 @@ struct inode *ialloc(RunningSystem &runningSystem) {
 
 // 根据对应的硬盘i节点id从系统打开表中释放
 //
-void ifree(int dinode_id, struct super_block &file_system) {
+void ifree(int dinode_id) {
     file_system.s_free_dinode_num++;
     if (file_system.s_pdinode > 0 ) {
         // 未达到最大空闲块数
@@ -71,13 +71,10 @@ void ifree(int dinode_id, struct super_block &file_system) {
     }
 }
 
-//
-void iwirte_back(struct dinode* dinode, RunningSystem &runningSystem){
-    if(dinode == nullptr)
-        return;
-    //写入初始化内容
-    fseek(runningSystem.disk, DINODESTART + dinode->di_number * DINODESIZ, SEEK_SET);
-    fwrite(dinode, 1, sizeof(struct dinode), runningSystem.disk);
+//文件内容写回
+void file_wirte_back(struct inode* inode){
+    //TODO 多级索引
+    // 需要抹除所占用的磁盘块
 }
 
 // 释放磁盘块

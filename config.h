@@ -87,7 +87,7 @@ typedef struct inode{
     struct inode *i_back;
     char i_flag;                //
     char ifChange;              //脏位 0未修改/1修改过
-    unsigned int d_index;          // 硬盘i节点id
+    unsigned int d_index;       // 硬盘i节点id
     struct dinode dinode;
 }*hinode;
 
@@ -179,15 +179,14 @@ extern bool hard_link(); //硬链接
 extern bool soft_link(); //软连接
 
 //查看某个磁盘i节点id对应的内存i节点是否存在
-inode* IsInHinode(int dinode_id , hinode* hinodes, FILE* disk);
+inode* findHinode(int dinode_id );
 // 获取内存i节点
-extern struct inode *iget(int dinode_id , hinode* hinodes, FILE* disk);
+inode* iget(int dinode_id)
 // 释放内存i节点
-extern void iput(hinode inode, FILE* disk, struct super_block &file_system);
-// 磁盘i节点分配
-extern int ialloc();
+extern bool iput(hinode inode);
+
 // 磁盘i节点释放
-extern void ifree(int dinode_id, struct super_block &file_system);
+extern void ifree(int dinode_id);
 // 实现对文件的存取搜索，将给定的路径名转换成所要搜索的文件的内存i结点指针（在目录数组中的位置）
 // 将会返回在数组中的下标，若为DIRNUM表明没找到
 extern unsigned int namei(char* name, hinode cur_path_inode, FILE* disk);
@@ -195,11 +194,13 @@ extern unsigned int namei(char* name, hinode cur_path_inode, FILE* disk);
 // 将会返回在数组中的下标，若为DIRNUM表明没找到
 extern unsigned short iname(char* name, hinode cur_path_inode, FILE* disk);
 // 磁盘块分配
-extern unsigned int balloc(struct super_block &file_system, FILE *disk);
+extern unsigned int balloc();
 // 磁盘块释放
-extern void bfree(int block_num, struct super_block &file_system, FILE* disk);
-
+extern void bfree(int block_num);
+//文件内容写回
+void file_wirte_back(struct inode* inode)
 // tool
+
 // 路径是否合法
 bool is_dir(const char *pathname);
 // 文件名是否合法
