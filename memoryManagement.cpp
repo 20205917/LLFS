@@ -23,44 +23,42 @@ inode* findHinode(int dinode_id , hinode* hinodes, FILE* disk){
 // 在内存i节点散列表根据硬盘i节点id查找
 // 找不到就创建内存i节点
 // 申请了额外空间,//插入内存i节点  情况: 1-Hash缓冲区对应桶号已达可容纳i节点数上限7  2-未达上限，直接插入
-inode* iget(int dinode_id , hinode* hinodes, FILE* disk){
-
-    hinode tmp= findHinode(dinode_id, hinodes, disk);
+hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
+    int inode_id = dinode_id % NHINO;
+    hinode tmp=findHinode(dinode_id,hinodes,disk);
     if(tmp!=NULL)
         return tmp;
     // 内存中不存在,需要创建
     long addr = DINODESTART + dinode_id * DINODESIZ;
-    inode* newinode = (hinode)malloc(sizeof(struct inode));
+    hinode newinode = (hinode)malloc(sizeof(struct inode));
     fseek(disk, addr, SEEK_SET);
-    fread(&(newinode->dinode), DINODESIZ, 1, disk);
-    int inode_id = dinode_id%128;
+    fread(&(newinode->dinode.di_number), DINODESIZ, 1, disk);
+    // 加入内存散列表，作为hinodes[inode_id]的下一个节点
+    // if(hinodes[inode_id]->i_forw != NULL){
 
-    hinode temp=hinodes[inode_id]->i_back;
-
-
-    //TODO remake
-    if(temp!=NULL){
-        if(temp->s_num==7)
-            iput(hinodes[inode_id]->i_forw,disk,file_system);
-        temp->form=newinode;
-        newinode->i_back=temp;
-        newinode->i_forw=hinodes[inode_id];
-        hinodes[inode_id]->i_back=newinode;
-        newinode->s_num=temp->s_num+1;
+    //     newinode->i_forw = hinodes[inode_id]->i_forw;
+    //     newinode->i_back = hinodes[inode_id];
+    //     newinode->i_forw->i_back = newinode;
+    //     hinodes[inode_id]->i_forw = newinode;
+    // }
+    // else{
+    //     newinode->i_forw = hinodes[inode_id]->i_forw;
+    //     newinode->i_back = hinodes[inode_id];
+    // }
+    hinode temp=hinodes[inode_id];
+    for(int i=0;temp->i_forw!=NULL;i++){
+        if(i==6)            
+            iput(hinodes[inode_id],disk,file_system);
+        temp=temp->i_forw;
     }
-    else{
-        newinode->i_back=hinodes[inode_id];
-        newinode->i_forw=hinodes[inode_id];
-        hinodes[inode_id]->i_forw=newinode;
-        hinodes[inode_id]->i_back=newinode;
-        newinode->s_num=1;
-    }
-
+    temp->i_forw=newinode;
+    newinode->i_forw=NULL;
+    newinode->i_back=temp;
 
     // 补充初始化
     newinode->i_flag = 0;
-    newinode->ifChange = 0;
     newinode->d_index = dinode_id;
+
     return newinode;
 }
 
