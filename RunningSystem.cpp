@@ -108,26 +108,14 @@ bool RunningSystem::access(int operation, inode *file_inode)
     bool other = !creat&&!group;
     switch (operation)
     {
-    case MAKEDIR:
+    case CHANGE:
         if(creat)
             return 1;
         else
             return -1;
         break;
-    case CHDIR:
+    case READ:
         if(creat&&group)
-            return 1;
-        else
-            return -1;
-        break;
-    case SHOWDIR:
-        if(true)
-            return 1;
-        else
-            return -1;
-        break;
-    case RMDIR:
-        if(creat)
             return 1;
         else
             return -1;
@@ -250,7 +238,7 @@ int RunningSystem::mkdir(string pathname)
         string father_path = pathname.substr(0,pos-1);
         string file = pathname.substr(pos);
         inode* catalog =  find_file(father_path);
-        if(access(MAKEDIR,catalog)==-1)
+        if(access(CHANGE,catalog)==-1)
             return -1;//权限不足，返回错误码
         if(catalog==NULL){
             return -1;//无该路径，返回错误码
@@ -306,7 +294,7 @@ int RunningSystem::chdir(string pathname)
     }
     else{
         inode* catalog =  find_file(pathname);
-        if(access(CHDIR,catalog)==-1)
+        if(access(CHANGE,catalog)==-1)
             return -1;//权限不足，返回错误码
         if(catalog==NULL){
             return -1;//无该路径，返回错误码
@@ -317,7 +305,7 @@ int RunningSystem::chdir(string pathname)
     return 1;
 }
 int RunningSystem::show_dir(){
-    if(access(SHOWDIR,cur_dir_inode)==-1)
+    if(access(READ,cur_dir_inode)==-1)
         return -1;//权限不足，返回错误码
     for(int i=0;i<DIRNUM;i++){
         if(cur_dir.files[i].d_index!=0){
@@ -335,7 +323,7 @@ int RunningSystem::rmdir(string pathname){
         string file = pathname.substr(pos);
         inode* catalog =  find_file(pathname);
         inode* father_catalog = find_file(father_path);
-        if(access(RMDIR,father_catalog))
+        if(access(CHANGE,father_catalog))
             return -1;//权限不足，返回错误码
         if(catalog==NULL){
             return -1;//无该路径，返回错误码

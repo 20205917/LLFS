@@ -68,6 +68,10 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 #define DISKFULL    65535
 #define SEEK_SET    0
 
+
+#define READ    1   //只有组内成员（包括创建者）可以读
+#define CHANGE  2   //只有创建者可以更改
+
 // 写文件方式
 #define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
 #define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
