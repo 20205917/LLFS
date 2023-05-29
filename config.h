@@ -206,9 +206,9 @@ struct sys_open_item{
 //// tool
 //
 // 路径是否合法
-bool is_dir(const string pathname);
+bool is_dir( string pathname);
 // 文件名是否合法
-bool is_file(const string filename);
+bool is_file( string filename);
 //// 将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
 //void write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
 //// 从磁盘数据区读取内容 内存地址，硬盘索引数组，数据长度，文件指针

@@ -34,7 +34,7 @@ FILE *disk;                               //系统磁盘文件
      W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写
      返回值false写失败 true写成功
      */
-    bool writeFile(string pathname, int write_mode, std::string content);
+    bool writeFile(string pathname, int write_mode, string content);
     // 创建新文件
     inode* createFile(string pathname, unsigned short di_mode);
     // 删除文件
@@ -50,16 +50,16 @@ FILE *disk;                               //系统磁盘文件
     struct inode* find_file(string addr);
 
     // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值为用户打开表下标)
-    int login(const string& pwd);
+    int login(string pwd);
     // 用户注销
-    void logout(const string& pwd);
+    void logout(string pwd);
     //判断用户权限是否足够某操作
     bool access(int operation, inode *file_inode);
     // 返回当前用户ss
     string whoami();
 
     // 文件夹路径相关
-    int mkdir(string pathname);     //创建文件夹
+    int mkdir(string& pathname);     //创建文件夹
     int chdir(string pathname);     //更改系统的当前文件路径
     int show_dir();                 //展示当前文件路径的内容
     int rmdir(string pathname);     //删除该路径下的文件夹
@@ -70,11 +70,11 @@ FILE *disk;                               //系统磁盘文件
 
     int seek_catalog_leisure()
     // 磁盘i节点分配
-    int ialloc(int);
+    int ialloc(unsigned int);
 
-    void ifree(int dinode_id)
+    void ifree(unsigned int dinode_id)
 
-    inode* iget(int dinode_id)
+    inode* iget(unsigned int dinode_id)
 
     bool iput(inode* inode);
 

@@ -4,7 +4,7 @@
 #include "RunningSystem.h"
 
 //路径是否合法
-bool is_dir(const string pathname){
+bool is_dir(string pathname){
 
     cout<<"您输入的地址不合法";
     return false;
