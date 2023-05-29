@@ -1,16 +1,12 @@
 //
 // Created by 86136 on 2023/5/25.
 //
-#include "config.h"
 #include "RunningSystem.h"
 
 //一个磁盘的i节点
 static struct dinode block_buf[BLOCKSIZ / DINODESIZ];
 
-struct inode *ialloc() {
-
-    struct inode *temp_inode;
-
+int ialloc(int) {
     unsigned int oneNum = BLOCKSIZ / DINODESIZ;
 
     if(file_system.s_pdinode == NICINOD){
@@ -42,17 +38,9 @@ struct inode *ialloc() {
         }
         file_system.s_rdinode = cur_i*oneNum+cur_j;
     }
-
-    //申请内存i节点
-    //temp_inode = iget(file_system.s_dinodes[file_system.s_pdinode]);
-    //写入初始化内容
-    fseek(disk, DINODESTART + file_system.s_dinodes[file_system.s_pdinode] * DINODESIZ, SEEK_SET);
-    fwrite(&temp_inode->dinode, 1, sizeof(struct dinode), disk);
-
     file_system.s_free_dinode_num--;
-    file_system.s_pdinode++;
     file_system.s_fmod = SUPDATE;
-    return temp_inode;
+    return file_system.s_dinodes[file_system.s_pdinode++];
 }
 
 
@@ -80,7 +68,7 @@ void file_wirte_back(struct inode* inode){
 // 释放磁盘块
 // 成组链法的空间回收
 // 要注意第一个组长块只有49块有效，其首位为0
-void bfree(int block_num, struct super_block &file_system, FILE* disk){
+void bfree(int block_num){
     if(file_system.s_pfree_block == NICFREE){
         // 栈满已经成组
         // 先写回磁盘
@@ -99,7 +87,7 @@ void bfree(int block_num, struct super_block &file_system, FILE* disk){
 }
 
 // 分配磁盘块
-unsigned int balloc(struct super_block &file_system, FILE *disk){
+unsigned int balloc(){
     if(file_system.s_free_block_size == 0){
         // 空间不足
         return DISKFULL;
