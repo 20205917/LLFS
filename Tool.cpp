@@ -1,17 +1,17 @@
 //
 // Created by 86136 on 2023/5/25.
 //
-#include "config.h"
+#include "RunningSystem.h"
 
 //路径是否合法
-bool is_dir(string pathname){
+bool is_dir(const string pathname){
 
     cout<<"您输入的地址不合法";
     return false;
 }
 
 //文件名是否合法
-bool is_file(const char *filename){
+bool is_file(string filename){
 
 }
 
