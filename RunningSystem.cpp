@@ -223,22 +223,32 @@ int mkdir(string &pathname) {
     if (!is_dir(pathname)) {
         return false;
     } else {
-        int pos = pathname.find_last_of('/') + 1;
-        string father_path = pathname.substr(0, pos - 1);
-        string file = pathname.substr(pos);
-        inode *catalog = find_file(father_path);
-        if (access(CHANGE, catalog))
-            return -1;//权限不足，返回错误码
-        if (catalog == nullptr) {
-            return -1;//无该路径，返回错误码
+        inode *catalog;
+        struct dir catalog_dir;
+        string filename;
+        if(pathname.find_last_of('/')==std::string::npos){
+            catalog = cur_dir_inode;
+            catalog_dir = cur_dir;
+            filename = pathname;
         }
-        struct dir catalog_dir = get_dir(catalog->d_index);
+        else{
+            int pos = pathname.find_last_of('/') + 1;
+            string father_path = pathname.substr(0, pos - 1);
+            filename = pathname.substr(pos);
+            catalog = find_file(father_path);
+            if (catalog == nullptr) {
+                return -1;//无该路径，返回错误码
+            }
+            catalog_dir = get_dir(catalog->d_index);
+        }
+        if (access(CHANGE, catalog))
+                return -1;//权限不足，返回错误码
         //判断目录文件数据区是否有空闲
         //小于最大目录数，说明空闲
         if (catalog_dir.size < DIRNUM) {
             //判断是否重复
             for (auto & i : catalog_dir.files) {
-                if (i.d_name == file) //如果有已经存在的文件夹，则返回错误码
+                if (strcmp(i.d_name,filename.data())) //如果有已经存在的文件夹，则返回错误码
                     return -1;
             }
             //申请索引结点和硬盘数据区
@@ -251,13 +261,13 @@ int mkdir(string &pathname) {
             }
             //初始化硬盘数据区(索引结点区在ialloc中初始化)
             struct dir new_dir = get_dir(new_d_index);
-            string tmp = "root";
-            tmp = new_dir.files[0].d_name;
+            char* tmp = "root";
+            strcpy(new_dir.files[0].d_name,tmp);
             new_dir.files[0].d_index = 1;
             new_dir.size = 0;
             //找到父目录空闲的目录项,写入文件名和文件磁盘结点
             int leisure = seek_catalog_leisure();
-            file = catalog_dir.files[leisure].d_name;
+            strcpy(catalog_dir.files[leisure].d_name,filename.data());
             catalog_dir.files[leisure].d_index = new_d_index;
             catalog_dir.size++;
             catalog->ifChange = 1;
@@ -303,11 +313,21 @@ int rmdir(const string& pathname) {
     if (!is_dir(pathname)) {
         return -1;
     } else {
-        int pos = pathname.find_last_of('/') + 1;
-        string father_path = pathname.substr(0, pos - 1);
-        string file = pathname.substr(pos);
+        inode *father_catalog;
+        string filename;
+        if(pathname.find_last_of('/')==std::string::npos){
+            father_catalog = cur_dir_inode;
+            filename = pathname;
+        }
+        else{
+            int pos = pathname.find_last_of('/') + 1;
+            string father_path = pathname.substr(0, pos - 1);
+            father_catalog = find_file(father_path);
+            if(father_catalog == nullptr)
+                return -1;//无该路径，返回错误码
+            filename = pathname.substr(pos);
+        }
         inode *catalog = find_file(pathname);
-        inode *father_catalog = find_file(father_path);
         if (access(CHANGE, father_catalog))
             return -1;//权限不足，返回错误码
         if (catalog == nullptr) {
@@ -319,10 +339,10 @@ int rmdir(const string& pathname) {
             return -1;//该路径的目录有内容，失败。
         } else {
             //将父目录里该项内容删除
-            for (auto &file: father_dir.files) {
-                if (file.d_index == catalog->d_index) {//查找该文件的下标
-                    file.d_index = 0;
-                    memset(file.d_name, 0, DIRSIZ);
+            for (auto &i: father_dir.files) {
+                if (i.d_index == catalog->d_index) {//查找该文件的下标
+                    i.d_index = 0;
+                    memset(i.d_name, 0, DIRSIZ);
                     father_dir.size--;
                     catalog->ifChange = 1;
                     father_catalog->ifChange = 1;
