@@ -38,6 +38,7 @@ extern FILE *disk;                               //系统磁盘文件
      返回值false写失败 true写成功
      */
     bool writeFile(const string& pathname, int write_mode, const string& content);
+    bool writeFile(int fd, const string& content);
     // 创建新文件
     inode* createFile(string pathname, unsigned short di_mode);
     // 删除文件

@@ -343,8 +343,8 @@ struct dir get_dir(unsigned int d_index) {
 
 //打开文件
 int open_file(const string &pathname, int operation) {
-    if (judge_path(pathname) != 2)
-        return -1;                                               //不是文件格式，返回错误码
+//    if (judge_path(pathname) != 2)
+//        return -1;                                               //不是文件格式，返回错误码
     inode *catalog;
     string filename;
     if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
@@ -361,7 +361,8 @@ int open_file(const string &pathname, int operation) {
     auto *catalog_dir = (dir *) catalog->content;
     unsigned int file_index;//文件的硬盘i结点id
     int leisure = -1;//目录下的空闲索引
-    for (int i = 0; i < DIRNUM; i++) {
+    int i;
+    for (i = 0; i < DIRNUM; i++) {
         if (catalog_dir->files[i].d_name == filename) {//查找成功
             //查找成功，获取磁盘索引号
             file_index = catalog_dir->files[i].d_index;
@@ -369,15 +370,16 @@ int open_file(const string &pathname, int operation) {
         if (catalog_dir->files[i].d_index == 0)
             leisure = i;
     }
-    if (file_index == -1) {//没查找成功
-        if (operation == BUILD_OPEN)//如果不是创建打开，就返回错误码，未找到文件
+    inode * new_inode;
+    if (i == DIRNUM) {//没查找成功
+        if (operation != BUILD_OPEN)//如果不是创建打开，就返回错误码，未找到文件
             return -1;
         else {//是创建打开
             if (leisure == -1)                                             //若目录已满，则返回错误码
                 return -1;
             //创建新结点
             file_index = ialloc(1);
-            inode *new_inode = iget(file_index);
+            new_inode = iget(file_index);
             new_inode->dinode.di_mode = DIFILE;
             new_inode->ifChange = 1;
             //修改目录的数据
@@ -386,10 +388,10 @@ int open_file(const string &pathname, int operation) {
             catalog_dir->size++;
             catalog->ifChange = 1;
             //写回文件磁盘i结点内容，写回目录磁盘i结点内容
-            iput(new_inode);
-            iput(catalog);
         }
     }
+    else// 查找成功，找到内存索引节点
+        new_inode = iget(file_index);
     //修改系统打开文件表
     short sys_leisure = 0;
     for (; sys_leisure < SYSOPENFILE; sys_leisure++) {//找到空闲
@@ -413,7 +415,8 @@ int open_file(const string &pathname, int operation) {
             else
                 T->items[usr_leisure].f_offset = 0;
             T->items[usr_leisure].index_to_sysopen = sys_leisure;
-            T->items[usr_leisure].u_default_mode = BUILD_OPEN;
+            T->items[usr_leisure].u_default_mode = operation;
+            T->items[usr_leisure].f_inode = new_inode;
             return usr_leisure;//返回用户打开表索引
         }
     }
@@ -787,38 +790,24 @@ inode *find_file(string addr) {
 }
 
 // 权限未实现
-//bool writeFile(const string& pathname, int write_mode,const string& content) {
-//bool writeFile(const string& pathname, int write_mode,const string& content) {
-//    // 判断文件名是否合法
-//    if (!is_file(pathname)) {
-//        return {};
-//    }
-// 判断用户对该文件是否有写权限
-// if(access())
 
-// 判断文件是否被用户打开
-// 获取用户的打开表
-//    user_open_table *userOpenTable = user_openfiles[cur_user];
-//    // 获取用户uid
-//    unsigned short p_uid = userOpenTable->p_uid;
-//
-//    // 遍历查询该文件
-//    unsigned short id;
-//    bool found = false;
-//    int i;
-//    for (i = 0; i < NOFILE; i++) {
-//        if (userOpenTable->items[i].f_inode == nullptr) {
-//            continue;
-//        }
-//        id = userOpenTable->items[i].index_to_sysopen;
-//        if (!strcmp(system_openfiles[id].fcb.d_name, pathname.c_str()) && system_openfiles[id].i_count != 0) {
-//            found = true;
-//            break;
-//        }
-//    }
-//    // 用户没有打开该文件
-//    if (!found)
-//        return false;
-//
-//    // 三种模式
-//}
+bool writeFile(int fd, const string& content) {
+
+ //判断文件是否被用户打开
+ // 获取用户的打开表
+    user_open_table *userOpenTable = user_openfiles[cur_user];
+    // 获取用户uid
+    unsigned short p_uid = userOpenTable->p_uid;
+    // 使用fd获取打开文件
+    struct user_open_item opened_file = userOpenTable->items[fd];
+    // 为0说明读取错误
+    if(opened_file.f_count == 0)
+        return false;
+
+    hinode file_inode = opened_file.f_inode;
+    file_inode->ifChange = '1';
+
+    // 写文件
+    file_inode->content = (char*) malloc(content.size() + 1);
+    strcpy((char*)file_inode->content, content.c_str());
+}

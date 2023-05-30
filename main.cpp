@@ -32,18 +32,9 @@ int main(){
     //初始化
     install();
     string path;
-    path = "dir";
-    i = mkdir(path);
-    login("");
-    path = "/aaa";
-    i = mkdir(path);
-    path = "/dir/bb";
-    i = mkdir(path);
-    path = "aaa/cc";
-    i = mkdir(path);
-
-    rmdir("dir");
-    rmdir("dir/bb");
+    login("admin");
+   int fd = open_file("test", BUILD_OPEN);
+    writeFile(fd, "this is a test");
     return 0;
 //    int j = 1;
 //    for(int i =0 ;i<102 ; i++ ){
@@ -53,9 +44,10 @@ int main(){
 //    string a;//接收用户输入命令
 
     login("admin");
-    int res = open_file("test.file", BUILD_OPEN);
-    printf("%d", res);
-    //    string a;//接收用户输入命令
+    open_file("test.file", BUILD_OPEN);
+
+
+//    string a;//接收用户输入命令
 //    const char* A;
 //    string b;//命令参数
 //    string c;//命令参数
@@ -66,6 +58,7 @@ int main(){
 //    cout<<"Hello World!"<<endl;
 //    cout<<">>";
 //    while(1){
+//
 //        cin>>a;
 //        A=a.data();
 //        switch(toUnicode(A)){
@@ -157,8 +150,8 @@ int main(){
 //                break;
 //
 //            case U("whoami")://查看当前用户
-//                string user=Runningsystem.whoami();
-//                cout<<user<<endl<<path;
+//                // string user=Runningsystem.whoami();
+//                // cout<<user<<endl<<path;
 //                break;
 //
 //            case U("chmod")://权限更改
@@ -168,7 +161,8 @@ int main(){
 //
 //            default:
 //                cout<<"'"<<a<<"'"<<"不是可执行命令"<<endl;
-//
+//                cout<<path;
+//                break;
 //        }
 //    }
 
