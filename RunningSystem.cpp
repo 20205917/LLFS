@@ -671,44 +671,41 @@ string readFile(string pathname) {
 }
 
 inode *find_file(string addr) {
-    string Subaddr;
-    unsigned int index;//保存根据文件名找到的FCB的d_index
-    int isInDir = 0;//判断是否在目录中
-    int first;//第一次出现'/'的位置
-    if (addr.empty())
-        return nullptr;
-    if (addr[addr.length() - 1] == '/')
-        return nullptr;
+    dir temp_dir=cur_dir;   //用于目录变更
+    unsigned int index; //保存根据文件名找到的FCB的d_index
+    int isInDir = 0;    //判断是否在目录中
+    hinode final;//可以保存退出循环后最后一级的文件或目录的内存i结点
     if (addr[0] == '/') {//绝对路径
         addr = addr.substr(1, addr.length());
         index = cur_dir.files[0].d_index;
-        cur_dir = get_dir(index);
+        temp_dir = get_dir(index);
     }
-
-    //依次查找各个目录内的下一级目录
-    while (addr.find_first_of('/') != string::npos) {
-        first = addr.find_first_of('/');
-        Subaddr = addr.substr(0, first);
-        addr = addr.substr(first + 1, addr.length());
-        for (auto &file: cur_dir.files) {
-            if (strcmp(file.d_name, Subaddr.c_str()) == 0) {
-                index = file.d_index;
-                cur_dir = get_dir(index);
-                isInDir = 1;
+    char* ADDR=new char[addr.length()+1];
+    addr.copy(ADDR,addr.length(),0); //addr内容复制到ADDR[]
+    *(ADDR+addr.length())='\0'; //末尾补上'/0'
+    char* token=std::strtok(ADDR,"/");  
+    while(1){
+        for(auto &file: temp_dir.files){
+            if(strcmp(file.d_name, token) == 0){
+                index=file.d_index;
+                isInDir=1;
+                final=iget(file.d_index);
                 break;
             }
         }
-        if (isInDir == 0)
+        if (isInDir == 0){//找不到符合的文件名
+            free(ADDR);
             return nullptr;
+        }
         isInDir = 0;
-    }
 
-    //得到最终文件的内存i结点指针
-    for (auto &file: cur_dir.files) {
-        if (strcmp(file.d_name, addr.c_str()) == 0)
-            return iget(file.d_index);
+        token = std::strtok(nullptr, " ");
+        if(token==NULL)
+            break;
+        temp_dir=get_dir(index);
     }
-    return nullptr;
+    return final;
+
 
 }
 
