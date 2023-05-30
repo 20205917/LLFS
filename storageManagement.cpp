@@ -6,44 +6,6 @@
 //一个磁盘的i节点
 static struct dinode block_buf[BLOCKSIZ / DINODESIZ];
 
-// 从当前目录查找name对应的i节点
-// 将会返回在数组中的下标，若为DIRNUM表明没找到
-// 可能有问题
-unsigned int namei(string name){
-    // 从磁盘加载目录文件
-    int size = cur_dir_inode->dinode.di_size;
-    int block_num = size / BLOCKSIZ;
-    struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
-    unsigned int id;
-    long addr;
-    int i;
-    for(i = 0; i < block_num; i++){
-        id = cur_dir_inode->dinode.di_addr[i];
-        addr = DINODESTART + id * DINODESIZ;
-        fseek(disk, addr, SEEK_SET);
-        fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
-    }
-    id = cur_dir_inode->dinode.di_addr[block_num];
-    addr = DINODESTART + id * DINODESIZ;
-    fseek(disk, addr, SEEK_SET);
-    fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
-
-    // 开始查找
-    bool found = false;
-
-    for(i = 0; i < tmp->size; i++){
-        if(!strcmp(tmp->files[i].d_name, name.c_str()) && tmp->files[i].d_index != 0){
-            found = true;
-            break;
-        }
-    }
-    free(tmp);
-    if(found)
-        return i;
-    else
-        return DIRNUM;
-}
-
 int ialloc(unsigned int) {
     unsigned int oneNum = BLOCKSIZ / DINODESIZ;
 
@@ -58,27 +20,35 @@ int ialloc(unsigned int) {
                 fread(block_buf, 1, BLOCKSIZ,disk);
                 block_end_flag = 0;
             }
-            //找到空闲块
-            while (block_buf[cur_j].di_mode == DIEMPTY && cur_j < oneNum) {
+            //略过非空闲块
+            while (block_buf[cur_j].di_mode != DIEMPTY && cur_j < oneNum) {
+                cur_j++;
+                count++;
+            }
+
+            while (block_buf[cur_j].di_mode == DIEMPTY && cur_j < oneNum && file_system.s_pdinode > 0) {
+                --file_system.s_pdinode;
+                file_system.s_dinodes[file_system.s_pdinode] = cur_i*oneNum+cur_j;
                 cur_j++;
                 count++;
             }
             //满一块，扫下一块
-            if (cur_j == oneNum) {
+            if(cur_j == oneNum) {
                 block_end_flag = 1;
                 cur_j = 0;
                 cur_i++;
             }
-            else {
-                file_system.s_dinodes[--file_system.s_pdinode] = cur_i*oneNum+cur_j;
-                count++;
-            }
         }
+
+
         file_system.s_rdinode = cur_i*oneNum+cur_j;
     }
+
     file_system.s_free_dinode_num--;
     file_system.s_fmod = SUPDATE;
-    return file_system.s_dinodes[file_system.s_pdinode++];
+    unsigned int result = file_system.s_dinodes[file_system.s_pdinode];
+    file_system.s_dinodes[file_system.s_pdinode++] = 0;
+    return result;
 }
 
 // 根据对应的硬盘i节点id从系统打中释放

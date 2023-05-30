@@ -57,7 +57,11 @@ int main(){
     initial();
     //初始化
     install();
-
+    format();
+    int j = 1;
+    for(int i =0 ;i<102 ; i++ ){
+        j = ialloc(1);
+    }
     halt();
 //    string a;//接收用户输入命令
 //    const char* A;

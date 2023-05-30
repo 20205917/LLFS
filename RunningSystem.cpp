@@ -625,35 +625,7 @@ string whoami() {
 }
 
 
-/* 文件名是否合法，需要findfile，判断是否有权限
-// 修改父目录数据区并写入磁盘，iput()删除文件
-// false删除失败 true删除成功
-// 权限未实现 iput未实现*/
-bool deleteFile(const string& pathname) {
-    // 判断文件名是否合法
-    if (judge_path(pathname) != 2) {
-        return false;
-    }
-    hinode res_inode = find_file(pathname);
-    // 是否在父目录数据区里有该文件
-    if (res_inode->d_index == 0) {
-        return false;
-    }
-    // 判断用户对父目录有写权限和执行权限是否
-    // if(access())
 
-    // 修改父目录数据区
-    // 更改目录项
-    unsigned int index = namei(pathname);
-    cur_dir.files[index].d_index = 0;
-    cur_dir.size--;
-    // 写入磁盘
-    file_wirte_back(cur_dir_inode);
-    // iput()删除文件
-    // iput(res_inode);
-
-    return true;
-}
 
 // 关闭一个已经被用户打开了的文件
 
