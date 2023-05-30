@@ -5,44 +5,7 @@
 #include "RunningSystem.h"
 using namespace std;
 
-
-int toUnicode(const char* str)
-{
-	return str[0] + (str[1] ? toUnicode(str + 1) : 0);
-}
-constexpr inline int U(const char* str)
-{
-	return str[0] + (str[1] ? U(str + 1) : 0);
-}
-
-// class RunningSystem {
-
-// public:
-//     //RunningSystem();
-//     //~RunningSystem();
-//     // 打开文件
-//     unsigned short openFile();
-//     // 关闭文件
-//     void closeFile();
-//     // 读取文件
-//     unsigned int readFile();
-//     // 写文件
-//     unsigned int writeFile();
-//     // 创建新文件
-//     bool createFile();
-//     // 删除文件
-//     bool deleteFile();
-//     // 从磁盘文件加载系统
-//     void install();
-//     // 格式化系统
-//     void format();
-//     // 退出系统
-//     void halt();
-
-// };
-
 int main(){
-    RunningSystem Runningsystem;
     string a;//接收用户输入命令
     const char* A;
     string b;//命令参数
