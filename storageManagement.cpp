@@ -13,7 +13,7 @@ unsigned int namei(string name){
     // 从磁盘加载目录文件
     int size = cur_dir_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
-    struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
+    auto* tmp = (struct dir*) malloc(sizeof(struct dir));
     unsigned int id;
     long addr;
     int i;
@@ -58,27 +58,35 @@ int ialloc(unsigned int) {
                 fread(block_buf, 1, BLOCKSIZ,disk);
                 block_end_flag = 0;
             }
-            //找到空闲块
-            while (block_buf[cur_j].di_mode == DIEMPTY && cur_j < oneNum) {
+            //略过非空闲块
+            while (block_buf[cur_j].di_mode != DIEMPTY && cur_j < oneNum) {
+                cur_j++;
+                count++;
+            }
+
+            while (block_buf[cur_j].di_mode == DIEMPTY && cur_j < oneNum && file_system.s_pdinode > 0) {
+                --file_system.s_pdinode;
+                file_system.s_dinodes[file_system.s_pdinode] = cur_i*oneNum+cur_j;
                 cur_j++;
                 count++;
             }
             //满一块，扫下一块
-            if (cur_j == oneNum) {
+            if(cur_j == oneNum) {
                 block_end_flag = 1;
                 cur_j = 0;
                 cur_i++;
             }
-            else {
-                file_system.s_dinodes[--file_system.s_pdinode] = cur_i*oneNum+cur_j;
-                count++;
-            }
         }
+
+
         file_system.s_rdinode = cur_i*oneNum+cur_j;
     }
+
     file_system.s_free_dinode_num--;
     file_system.s_fmod = SUPDATE;
-    return file_system.s_dinodes[file_system.s_pdinode++];
+    unsigned int result = file_system.s_dinodes[file_system.s_pdinode];
+    file_system.s_dinodes[file_system.s_pdinode++] = 0;
+    return result;
 }
 
 // 根据对应的硬盘i节点id从系统打中释放

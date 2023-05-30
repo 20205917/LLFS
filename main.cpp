@@ -54,11 +54,15 @@ string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
 
 int main(){
-    initial();
+//    initial();
     //初始化
     install();
-
-    halt();
+    // format();
+//    int j = 1;
+//    for(int i =0 ;i<102 ; i++ ){
+//        j = ialloc(1);
+//    }
+//    halt();
 //    string a;//接收用户输入命令
 //    const char* A;
 //    string b;//命令参数

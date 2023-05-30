@@ -12,6 +12,8 @@
 #include <iostream>
 using namespace std;
 
+constexpr char* disk_file_name = "D:\\disk.bin";
+
 #define BLOCKSIZ  512   //每个物理块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
 #define DIRNUM  31     //每个目录所包含的最大目录项数（文件数）
@@ -26,7 +28,7 @@ using namespace std;
 #define DINODEBLK  32   //所有磁盘i节点共占32个物理块
 #define FILEBLK  1024    //共有512个目录文件物理块
 #define NICFREE  50     //超级块中空闲块数组的最大块数
-#define NICINOD  50     //超级块中空闲节点的最大块数
+#define NICINOD  10     //超级块中空闲节点的最大块数
 #define DINODESTART 2*BLOCKSIZ                //i节点起始地址
 #define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
 enum operation{Open,Read,Write};       //定义操作 打开 读 写
@@ -70,10 +72,14 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 
 #define READ    1   //只有组内成员（包括创建者）可以读
 #define CHANGE  2   //只有创建者可以更改
-
+#define DELETE  3   //删除
 // 写文件方式
 #define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
 #define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
+// 打开方式
+#define BUILD_OPEN      1 //创建打开
+#define FP_HEAD_OPEN    2 //在开头打开文件
+#define FP_TAIL_OPEN    3 //在末尾打开文件
 
 #define USER_UNOPENED (-1)      // 当前用户未打开
 struct dinode{
@@ -137,7 +143,7 @@ struct user_open_item{
     unsigned short u_default_mode;      //打开方式
     struct inode *f_inode;              //内存i节点指针
     unsigned long f_offset;             //文件偏移量（文件指针）
-    unsigned short index_to_sysopen;       //系统打开表索引
+    short index_to_sysopen;       //系统打开表索引
 };
 
 
@@ -157,80 +163,10 @@ struct sys_open_item{
     unsigned int i_count;        // 打开次数
 };
 
-//
-//// 打开文件
-//extern unsigned short openFile();
-//// 关闭文件
-//extern void closeFile();
-//// 读取文件
-//extern unsigned int readFile();
-//// 写文件
-//extern unsigned int writeFile();
-//// 创建新文件
-//extern bool createFile();
-//// 删除文件
-//extern bool deleteFile();
-//
-//// 创建新目录
-//extern bool mkdir();
-//// 改变当前所在目录
-//extern bool chdir();
-//// 展示当前目录
-//extern void show_dir();
-//
-//extern bool hard_link(); //硬链接
-//extern bool soft_link(); //软连接
-//
-////查看某个磁盘i节点id对应的内存i节点是否存在
-//inode* findHinode(int dinode_id );
-//// 获取内存i节点
-//inode* iget(int dinode_id)
-//// 释放内存i节点
-//extern bool iput(hinode inode);
-//
-//// 磁盘i节点释放
-//extern void ifree(int dinode_id);
-//// 实现对文件的存取搜索，将给定的路径名转换成所要搜索的文件的内存i结点指针（在目录数组中的位置）
-//// 将会返回在数组中的下标，若为DIRNUM表明没找到
-//extern unsigned int namei(char* name, hinode cur_path_inode, FILE* disk);
-//// 在当前目录下搜索到一个空的目录数组，以便建立新的目录或文件时使用
-//// 将会返回在数组中的下标，若为DIRNUM表明没找到
-//extern unsigned short iname(char* name, hinode cur_path_inode, FILE* disk);
-//// 磁盘块分配
-//extern unsigned int balloc();
-//// 磁盘块释放
-//extern void bfree(int block_num);
-////文件内容写回
-//void file_wirte_back(struct inode* inode)
-//// tool
-//
+
 // 路径是否合法
 int judge_path(string pathname);
 // 文件名是否合法
 bool is_file( string filename);
-//// 将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
-//void write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp);
-//// 从磁盘数据区读取内容 内存地址，硬盘索引数组，数据长度，文件指针
-//void read_data_from(void *data_address, unsigned int *di_addr, int size, FILE *fp);
-//// 额外
-//// 删除指定目录
-//extern void rmdir();
-//// 复制
-//extern void copy();
-//// 改变文件所有者
-//extern bool chown();
-//// 改变文件所在组
-//extern bool chgrp();
-//// 改变用户所在组
-//extern bool usermod();
-//// 改变权限
-//extern bool chmod();
-//// 添加组
-//extern bool groupadd();
-//// 查看所有组
-//extern void show_group();
-//// 查看所有用户
-//extern void show_users();
-//// 查看当前用户
-//extern void shoami();
+
 #endif //LLFS_CONFIG_H

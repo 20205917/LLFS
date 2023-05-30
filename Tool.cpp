@@ -62,4 +62,3 @@ void read_data_from(void *data_address, unsigned int *di_addr, int size, FILE *f
     fseek(fp, addr, SEEK_SET);
     fread((char*)data_address+i*BLOCKSIZ, size-block_num*BLOCKSIZ, 1, fp);
 }
-
