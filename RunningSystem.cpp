@@ -471,7 +471,7 @@ int close_file(string pathname){
             return 1;//删除成功
         }
     }
-
+    return -1;
 }
 // 创建文件夹，输入是文件路径
 int mkdir(string &pathname) {
@@ -504,7 +504,7 @@ int mkdir(string &pathname) {
             //判断是否重复
             int leisure;
             for (int i = 0;i<DIRNUM ;i++ ){
-                if (catalog_dir.files[i].d_name == file) //如果有已经存在的文件夹，则返回错误码
+                if (catalog_dir.files[i].d_name == filename) //如果有已经存在的文件夹，则返回错误码
                     return -1;
                 if (catalog_dir.files[i].d_index==0)
                     leisure = i;
@@ -524,7 +524,6 @@ int mkdir(string &pathname) {
             new_dir.files[0].d_index = 1;
             new_dir.size = 0;
             //找到父目录空闲的目录项,写入文件名和文件磁盘结点
-            int leisure = seek_catalog_leisure();
             strcpy(catalog_dir.files[leisure].d_name,filename.data());
             catalog_dir.files[leisure].d_index = new_d_index;
             catalog_dir.size++;
