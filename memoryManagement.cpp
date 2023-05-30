@@ -22,7 +22,7 @@ inode* findHinode(int dinode_id){
 // 在内存i节点散列表根据硬盘i节点id查找
 // 找不到就创建内存i节点
 // 申请了额外空间,//插入内存i节点  情况: 1-Hash缓冲区对应桶号已达可容纳i节点数上限7  2-未达上限，直接插入
-
+// 这里初始化了新的inode
 hinode iget(unsigned int dinode_id){
     int inode_id = dinode_id % NHINO;
     hinode temp=findHinode(dinode_id);
@@ -42,7 +42,11 @@ hinode iget(unsigned int dinode_id){
     temp->i_forw=newinode;
     newinode->i_forw=NULL;
     newinode->i_back=temp;
-    return temp;
+
+    newinode->d_index = dinode_id;
+    newinode->ifChange = '0';
+    newinode->i_flag = '0';
+    return newinode;
 }
 
 // 释放i节点回磁盘

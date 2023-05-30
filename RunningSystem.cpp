@@ -7,7 +7,7 @@
 
 void initial(){
     // ∂¡”≤≈Ã
-    disk = fopen("disk", "rb+");
+    disk = fopen(disk_file_name, "wb+");
     char nothing[BLOCKSIZ] = {0};
     fseek(disk, 0, SEEK_SET);
     fwrite(nothing, BLOCKSIZ, FILEBLK + DINODEBLK + 2, disk);
@@ -81,7 +81,7 @@ void initial(){
 
 void install() {
     // ∂¡”≤≈Ã
-    disk = fopen("disk", "rb+");
+    disk = fopen(disk_file_name, "rb+");
 
     // ≥ı ºªØfile_system
     fseek(disk, BLOCKSIZ, SEEK_SET);
