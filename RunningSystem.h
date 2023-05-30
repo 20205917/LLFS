@@ -88,7 +88,6 @@ extern FILE *disk;                               //系统磁盘文件
 
     unsigned int balloc();
 
-    unsigned int namei(string name);
 
     void file_wirte_back(struct inode* inode);
 
