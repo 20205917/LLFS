@@ -25,15 +25,15 @@ inode* findHinode(int dinode_id){
 
 hinode iget(unsigned int dinode_id){
     int inode_id = dinode_id % NHINO;
-    hinode tmp=findHinode(dinode_id);
-    if(tmp!=NULL)
-        return tmp;
+    hinode temp=findHinode(dinode_id);
+    if(temp!=NULL)
+        return temp;
     // 内存中不存在,需要创建
     long addr = DINODESTART + dinode_id * DINODESIZ;
     hinode newinode = (hinode)malloc(sizeof(struct inode));
     fseek(disk, addr, SEEK_SET);
     fread(&(newinode->dinode.di_number), DINODESIZ, 1, disk);
-    hinode temp=hinodes[inode_id];
+    temp=hinodes[inode_id];
     for(int i=0;temp->i_forw!=NULL;i++){
         if(i==6)
             iput(hinodes[inode_id]);
@@ -42,6 +42,7 @@ hinode iget(unsigned int dinode_id){
     temp->i_forw=newinode;
     newinode->i_forw=NULL;
     newinode->i_back=temp;
+    return temp;
 }
 
 // 释放i节点回磁盘

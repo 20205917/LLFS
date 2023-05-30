@@ -433,10 +433,10 @@ int mkdir(string &pathname) {
                 new_inode->dinode.di_addr[j] = balloc();
             }
             new_inode->dinode.di_mode = DIDIR;
+            new_inode->dinode.di_size = sizeof(dir);
             //初始化硬盘数据区(索引结点区在ialloc中初始化)
             struct dir new_dir = get_dir(new_d_index);
-            char* tmp = "root";
-            strcpy(new_dir.files[0].d_name,tmp);
+            strcpy(new_dir.files[0].d_name,"root");
             new_dir.files[0].d_index = 1;
             new_dir.size = 0;
             //找到父目录空闲的目录项,写入文件名和文件磁盘结点
@@ -547,7 +547,7 @@ string whoami() {
 // 权限未实现 iput未实现*/
 bool deleteFile(const string& pathname) {
     // 判断文件名是否合法
-    if (!is_file(pathname)) {
+    if (judge_path(pathname) != 2) {
         return false;
     }
     hinode res_inode = find_file(pathname);
@@ -575,7 +575,7 @@ bool deleteFile(const string& pathname) {
 
 void closeFile(const string& pathname) {
     // 判断文件名是否合法
-    if (!is_file(pathname)) {
+    if (judge_path(pathname)!=2) {
         return;
     }
     // 获取用户的打开表
@@ -618,7 +618,7 @@ void closeFile(const string& pathname) {
 // 没有实现权限判断
 string readFile(string pathname) {
     // 判断文件名是否合法
-    if (!is_file(pathname)) {
+    if (judge_path(pathname)!=2) {
         return {};
     }
 

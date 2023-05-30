@@ -55,16 +55,11 @@ FILE *disk;                               //系统磁盘文件
 
 int main(){
     //初始化
-    install();
-    strcpy(pwds[1].password, "a");
-    strcpy(pwds[5].password, "b");
-    strcpy(pwds[9].password, "c");
-    login("a");
-    login("b");
-    logout("a");
-    login("c");
-    logout("b");
-    halt();
+    int a = 5;
+
+    a = judge_path("a.x");
+    a =judge_path("ac");
+
 //    string a;//接收用户输入命令
 //    const char* A;
 //    string b;//命令参数
