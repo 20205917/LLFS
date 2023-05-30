@@ -24,14 +24,33 @@ struct super_block file_system;           //超级块
 struct PWD pwds[PWDNUM];                  //用户数组
 
 struct inode *cur_dir_inode;             //当前目录的索引结点
-struct dir cur_dir;                       //当前目录的数据
 string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
 
 int main(){
-//    initial();
+    int i;
     //初始化
     install();
+    string path;
+    path = "dir";
+    i = mkdir(path);
+    login("");
+    path = "/aaa";
+    i = mkdir(path);
+    path = "/dir/bb";
+    i = mkdir(path);
+    path = "aaa/cc";
+    i = mkdir(path);
+
+    rmdir("dir");
+    rmdir("dir/bb");
+    return 0;
+//    int j = 1;
+//    for(int i =0 ;i<102 ; i++ ){
+//        j = ialloc(1);
+//    }
+//    halt();
+//    string a;//接收用户输入命令
 
     login("admin");
     int res = open_file("test.file", BUILD_OPEN);
@@ -152,5 +171,5 @@ int main(){
 //
 //        }
 //    }
-    return 0;
+
 }

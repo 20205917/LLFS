@@ -12,7 +12,7 @@
 #include <iostream>
 using namespace std;
 
-constexpr char* disk_file_name = "D:\\disk.bin";
+static char disk_file_name[20] = "D:\\disk.bin";
 
 #define BLOCKSIZ  512   //每个物理块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
@@ -29,8 +29,8 @@ constexpr char* disk_file_name = "D:\\disk.bin";
 #define FILEBLK  1024    //共有512个目录文件物理块
 #define NICFREE  50     //超级块中空闲块数组的最大块数
 #define NICINOD  10     //超级块中空闲节点的最大块数
-#define DINODESTART 2*BLOCKSIZ                //i节点起始地址
-#define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
+#define DINODESTART (2*BLOCKSIZ)                //i节点起始地址
+#define DATASTART ((2+DINODEBLK)*BLOCKSIZ)     //目录、文件区起始地址
 enum operation{Open,Read,Write};       //定义操作 打开 读 写
 
 #define DIEMPTY     00000
@@ -72,7 +72,7 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 
 #define READ    1   //只有组内成员（包括创建者）可以读
 #define CHANGE  2   //只有创建者可以更改
-#define DELETE  3   //删除
+#define FDELETE  3   //删除
 // 写文件方式
 #define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
 #define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
@@ -94,12 +94,11 @@ struct dinode{
 typedef struct inode{
     struct inode *i_forw;
     struct inode *i_back;
-    char i_flag;                //
+    void *      content;
     char ifChange;              //脏位 0未修改/1修改过
     unsigned int d_index;       // 硬盘i节点id
     struct dinode dinode;
 }*hinode;
-
 
 // 先暂定32块 4块索引 26块数据
 struct super_block{

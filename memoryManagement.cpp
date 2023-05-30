@@ -19,6 +19,8 @@ inode* findHinode(int dinode_id){
     return NULL; 
 }
 
+//TODO iget iput,对于内容的释放
+
 // 在内存i节点散列表根据硬盘i节点id查找
 // 找不到就创建内存i节点
 // 申请了额外空间,//插入内存i节点  情况: 1-Hash缓冲区对应桶号已达可容纳i节点数上限7  2-未达上限，直接插入
@@ -42,10 +44,21 @@ hinode iget(unsigned int dinode_id){
     temp->i_forw=newinode;
     newinode->i_forw=NULL;
     newinode->i_back=temp;
-
     newinode->d_index = dinode_id;
     newinode->ifChange = '0';
-    newinode->i_flag = '0';
+    newinode->content = nullptr;
+    if(newinode->dinode.di_size == 0)
+        return newinode;
+    //
+    newinode->content = malloc(newinode->dinode.di_size);
+    memset(newinode->content,0,newinode->dinode.di_size);
+    int i;
+    for (i = 0; i < newinode->dinode.di_size / BLOCKSIZ ; i++) {
+        fseek(disk, DATASTART + BLOCKSIZ * newinode->dinode.di_addr[i], SEEK_SET);
+        fread(newinode->content, 1, BLOCKSIZ, disk);
+    }
+    fseek(disk, DATASTART + BLOCKSIZ * newinode->dinode.di_addr[i], SEEK_SET);
+    fread(newinode->content, 1, newinode->dinode.di_size % BLOCKSIZ, disk);
     return newinode;
 }
 
@@ -78,6 +91,7 @@ bool iput(inode* inode){
         inode->i_forw->i_back = inode->i_back;
         inode->i_back->i_forw = inode->i_forw;
     }
+    free (inode->content);
     free(inode);
     return true;
 }
