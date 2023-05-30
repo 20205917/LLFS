@@ -12,6 +12,8 @@
 #include <iostream>
 using namespace std;
 
+static const char* disk_file_name = "D:\\disk.bin";
+
 #define BLOCKSIZ  512   //每个物理块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
 #define DIRNUM  31     //每个目录所包含的最大目录项数（文件数）

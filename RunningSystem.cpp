@@ -7,10 +7,12 @@
 
 void initial(){
     // 读硬盘
-    disk = fopen("disk", "rb+");
-    char nothing[BLOCKSIZ] = {0};
+    disk = fopen(disk_file_name, "wb+");
+    int* nothing = (int*)malloc(BLOCKSIZ);
+    memset(nothing, 0, BLOCKSIZ);
     fseek(disk, 0, SEEK_SET);
-    fwrite(nothing, BLOCKSIZ, FILEBLK + DINODEBLK + 2, disk);
+    for(int i = 0; i < FILEBLK + DINODEBLK + 2; i++)
+        fwrite(nothing, BLOCKSIZ, 1, disk);
 
     // 初始化超级块
     // 此时只有root对应的磁盘i节点和数据块
@@ -21,7 +23,7 @@ void initial(){
     for(int i = 0; i < NICINOD; i++){
         file_system.s_dinodes[i] = i + 2;
     }
-    file_system.s_pdinode = 0;
+    file_system.s_pdinode = NICINOD;
     file_system.s_rdinode = 2;
 
     file_system.s_free_block_size = 0;
@@ -49,10 +51,10 @@ void initial(){
     // 初始化root目录数据块内容
     root.size = 2;
     // 根目录
-    root.files[0].d_index = 1;
+    root.files[0].d_index = 0;
     strcpy(root.files[0].d_name, "root");
     // 父目录
-    root.files[1].d_index = 1;
+    root.files[1].d_index = 0;
     strcpy(root.files[1].d_name, "root");
     for(int i = 2; i < DIRNUM; i++){
         root.files[i].d_index = 0;
@@ -60,7 +62,7 @@ void initial(){
 
     addr = DATASTART;
     fseek(disk, addr, SEEK_SET);
-    fwrite(&(root), sizeof(struct dir), 1, disk);
+    fwrite(&root, sizeof(struct dir), 1, disk);
 
     // admin账户
     pwds[0].p_uid = 0;
@@ -81,7 +83,7 @@ void initial(){
 
 void install() {
     // 读硬盘
-    disk = fopen("disk", "rb+");
+    disk = fopen(disk_file_name, "rb+");
 
     // 初始化file_system
     fseek(disk, BLOCKSIZ, SEEK_SET);
@@ -106,7 +108,6 @@ void install() {
 
     // 初始化user_openfiles
     user_openfiles.clear();
-
 
     // 读取root目录和cur_dir当前目录
     // 即第一个i节点
@@ -146,7 +147,7 @@ void format(){
     strcpy(pwds[1].password, "1");
     // 清空
     for(int i = 2; i < PWDNUM; i++){
-        strcpy(pwds[0].password, "");
+        strcpy(pwds[i].password, "");
     }
     fseek(disk, 0, SEEK_SET);
     fwrite(pwds, sizeof(PWD), PWDNUM, disk);
