@@ -266,7 +266,7 @@ void logout(const string &pwd) {
     user_open_table *u = user_openfiles.find(pwd)->second;
     //关闭每个文件
     for (auto &item: u->items) {
-        unsigned short id_to_sysopen = item.index_to_sysopen;
+        short id_to_sysopen = item.index_to_sysopen;
         if ( id_to_sysopen!= -1) {
             //关闭后打开数为零需要释放内存节点
             system_openfiles[id_to_sysopen].i_count--;
@@ -341,8 +341,8 @@ struct dir get_dir(unsigned int d_index) {
     return work_dir;
 }
 //打开文件
-int open_file(string pathname,int operation){
-    if(!is_file(pathname))
+int open_file(const string& pathname,int operation){
+    if(judge_path(pathname)!=2)
         return false;                                               //不是文件格式，返回错误码
     inode *catalog;
     string filename;
@@ -359,7 +359,7 @@ int open_file(string pathname,int operation){
     if(access(READ,catalog))
         return -1;                                                  //权限不足，返回错误码
     struct dir catalog_dir = get_dir(catalog->d_index);
-    int file_index = -1;//文件的硬盘i结点id
+    unsigned int file_index;//文件的硬盘i结点id
     int leisure = -1;//目录下的空闲索引
     for (int i = 0;i<DIRNUM;i++) {
         if (catalog_dir.files[i].d_name == filename){//查找成功
@@ -391,7 +391,7 @@ int open_file(string pathname,int operation){
         }
     }
     //修改系统打开文件表
-    int sys_leisure = 0;    
+    short sys_leisure = 0;
     for(;sys_leisure< SYSOPENFILE;sys_leisure++){//找到空闲
         if(system_openfiles[sys_leisure].i_count==0){
             system_openfiles[sys_leisure].i_count++;
@@ -420,8 +420,8 @@ int open_file(string pathname,int operation){
     return -1;//没找到用户打开表空闲表项
 }
 //关闭文件
-int close_file(string pathname){
-    if(!is_file(pathname))
+int close_file(const string& pathname){
+    if(judge_path(pathname)!=2)
         return false;                                               //不是文件格式，返回错误码
     inode *catalog;
     string filename;
@@ -438,7 +438,7 @@ int close_file(string pathname){
     if(access(READ,catalog))
         return -1;                                                  //权限不足，返回错误码
     struct dir catalog_dir = get_dir(catalog->d_index);
-    int file_index = -1;//文件的硬盘i结点id
+    unsigned int file_index = 0;//文件的硬盘i结点id
     int d_i = 0;
     for (d_i = 0;d_i<DIRNUM;d_i++) {
         if (catalog_dir.files[d_i].d_name == filename){
@@ -475,7 +475,7 @@ int close_file(string pathname){
 }
 // 创建文件夹，输入是文件路径
 int mkdir(string &pathname) {
-    if (!judge_path(pathname)) {
+    if (judge_path(pathname)!=1) {
         return false;
     } else {
         inode *catalog;
@@ -541,7 +541,7 @@ int mkdir(string &pathname) {
 
 
 int rmdir(const string& pathname) {
-    if (!judge_path(pathname)) {
+    if (judge_path(pathname)!=1) {
         return -1;
     } else {
         inode *father_catalog;
@@ -592,7 +592,7 @@ int rmdir(const string& pathname) {
 
 //移动系统当前路径
 int chdir(const string& pathname) {
-    if (!judge_path(pathname)) {
+    if (judge_path(pathname)!=1) {
         return -1;
     } else {
         inode *catalog = find_file(pathname);
@@ -699,7 +699,7 @@ void closeFile(const string& pathname) {
 // 从用户以打开的文件中读取内容
 // 以字符形式返回内容
 // 没有实现权限判断
-string readFile(string pathname) {
+string readFile(const string& pathname) {
     // 判断文件名是否合法
     if (judge_path(pathname)!=2) {
         return {};
@@ -796,6 +796,7 @@ inode *find_file(string addr) {
 }
 
 // 权限未实现
+//bool writeFile(const string& pathname, int write_mode,const string& content) {
 //bool writeFile(const string& pathname, int write_mode,const string& content) {
 //    // 判断文件名是否合法
 //    if (!is_file(pathname)) {

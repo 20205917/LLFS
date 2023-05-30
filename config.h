@@ -141,7 +141,7 @@ struct user_open_item{
     unsigned short u_default_mode;      //打开方式
     struct inode *f_inode;              //内存i节点指针
     unsigned long f_offset;             //文件偏移量（文件指针）
-    unsigned short index_to_sysopen;       //系统打开表索引
+    short index_to_sysopen;       //系统打开表索引
 };
 
 
