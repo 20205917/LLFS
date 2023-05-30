@@ -23,11 +23,9 @@ inode* findHinode(int dinode_id , hinode* hinodes, FILE* disk){
 // 在内存i节点散列表根据硬盘i节点id查找
 // 找不到就创建内存i节点
 // 申请了额外空间,//插入内存i节点  情况: 1-Hash缓冲区对应桶号已达可容纳i节点数上限7  2-未达上限，直接插入
-hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
-    int inode_id = dinode_id % NHINO;
-    hinode tmp=findHinode(dinode_id,hinodes,disk);
-inode* iget(int dinode_id){
 
+inode* iget(unsigned int dinode_id){
+    int inode_id = dinode_id % NHINO;
     hinode tmp= findHinode(dinode_id, hinodes, disk);
     if(tmp!=NULL)
         return tmp;
@@ -51,7 +49,7 @@ inode* iget(int dinode_id){
     hinode temp=hinodes[inode_id];
     for(int i=0;temp->i_forw!=NULL;i++){
         if(i==6)
-            iput(hinodes[inode_id],disk,file_system);
+            iput(hinodes[inode_id]);
         temp=temp->i_forw;
     }
     temp->i_forw=newinode;
@@ -96,6 +94,7 @@ bool iput(inode* inode){
         inode->i_back->i_forw = inode->i_forw;
     }
     free(inode);
+    return true;
 }
 
 // 从当前目录查找name对应的i节点
@@ -124,7 +123,7 @@ unsigned int namei(string name){
     bool found = false;
 
     for(i = 0; i < tmp->size; i++){
-        if(!strcmp(tmp->files[i].d_name, name) && tmp->files[i].d_index != 0){
+        if(!strcmp(tmp->files[i].d_name, name.c_str()) && tmp->files[i].d_index != 0){
             found = true;
             break;
         }

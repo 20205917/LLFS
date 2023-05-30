@@ -17,7 +17,7 @@ void install() {
     // 初始化hinodes
     for (auto &i: hinodes) {
         i = (hinode) malloc(sizeof(struct inode));
-        i->i_forw = nullptr;
+        memset(i,)
     }
 
     // 初始化system_openfiles
@@ -144,7 +144,7 @@ bool access(int operation, inode *file_inode) {
 //    }
 //}
 
-int openFile(const string& pathname, unsigned short flags) {
+//int openFile(const string& pathname, unsigned short flags) {
 //    //判断合法性
 //    string path = clean_path(pathname);
 //    //clean_path清除
@@ -187,20 +187,16 @@ int openFile(const string& pathname, unsigned short flags) {
 //            break;
 //        }
 //    };
-
-
-    //清空文件
-    //TODO
+//
 //    /*if APPEND, free the block of the file before */
-//    if (openmode & FAPPEND) {
+//    if (flags & FAPPEND) {
 //        for (index_to_system = 0; index_to_system < inode->di_size / BLOCKSIZ + 1; index_to_system++)
 //            bfree(inode->di_addr[index_to_system]);
 //        inode->di_size = 0;
 //    }
-
-
-    return 1;//fd;
-}
+//
+//    return fd;
+//}
 
 struct dir get_dir(unsigned int d_index) {
     inode *dir_inode = iget(d_index);
@@ -241,7 +237,7 @@ int mkdir(string &pathname) {
                     return -1;
             }
             //申请索引结点和硬盘数据区
-            int new_d_index = ialloc(1);
+            unsigned int new_d_index = ialloc(1);
             inode *new_inode = iget(new_d_index);
             int block_amount = sizeof(dir) / BLOCKSIZ + 1;
             for (int j = 0; j < block_amount; j++) {
@@ -296,6 +292,7 @@ int show_dir() {
             cout << file.d_name << endl;//输出当前路径下的文件内容
         }
     }
+    return 0;
 }
 
 int rmdir(const string& pathname) {

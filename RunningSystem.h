@@ -10,17 +10,17 @@
 
 using namespace std;
 
-struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
-map<string, user_open_table*> user_openfiles;        //用户打开表组
-struct dir root;                          //root目录
-hinode hinodes[NHINO];                    //内存节点缓存
-struct super_block file_system;           //超级块
-struct PWD pwds[PWDNUM];                  //用户数组
+extern struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
+extern map<string, user_open_table*> user_openfiles;        //用户打开表组
+extern struct dir root;                          //root目录
+extern hinode hinodes[NHINO];                    //内存节点缓存
+extern struct super_block file_system;           //超级块
+extern struct PWD pwds[PWDNUM];                  //用户数组
 
-struct inode *cur_dir_inode;             //当前目录的索引结点
-struct dir cur_dir;                       //当前目录的数据
-string cur_user;                          //当前用户
-FILE *disk;                               //系统磁盘文件
+extern struct inode *cur_dir_inode;             //当前目录的索引结点
+extern struct dir cur_dir;                       //当前目录的数据
+extern string cur_user;                          //当前用户
+extern FILE *disk;                               //系统磁盘文件
 
 
     // 打开文件
@@ -38,7 +38,7 @@ FILE *disk;                               //系统磁盘文件
     // 创建新文件
     inode* createFile(string pathname, unsigned short di_mode);
     // 删除文件
-    bool deleteFile(stringpathname);
+    bool deleteFile(string pathname);
     // 从磁盘文件加载系统
     void install();
     // 格式化系统
@@ -50,9 +50,9 @@ FILE *disk;                               //系统磁盘文件
     struct inode* find_file(string addr);
 
     // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值为用户打开表下标)
-    int login(string pwd);
+    int login(const string& pwd);
     // 用户注销
-    void logout(string pwd);
+    void logout(const string& pwd);
     //判断用户权限是否足够某操作
     bool access(int operation, inode *file_inode);
     // 返回当前用户ss
@@ -63,18 +63,18 @@ FILE *disk;                               //系统磁盘文件
     int chdir(const string& pathname);     //更改系统的当前文件路径
     int show_dir();                 //展示当前文件路径的内容
     int rmdir(const string& pathname);     //删除该路径下的文件夹
-    struct dir get_dir(int d_index);//根据d_index，获取dir
+    struct dir get_dir(unsigned int d_index);//根据d_index，获取dir
 
     // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED
     bool isOpened(string pathname);
 
-    int seek_catalog_leisure()
+    int seek_catalog_leisure();
     // 磁盘i节点分配
     int ialloc(unsigned int);
 
-    void ifree(unsigned int dinode_id)
+    void ifree(unsigned int dinode_id);
 
-    inode* iget(unsigned int dinode_id)
+    inode* iget(unsigned int dinode_id);
 
     bool iput(inode* inode);
 
@@ -84,5 +84,6 @@ FILE *disk;                               //系统磁盘文件
 
     unsigned int namei(string name);
 
-    void file_wirte_back(struct inode* inode)
-#endif LLFS_RUNNINGSYSTEM_H
+    void file_wirte_back(struct inode* inode);
+
+#endif //LLFS_RUNNINGSYSTEM_H

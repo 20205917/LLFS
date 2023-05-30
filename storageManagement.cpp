@@ -6,7 +6,7 @@
 //一个磁盘的i节点
 static struct dinode block_buf[BLOCKSIZ / DINODESIZ];
 
-int ialloc(int) {
+int ialloc(unsigned int) {
     unsigned int oneNum = BLOCKSIZ / DINODESIZ;
 
     if(file_system.s_pdinode == NICINOD){
@@ -46,7 +46,7 @@ int ialloc(int) {
 
 // 根据对应的硬盘i节点id从系统打开表中释放
 //
-void ifree(int dinode_id) {
+void ifree(unsigned int dinode_id) {
     file_system.s_free_dinode_num++;
     if (file_system.s_pdinode > 0 ) {
         // 未达到最大空闲块数
