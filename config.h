@@ -9,14 +9,13 @@
 #include <malloc.h>
 #include <cstring>
 #include "RunningSystem.h"
-
-#define BLOCKSIZ  512   //每块大小
 #include <iostream>
 using namespace std;
+
 #define BLOCKSIZ  512   //每个物理块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
-#define DIRNUM  128     //每个目录所包含的最大目录项数（文件数）
-#define DIRSIZ  14      //每个目录项名字部分所占字节数，另加i节点号2个字节
+#define DIRNUM  31     //每个目录所包含的最大目录项数（文件数）
+#define DIRSIZ  16      //每个目录项名字部分所占字节数，另加i节点号2个字节
 #define PWDSIZ   12     //口令字
 #define PWDNUM   32     //最多可设32个口令登录
 #define NOFILE  20      //每个用户最多可打开20个文件，即用户打开文件最大次数
@@ -25,9 +24,9 @@ using namespace std;
 #define USERNUM  10     //最多允许10个用户登录
 #define DINODESIZ  32   //每个磁盘i节点所占字节
 #define DINODEBLK  32   //所有磁盘i节点共占32个物理块
-#define FILEBLK  512    //共有512个目录文件物理块
-#define NICFREE  50     //超级块中空闲块数组的最大块数  ????????待定
-#define NICINOD  50     //超级块中空闲节点的最大块数  ??????待定
+#define FILEBLK  1024    //共有512个目录文件物理块
+#define NICFREE  50     //超级块中空闲块数组的最大块数
+#define NICINOD  50     //超级块中空闲节点的最大块数
 #define DINODESTART 2*BLOCKSIZ                //i节点起始地址
 #define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
 enum operation{Open,Read,Write};       //定义操作 打开 读 写
@@ -87,7 +86,7 @@ struct dinode{
     unsigned short di_uid;       // 所有者标识符
     unsigned short di_gid;       // 所在组标识符
     unsigned short di_size;      // 文件的字节数
-    unsigned int di_addr[NADDR]; // 文件的硬盘索引数组，即各硬盘节点的id
+    unsigned short di_addr[NADDR]; // 文件的硬盘索引数组，即各硬盘节点的id
 };
 
 typedef struct inode{
@@ -124,7 +123,7 @@ struct PWD{
 };
 
 struct FCB{
-    char d_name[DIRSIZ];
+    char d_name[DIRSIZ-4];
     unsigned int d_index;            // 硬盘i节点id
 };
 
@@ -209,7 +208,7 @@ struct sys_open_item{
 //// tool
 //
 // 路径是否合法
-bool is_dir( string pathname);
+int judge_path(string pathname);
 // 文件名是否合法
 bool is_file( string filename);
 //// 将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针

@@ -20,6 +20,9 @@ extern struct PWD pwds[PWDNUM];                  //用户数组
 extern struct inode *cur_dir_inode;             //当前目录的索引结点
 extern struct dir cur_dir;                       //当前目录的数据
 extern string cur_user;                          //当前用户
+// 现在分配有2+DINODEBLK+FILEBLK个磁盘块
+// 前2个为引导快（现在放了用户信息）、超级块
+// 索引区有DINODEBLK个块，数据区FILEBLK个块
 extern FILE *disk;                               //系统磁盘文件
 
 
@@ -39,6 +42,8 @@ extern FILE *disk;                               //系统磁盘文件
     inode* createFile(string pathname, unsigned short di_mode);
     // 删除文件
     bool deleteFile(string pathname);
+    // 初始化
+    void initial();
     // 从磁盘文件加载系统
     void install();
     // 格式化系统
@@ -48,7 +53,8 @@ extern FILE *disk;                               //系统磁盘文件
 
     //根据地址寻找并读入索引节点
     struct inode* find_file(string addr);
-
+    // 申请磁盘i节点
+    struct inode *ialloc();
     // 用户登录 -1.口令错误 -2.已经登录-3.已经达登录上限 >0.登录成功(返回值为用户打开表下标)
     int login(const string& pwd);
     // 用户注销

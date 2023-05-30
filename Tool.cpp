@@ -1,6 +1,7 @@
 //
 // Created by 86136 on 2023/5/25.
 //
+#include <algorithm>
 #include "RunningSystem.h"
 
 //路径是否合法
@@ -16,7 +17,7 @@ bool is_file(string filename){
 }
 
 //将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
-bool write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp){
+void write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp){
     int block_num = size / BLOCKSIZ;
     long addr;
     int i;
@@ -46,10 +47,3 @@ void read_data_from(void *data_address, unsigned int *di_addr, int size, FILE *f
     fread((char*)data_address+i*BLOCKSIZ, size-block_num*BLOCKSIZ, 1, fp);
 }
 
-void string_char(string content,char *add,int i){
-    int length = content.length();
-    for(int i=0;i<length;i++){
-        add[i] = content[i];
-    }
-    return;
-}

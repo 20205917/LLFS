@@ -54,18 +54,21 @@ string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
 
 int main(){
+    initial();
     //初始化
     install();
-    string a;//接收用户输入命令
-    const char* A;
-    string b;//命令参数
-    string c;//命令参数
-    string d;//命令参数
-    int state=0;//保存调用接口服务返回的状态
-    string path=">>";//命令窗口输入命令前的路径
-    system("cls");
-    cout<<"Hello World!"<<endl;
-    cout<<">>";
+
+    halt();
+//    string a;//接收用户输入命令
+//    const char* A;
+//    string b;//命令参数
+//    string c;//命令参数
+//    string d;//命令参数
+//    int state=0;//保存调用接口服务返回的状态
+//    string path=">>";//命令窗口输入命令前的路径
+//    system("cls");
+//    cout<<"Hello World!"<<endl;
+//    cout<<">>";
 //    while(1){
 //        cin>>a;
 //        A=a.data();
