@@ -42,7 +42,7 @@ hinode iget(unsigned int dinode_id){
     temp->i_forw=newinode;
     newinode->i_forw=NULL;
     newinode->i_back=temp;
-    return temp;
+    return newinode;
 }
 
 // 释放i节点回磁盘
