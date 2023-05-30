@@ -30,7 +30,6 @@ using namespace std;
 #define NICINOD  50     //超级块中空闲节点的最大块数  ??????待定
 #define DINODESTART 2*BLOCKSIZ                //i节点起始地址
 #define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
-enum operation{Open,Read,Write};       //定义操作 打开 读 写
 
 #define DIEMPTY     00000
 #define DIFILE      01000
@@ -68,6 +67,8 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 #define DISKFULL    65535
 #define SEEK_SET    0
 
+#define CHANGE      0   //创建者能改
+#define READ        1   //创建者和同组能读
 // 写文件方式
 #define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
 #define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
