@@ -343,7 +343,7 @@ struct dir get_dir(unsigned int d_index) {
 //打开文件
 int open_file(const string& pathname,int operation){
     if(judge_path(pathname)!=2)
-        return false;                                               //不是文件格式，返回错误码
+        return -1;                                               //不是文件格式，返回错误码
     inode *catalog;
     string filename;
     if(pathname.find_last_of('/')==string::npos){//当前目录的子文件     绝对路径
@@ -356,7 +356,7 @@ int open_file(const string& pathname,int operation){
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
     }
-    if(access(READ,catalog))
+    if(!access(READ,catalog))
         return -1;                                                  //权限不足，返回错误码
     struct dir catalog_dir = get_dir(catalog->d_index);
     unsigned int file_index;//文件的硬盘i结点id
@@ -370,7 +370,7 @@ int open_file(const string& pathname,int operation){
             leisure = i;
     }
     if(file_index==-1){//没查找成功
-        if(operation==BUILD_OPEN)//如果不是创建打开，就返回错误码，未找到文件
+        if(operation != BUILD_OPEN)//如果不是创建打开，就返回错误码，未找到文件
             return -1;
         else{//是创建打开                      
             if(leisure==-1)                                             //若目录已满，则返回错误码

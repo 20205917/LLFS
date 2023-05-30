@@ -27,7 +27,8 @@ extern FILE *disk;                               //系统磁盘文件
 
 
     // 打开文件
-    int openFile(const string& pathname,unsigned short flags);
+    int openFile(const string& pathname, unsigned short flags);
+    int open_file(const string& pathname, int operation);
     // 关闭文件
     void closeFile(const string& pathname);
     // 读取文件

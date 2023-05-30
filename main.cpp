@@ -15,31 +15,6 @@ constexpr inline int U(const char* str)
     return str[0] + (str[1] ? U(str + 1) : 0);
 }
 
-// class RunningSystem {
-
-// public:
-//     //RunningSystem();
-//     //~RunningSystem();
-//     // 打开文件
-//     unsigned short openFile();
-//     // 关闭文件
-//     void closeFile();
-//     // 读取文件
-//     unsigned int readFile();
-//     // 写文件
-//     unsigned int writeFile();
-//     // 创建新文件
-//     bool createFile();
-//     // 删除文件
-//     bool deleteFile();
-//     // 从磁盘文件加载系统
-//     void install();
-//     // 格式化系统
-//     void format();
-//     // 退出系统
-//     void halt();
-
-// };
 
 struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
 map<string, user_open_table*> user_openfiles;        //用户打开表组
@@ -57,13 +32,11 @@ int main(){
 //    initial();
     //初始化
     install();
-    // format();
-//    int j = 1;
-//    for(int i =0 ;i<102 ; i++ ){
-//        j = ialloc(1);
-//    }
-//    halt();
-//    string a;//接收用户输入命令
+
+    login("admin");
+    int res = open_file("test.file", BUILD_OPEN);
+    printf("%d", res);
+    //    string a;//接收用户输入命令
 //    const char* A;
 //    string b;//命令参数
 //    string c;//命令参数
@@ -179,4 +152,5 @@ int main(){
 //
 //        }
 //    }
+    return 0;
 }
