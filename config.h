@@ -9,14 +9,13 @@
 #include <malloc.h>
 #include <cstring>
 #include "RunningSystem.h"
-
-#define BLOCKSIZ  512   //每块大小
 #include <iostream>
 using namespace std;
+
 #define BLOCKSIZ  512   //每个物理块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
 #define DIRNUM  31     //每个目录所包含的最大目录项数（文件数）
-#define DIRSIZ  14      //每个目录项名字部分所占字节数，另加i节点号2个字节
+#define DIRSIZ  16      //每个目录项名字部分所占字节数，另加i节点号2个字节
 #define PWDSIZ   12     //口令字
 #define PWDNUM   32     //最多可设32个口令登录
 #define NOFILE  20      //每个用户最多可打开20个文件，即用户打开文件最大次数
@@ -25,9 +24,9 @@ using namespace std;
 #define USERNUM  10     //最多允许10个用户登录
 #define DINODESIZ  32   //每个磁盘i节点所占字节
 #define DINODEBLK  32   //所有磁盘i节点共占32个物理块
-#define FILEBLK  512    //共有512个目录文件物理块
-#define NICFREE  50     //超级块中空闲块数组的最大块数  ????????待定
-#define NICINOD  50     //超级块中空闲节点的最大块数  ??????待定
+#define FILEBLK  1024    //共有512个目录文件物理块
+#define NICFREE  50     //超级块中空闲块数组的最大块数
+#define NICINOD  50     //超级块中空闲节点的最大块数
 #define DINODESTART 2*BLOCKSIZ                //i节点起始地址
 #define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
 enum operation{Open,Read,Write};       //定义操作 打开 读 写
@@ -51,6 +50,13 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 #define SEEK_END 2
 */
 
+#define O_RDONLY 00
+#define O_WRONLY 01
+#define O_RDWR 02
+#define O_CREAT 0100
+#define O_TRUNC  01000
+#define O_APPEND 02000
+
 #define EXICUTE     3
 #define DEFAULTMODE 00777
 #define IUPDATE     00002
@@ -68,20 +74,6 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 // 写文件方式
 #define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
 #define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
-
-// 打开文件方式
-#define O_RDONLY 00
-#define O_WRONLY 01
-#define O_RDWR 10
-#define O_NORMAL 11        // 普通打开，不存在就失败
-#define O_CREAT 0100       // 不存在则创建
-#define O_TRUNC  01000
-#define O_APPEND 02000
-
-#define O_NONEXIST 10000   // 因文件不存在而打开失败
-#define O_USERNOSPACE 20000// 用户打开表空间不足
-#define O_SYSNOSPACE 40000 // 系统打开表空间不足
-#define O_DISKNOSPACE 40000 // 磁盘空间不足
 
 #define USER_UNOPENED (-1)      // 当前用户未打开
 struct dinode{
@@ -115,7 +107,7 @@ struct super_block{
 
     unsigned long  s_free_block_size;    //空闲数据块块数
     unsigned int   s_free_blocks[NICFREE]; //空闲块栈,用于成组连接
-    unsigned short s_pfree_block;        //空闲块栈栈顶的下标
+    unsigned short s_pfree_block;        //空闲块栈栈顶
     char s_fmod;                         //超级块修改标志
 };
 
@@ -156,7 +148,6 @@ struct user_open_item{
 struct user_open_table{
     unsigned short p_uid;
     unsigned short p_gid;
-    int size;
     struct user_open_item items[NOFILE];
 };
 
@@ -214,7 +205,7 @@ struct sys_open_item{
 //// tool
 //
 // 路径是否合法
-bool is_dir( string pathname);
+int judge_path(string pathname);
 // 文件名是否合法
 bool is_file( string filename);
 //// 将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
