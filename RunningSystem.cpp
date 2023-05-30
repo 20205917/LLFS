@@ -213,11 +213,8 @@ void halt(){
                 continue;
             int id = tmp->items[i].index_to_sysopen;
             system_openfiles[id].i_count--;
-            tmp->size--;
             if(system_openfiles[id].i_count == 0)
                 system_openfiles[id].fcb.d_index = 0;
-            if(tmp->size == 0)
-                break;
         }
     }
     user_openfiles.clear();
@@ -435,7 +432,6 @@ int mkdir(string &pathname) {
                 new_inode->dinode.di_addr[j] = balloc();
             }
             new_inode->dinode.di_mode = DIDIR;
-            new_inode->dinode.size = sizeof(dir);
             //初始化硬盘数据区(索引结点区在ialloc中初始化)
             struct dir new_dir = get_dir(new_d_index);
             char* tmp = "root";
