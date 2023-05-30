@@ -54,16 +54,14 @@ string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
 
 int main(){
+    initial();
     //初始化
     install();
-    strcpy(pwds[1].password, "a");
-    strcpy(pwds[5].password, "b");
-    strcpy(pwds[9].password, "c");
-    login("a");
-    login("b");
-    logout("a");
-    login("c");
-    logout("b");
+    format();
+    int j = 1;
+    for(int i =0 ;i<102 ; i++ ){
+        j = ialloc(1);
+    }
     halt();
 //    string a;//接收用户输入命令
 //    const char* A;

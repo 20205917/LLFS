@@ -42,6 +42,8 @@ extern FILE *disk;                               //系统磁盘文件
     inode* createFile(string pathname, unsigned short di_mode);
     // 删除文件
     bool deleteFile(string pathname);
+    // 初始化
+    void initial();
     // 从磁盘文件加载系统
     void install();
     // 格式化系统

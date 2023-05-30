@@ -1,6 +1,7 @@
 //
 // Created by 86136 on 2023/5/25.
 //
+#include <algorithm>
 #include "RunningSystem.h"
 
 //路径是否合法
@@ -25,6 +26,7 @@ int judge_path(string pathname) {
     //走出上面循环后的pathname为最后一级的文件名
     if (pathname.find('.') == string::npos)        //说明不含'.'，为目录名
         return 1;
+
     int count = std::count(pathname.begin(), pathname.end(), '.');
     if (count > 1)         //文件名中不可以含有一个以上的'.'
         return 0;
@@ -61,10 +63,3 @@ void read_data_from(void *data_address, unsigned int *di_addr, int size, FILE *f
     fread((char*)data_address+i*BLOCKSIZ, size-block_num*BLOCKSIZ, 1, fp);
 }
 
-void string_char(string content,char *add,int i){
-    int length = content.length();
-    for(int i=0;i<length;i++){
-        add[i] = content[i];
-    }
-    return;
-}
