@@ -8,6 +8,8 @@
 #include <map>
 #include "config.h"
 
+using namespace std;
+
 struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
 map<string, user_open_table*> user_openfiles;        //用户打开表组
 struct dir root;                          //root目录
@@ -20,24 +22,23 @@ struct dir cur_dir;                       //当前目录的数据
 string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
 
-struct RunningSystem {
-
 
     // 打开文件
-    int openFile(const char *pathname, int flags);
+    int openFile(const string& pathname,unsigned short flags);
     // 关闭文件
-    void closeFile(const char *pathname);
+    void closeFile(const string& pathname);
     // 读取文件
-    std::string readFile(const char *pathname);
-    // 写文件
-    // write_mode可为W_APPEND W_TRUNC 或其他任意值
-    // W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写
-    // 返回值false写失败 true写成功
-    bool writeFile(const char *pathname, int write_mode, std::string content);
+    string readFile(string pathname);
+    /* 写文件
+     write_mode可为W_APPEND W_TRUNC 或其他任意值
+     W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写
+     返回值false写失败 true写成功
+     */
+    bool writeFile(const string& pathname, int write_mode, const string& content);
     // 创建新文件
-    inode* createFile(const char *pathname, unsigned short di_mode);
+    inode* createFile(string pathname, unsigned short di_mode);
     // 删除文件
-    bool deleteFile(const char *pathname);
+    bool deleteFile(stringpathname);
     // 从磁盘文件加载系统
     void install();
     // 格式化系统
@@ -58,24 +59,30 @@ struct RunningSystem {
     string whoami();
 
     // 文件夹路径相关
-    int mkdir(string pathname);     //创建文件夹
-    int chdir(string pathname);     //更改系统的当前文件路径
+    int mkdir(string& pathname);     //创建文件夹
+    int chdir(const string& pathname);     //更改系统的当前文件路径
     int show_dir();                 //展示当前文件路径的内容
-    int rmdir(string pathname);     //删除该路径下的文件夹
+    int rmdir(const string& pathname);     //删除该路径下的文件夹
     struct dir get_dir(int d_index);//根据d_index，获取dir
 
-    // 判断是否被当前用户打开
-    // 若打开返回用户打开表下表
-    // 未打开返回USER_UNOPENED
-    bool isOpened(const char *pathname);
+    // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED
+    bool isOpened(string pathname);
 
+    int seek_catalog_leisure()
     // 磁盘i节点分配
-    struct inode RunningSystem::*ialloc();
-};
+    int ialloc(unsigned int);
 
+    void ifree(unsigned int dinode_id)
 
-struct inode *ialloc(RunningSystem &runningSystem);
+    inode* iget(unsigned int dinode_id)
 
+    bool iput(inode* inode);
 
+    void bfree(int block_num);
 
+    unsigned int balloc();
+
+    unsigned int namei(string name);
+
+    void file_wirte_back(struct inode* inode)
 #endif LLFS_RUNNINGSYSTEM_H

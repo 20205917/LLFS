@@ -1,7 +1,7 @@
 //
 // Created by 86173 on 2023/5/25.
 //
-#include "config.h"
+#include "RunningSystem.h"
 
 //查看某个磁盘i节点id对应的内存i节点是否存在
 inode* findHinode(int dinode_id , hinode* hinodes, FILE* disk){
@@ -26,6 +26,9 @@ inode* findHinode(int dinode_id , hinode* hinodes, FILE* disk){
 hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
     int inode_id = dinode_id % NHINO;
     hinode tmp=findHinode(dinode_id,hinodes,disk);
+inode* iget(int dinode_id){
+
+    hinode tmp= findHinode(dinode_id, hinodes, disk);
     if(tmp!=NULL)
         return tmp;
     // 内存中不存在,需要创建
@@ -47,7 +50,7 @@ hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
     // }
     hinode temp=hinodes[inode_id];
     for(int i=0;temp->i_forw!=NULL;i++){
-        if(i==6)            
+        if(i==6)
             iput(hinodes[inode_id],disk,file_system);
         temp=temp->i_forw;
     }
@@ -57,6 +60,7 @@ hinode iget(int dinode_id , hinode* hinodes, FILE* disk){
 
     // 补充初始化
     newinode->i_flag = 0;
+    newinode->ifChange = 0;
     newinode->d_index = dinode_id;
 
     return newinode;
@@ -97,21 +101,21 @@ bool iput(inode* inode){
 // 从当前目录查找name对应的i节点
 // 将会返回在数组中的下标，若为DIRNUM表明没找到
 // 可能有问题
-unsigned int namei(char* name, hinode cur_path_inode, FILE* disk){
+unsigned int namei(string name){
     // 从磁盘加载目录文件
-    int size = cur_path_inode->dinode.di_size;
+    int size = cur_dir_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
     struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
     unsigned int id;
     long addr;
     int i;
     for(i = 0; i < block_num; i++){
-        id = cur_path_inode->dinode.di_addr[i];
+        id = cur_dir_inode->dinode.di_addr[i];
         addr = DINODESTART + id * DINODESIZ;
         fseek(disk, addr, SEEK_SET);
         fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
-    id = cur_path_inode->dinode.di_addr[block_num];
+    id = cur_dir_inode->dinode.di_addr[block_num];
     addr = DINODESTART + id * DINODESIZ;
     fseek(disk, addr, SEEK_SET);
     fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
@@ -133,21 +137,21 @@ unsigned int namei(char* name, hinode cur_path_inode, FILE* disk){
 }
 // 从当前目录找到下一个空的位置
 // 将会返回在数组中的下标，若为-1表明没找到
-int seek_catalog_leisure(inode* cur_path_inode, FILE* disk){//原来是iname
+int seek_catalog_leisure(){//原来是iname
     // 从磁盘加载目录
-    int size = cur_path_inode->dinode.di_size;
+    int size = cur_dir_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
     struct dir* tmp = (struct dir*) malloc(sizeof(struct dir));
     unsigned int id;
     long addr;
     int i;
     for(i = 0; i < block_num; i++){
-        id = cur_path_inode->dinode.di_addr[i];
+        id = cur_dir_inode->dinode.di_addr[i];
         addr = DINODESTART + id * DINODESIZ;
         fseek(disk, addr, SEEK_SET);
         fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
-    id = cur_path_inode->dinode.di_addr[block_num];
+    id = cur_dir_inode->dinode.di_addr[block_num];
     addr = DINODESTART + id * DINODESIZ;
     fseek(disk, addr, SEEK_SET);
     fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);

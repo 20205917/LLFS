@@ -97,7 +97,6 @@ void logout(const string &pwd) {
     }
     user_openfiles.erase(pwd);
     cur_user = "";
-    return;
 }
 
 bool access(int operation, inode *file_inode) {
@@ -115,41 +114,6 @@ bool access(int operation, inode *file_inode) {
 //判断基础合法性，存在，长度，位于根目录
 //清理多余合法符号
 //具体待修改.(暂定）
-char *clean_path(const char *path){
-
-inode* RunningSystem::createFile(string pathname, unsigned short di_mode){
-    FCB  fcb;
-
-    int i, j;
-    //查找文件
-    fcb = addFile(pathname);
-    //文件已经存在
-    if (fcb.d_ino != 0)
-        return NULL;
-    else
-    {
-        struct inode* inode = ialloc(*this);
-        //在目录中加入
-        ;
-        inode->dinode.di_mode = 1;
-        inode->dinode.di_uid = user_openfiles.find(cur_user)->second->p_uid;
-        inode->dinode.di_gid = user_openfiles.find(cur_user)->second->p_gid;
-        inode->dinode.di_size = 0;
-        inode->ifChange = 1;                //需要重新写回
-        return j;
-    }
-}
-
-int RunningSystem::openFile(string pathname,unsigned short flags) {
-    //判断合法性
-    string path = clean_path(pathname);
-    //clean_path清除
-    if (path.empty())
-        return -1;
-    //寻找文件
-    FCB fcb = find_file(path);
-    if(fcb.d_ino == 0){
-        return -2;}
 
 
 /* 目录文件数据区是否有空闲，是否在父目录数据区里有已存在文件(findfile()实现)，有空闲
@@ -379,44 +343,6 @@ string whoami() {
     return cur_user;
 }
 
-RunningSystem::~RunningSystem(){
-    fclose(disk);
-}
-// 目录文件数据区是否有空闲，是否在父目录数据区里有已存在文件(findfile()实现)，有空闲
-// 申请磁盘i结点，初始化磁盘i结点，磁盘i结点写回磁盘，父目录数据区写回磁盘。
-// 申请磁盘i节点未实现
-inode* RunningSystem::createFile(const char *pathname, unsigned short di_mode)
-{
-    // 判断文件名是否合法
-    if(!is_file(pathname)){
-        return nullptr;
-    }
-    hinode res_inode = (hinode)malloc(sizeof(struct inode));
-    res_inode->d_index = 0;
-    // 是否在父目录数据区里有已存在文件
-    if(find_file(const_cast<char *>(pathname))->d_index != 0){
-        return res_inode;
-    }
-    // 是否有空闲
-    int index = iname(const_cast<char *>(pathname), cur_dir_inode, disk);
-    if(index == DIRNUM)
-        return nullptr;
-    // 申请磁盘i结点
-    struct inode* new_inode = ialloc();
-    // 初始化磁盘i节点
-    new_inode->dinode.di_mode = di_mode;
-    new_inode->dinode.di_size = 0;
-    // 磁盘i节点写回磁盘
-    long addr = DINODESTART + new_inode->d_index * DINODESIZ;
-    fseek(disk, addr, SEEK_SET);
-    fwrite(&(new_inode->dinode), DINODESIZ, 1, disk);
-    // 新增目录项
-    cur_dir.files[index].d_index = new_inode->d_index;
-    cur_dir.size++;
-    // 父目录写回磁盘数据区
-    write_data_back((void*)(&cur_dir), cur_dir_inode->dinode.di_addr, sizeof(struct dir), disk);
-    return new_inode;
-}
 
 /* 文件名是否合法，需要findfile，判断是否有权限
 // 修改父目录数据区并写入磁盘，iput()删除文件
@@ -506,7 +432,6 @@ string readFile(string pathname) {
     // 获取用户的打开表
     user_open_table *userOpenTable = user_openfiles[cur_user];
     // 获取用户uid
-    unsigned short p_uid = userOpenTable->p_uid;
 
     // 遍历查询该文件
     unsigned short id;
