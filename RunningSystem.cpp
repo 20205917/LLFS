@@ -76,6 +76,7 @@ void initial(){
     }
     fseek(disk, 0, SEEK_SET);
     fwrite(pwds, sizeof(PWD), PWDNUM, disk);
+    fclose(disk);
 }
 
 void install() {
