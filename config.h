@@ -12,8 +12,6 @@
 #include <iostream>
 using namespace std;
 
-static const char* disk_file_name = "D:\\disk.bin";
-
 #define BLOCKSIZ  512   //每个物理块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
 #define DIRNUM  31     //每个目录所包含的最大目录项数（文件数）
@@ -28,7 +26,7 @@ static const char* disk_file_name = "D:\\disk.bin";
 #define DINODEBLK  32   //所有磁盘i节点共占32个物理块
 #define FILEBLK  1024    //共有512个目录文件物理块
 #define NICFREE  50     //超级块中空闲块数组的最大块数
-#define NICINOD  50     //超级块中空闲节点的最大块数
+#define NICINOD  10     //超级块中空闲节点的最大块数
 #define DINODESTART 2*BLOCKSIZ                //i节点起始地址
 #define DATASTART (2+DINODEBLK)*BLOCKSIZ     //目录、文件区起始地址
 enum operation{Open,Read,Write};       //定义操作 打开 读 写
@@ -72,14 +70,10 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 
 #define READ    1   //只有组内成员（包括创建者）可以读
 #define CHANGE  2   //只有创建者可以更改
-#define DELETE  3   //删除
+
 // 写文件方式
 #define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
 #define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
-// 打开方式
-#define BUILD_OPEN      1 //创建打开
-#define FP_HEAD_OPEN    2 //在开头打开文件
-#define FP_TAIL_OPEN    3 //在末尾打开文件
 
 #define USER_UNOPENED (-1)      // 当前用户未打开
 struct dinode{
@@ -141,6 +135,7 @@ struct dir{
 struct user_open_item{
     unsigned int f_count;               //使用进程数
     unsigned short u_default_mode;      //打开方式
+    struct inode *f_inode;              //内存i节点指针
     unsigned long f_offset;             //文件偏移量（文件指针）
     unsigned short index_to_sysopen;       //系统打开表索引
 };

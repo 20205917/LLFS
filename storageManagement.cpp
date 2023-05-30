@@ -6,6 +6,44 @@
 //一个磁盘的i节点
 static struct dinode block_buf[BLOCKSIZ / DINODESIZ];
 
+// 从当前目录查找name对应的i节点
+// 将会返回在数组中的下标，若为DIRNUM表明没找到
+// 可能有问题
+unsigned int namei(string name){
+    // 从磁盘加载目录文件
+    int size = cur_dir_inode->dinode.di_size;
+    int block_num = size / BLOCKSIZ;
+    auto* tmp = (struct dir*) malloc(sizeof(struct dir));
+    unsigned int id;
+    long addr;
+    int i;
+    for(i = 0; i < block_num; i++){
+        id = cur_dir_inode->dinode.di_addr[i];
+        addr = DINODESTART + id * DINODESIZ;
+        fseek(disk, addr, SEEK_SET);
+        fread((char*)tmp+i*BLOCKSIZ, BLOCKSIZ, 1, disk);
+    }
+    id = cur_dir_inode->dinode.di_addr[block_num];
+    addr = DINODESTART + id * DINODESIZ;
+    fseek(disk, addr, SEEK_SET);
+    fread((char*)tmp+block_num*BLOCKSIZ, size-BLOCKSIZ*block_num, 1, disk);
+
+    // 开始查找
+    bool found = false;
+
+    for(i = 0; i < tmp->size; i++){
+        if(!strcmp(tmp->files[i].d_name, name.c_str()) && tmp->files[i].d_index != 0){
+            found = true;
+            break;
+        }
+    }
+    free(tmp);
+    if(found)
+        return i;
+    else
+        return DIRNUM;
+}
+
 int ialloc(unsigned int) {
     unsigned int oneNum = BLOCKSIZ / DINODESIZ;
 

@@ -74,7 +74,7 @@ extern FILE *disk;                               //系统磁盘文件
     // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED
     bool isOpened(string pathname);
 
-    int seek_catalog_leisure(inode *catalog);
+    int seek_catalog_leisure();
     // 磁盘i节点分配
     int ialloc(unsigned int);
 
@@ -88,6 +88,7 @@ extern FILE *disk;                               //系统磁盘文件
 
     unsigned int balloc();
 
+    unsigned int namei(string name);
 
     void file_wirte_back(struct inode* inode);
 

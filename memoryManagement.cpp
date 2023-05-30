@@ -32,7 +32,7 @@ hinode iget(unsigned int dinode_id){
     long addr = DINODESTART + dinode_id * DINODESIZ;
     hinode newinode = (hinode)malloc(sizeof(struct inode));
     fseek(disk, addr, SEEK_SET);
-    fread(&(newinode->dinode), DINODESIZ, 1, disk);
+    fread(&(newinode->dinode.di_number), DINODESIZ, 1, disk);
     temp=hinodes[inode_id];
     for(int i=0;temp->i_forw!=NULL;i++){
         if(i==6)
@@ -42,7 +42,7 @@ hinode iget(unsigned int dinode_id){
     temp->i_forw=newinode;
     newinode->i_forw=NULL;
     newinode->i_back=temp;
-    return newinode;
+    return temp;
 }
 
 // 释放i节点回磁盘
