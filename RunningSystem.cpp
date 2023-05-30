@@ -24,7 +24,7 @@ void initial(){
     file_system.s_pdinode = 0;
     file_system.s_rdinode = 2;
 
-    file_system.s_free_block_size = FILEBLK - 1;
+    file_system.s_free_block_size = 0;
     for(int i = FILEBLK; i > 1; i--){
         bfree(i);
     }
@@ -72,7 +72,7 @@ void initial(){
     strcpy(pwds[1].password, "1");
     // Çå¿Õ
     for(int i = 2; i < PWDNUM; i++){
-        strcpy(pwds[0].password, "");
+        strcpy(pwds[i].password, "");
     }
     fseek(disk, 0, SEEK_SET);
     fwrite(pwds, sizeof(PWD), PWDNUM, disk);
