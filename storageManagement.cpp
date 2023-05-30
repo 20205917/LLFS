@@ -69,6 +69,9 @@ void file_wirte_back(struct inode* inode){
 // 成组链法的空间回收
 // 要注意第一个组长块只有49块有效，其首位为0
 void bfree(int block_num){
+    if(block_num == 1){
+        return;
+    }
     if(file_system.s_pfree_block == NICFREE){
         // 栈满已经成组
         // 先写回磁盘

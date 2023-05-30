@@ -15,7 +15,7 @@
 using namespace std;
 #define BLOCKSIZ  512   //每个物理块大小
 #define SYSOPENFILE 40  //系统打开文件表最大项数
-#define DIRNUM  128     //每个目录所包含的最大目录项数（文件数）
+#define DIRNUM  31     //每个目录所包含的最大目录项数（文件数）
 #define DIRSIZ  14      //每个目录项名字部分所占字节数，另加i节点号2个字节
 #define PWDSIZ   12     //口令字
 #define PWDNUM   32     //最多可设32个口令登录
@@ -51,13 +51,6 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 #define SEEK_END 2
 */
 
-#define O_RDONLY 00
-#define O_WRONLY 01
-#define O_RDWR 02
-#define O_CREAT 0100
-#define O_TRUNC  01000
-#define O_APPEND 02000
-
 #define EXICUTE     3
 #define DEFAULTMODE 00777
 #define IUPDATE     00002
@@ -76,6 +69,20 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 #define W_APPEND (-2)      // 追加，即从文件末尾写起，补充原文件
 #define W_TRUNC  (-1)      // 截断，即从文件开头写起，原文件作废
 
+// 打开文件方式
+#define O_RDONLY 00
+#define O_WRONLY 01
+#define O_RDWR 10
+#define O_NORMAL 11        // 普通打开，不存在就失败
+#define O_CREAT 0100       // 不存在则创建
+#define O_TRUNC  01000
+#define O_APPEND 02000
+
+#define O_NONEXIST 10000   // 因文件不存在而打开失败
+#define O_USERNOSPACE 20000// 用户打开表空间不足
+#define O_SYSNOSPACE 40000 // 系统打开表空间不足
+#define O_DISKNOSPACE 40000 // 磁盘空间不足
+
 #define USER_UNOPENED (-1)      // 当前用户未打开
 struct dinode{
     unsigned short di_number;    // 硬连接次数
@@ -83,7 +90,7 @@ struct dinode{
     unsigned short di_uid;       // 所有者标识符
     unsigned short di_gid;       // 所在组标识符
     unsigned short di_size;      // 文件的字节数
-    unsigned int di_addr[NADDR]; // 文件的硬盘索引数组，即各硬盘节点的id
+    unsigned short di_addr[NADDR]; // 文件的硬盘索引数组，即各硬盘节点的id
 };
 
 typedef struct inode{
@@ -108,7 +115,7 @@ struct super_block{
 
     unsigned long  s_free_block_size;    //空闲数据块块数
     unsigned int   s_free_blocks[NICFREE]; //空闲块栈,用于成组连接
-    unsigned short s_pfree_block;        //空闲块栈栈顶
+    unsigned short s_pfree_block;        //空闲块栈栈顶的下标
     char s_fmod;                         //超级块修改标志
 };
 
@@ -120,7 +127,7 @@ struct PWD{
 };
 
 struct FCB{
-    char d_name[DIRSIZ];
+    char d_name[DIRSIZ-4];
     unsigned int d_index;            // 硬盘i节点id
 };
 
@@ -149,6 +156,7 @@ struct user_open_item{
 struct user_open_table{
     unsigned short p_uid;
     unsigned short p_gid;
+    int size;
     struct user_open_item items[NOFILE];
 };
 

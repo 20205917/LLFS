@@ -16,7 +16,7 @@ bool is_file(string filename){
 }
 
 //将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
-bool write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp){
+void write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *fp){
     int block_num = size / BLOCKSIZ;
     long addr;
     int i;
@@ -28,7 +28,6 @@ bool write_data_back(void *data_address, unsigned int *di_addr, int size, FILE *
     addr = DATASTART + di_addr[i] * BLOCKSIZ;
     fseek(fp, addr, SEEK_SET);
     fwrite((char*)data_address+i*BLOCKSIZ, size-block_num*BLOCKSIZ, 1, fp);
-    return true;
 }
 
 //将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
