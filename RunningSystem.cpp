@@ -342,7 +342,7 @@ struct dir get_dir(unsigned int d_index) {
 }
 
 //打开文件
-int open_file(const string &pathname, int operation) {
+int open_file(string &pathname, int operation) {
 //    if (judge_path(pathname) != 2)
 //        return -1;                                               //不是文件格式，返回错误码
     inode *catalog;
@@ -351,6 +351,8 @@ int open_file(const string &pathname, int operation) {
         catalog = cur_dir_inode;
         filename = pathname;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
