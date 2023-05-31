@@ -40,7 +40,7 @@ extern FILE *disk;                               //系统磁盘文件
     bool writeFile(const string& pathname, int write_mode, const string& content);
     bool writeFile(int fd, const string& content);
     // 创建新文件
-    inode* createFile(string pathname, unsigned short di_mode);
+    int createFile(string pathname, int di_mode);
     // 删除文件
     bool deleteFile(string pathname);
     // 初始化

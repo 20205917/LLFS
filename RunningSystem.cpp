@@ -366,6 +366,7 @@ int open_file(const string &pathname, int operation) {
         if (catalog_dir->files[i].d_name == filename) {//查找成功
             //查找成功，获取磁盘索引号
             file_index = catalog_dir->files[i].d_index;
+            break;
         }
         if (catalog_dir->files[i].d_index == 0)
             leisure = i;
@@ -810,4 +811,50 @@ bool writeFile(int fd, const string& content) {
     // 写文件
     file_inode->content = (char*) malloc(content.size() + 1);
     strcpy((char*)file_inode->content, content.c_str());
+}
+
+int createFile(string pathname, int operation){
+//    if (judge_path(pathname) != 2)
+//        return -1;                                               //不是文件格式，返回错误码
+    inode *catalog;
+    string filename;
+    if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
+        catalog = cur_dir_inode;
+        filename = pathname;
+    } else {
+        int pos = pathname.find_last_of('/') + 1;
+        string father_path = pathname.substr(0, pos - 1);
+        filename = pathname.substr(pos);
+        catalog = find_file(father_path);//获取目录文件的内存索引节点
+    }
+    if (!access(Write, catalog))
+        return -2;                                                  //权限不足，返回错误码
+    auto *catalog_dir = (dir *) catalog->content;
+    unsigned int file_index;//文件的硬盘i结点id
+    int leisure = -1;//目录下的空闲索引
+    int i;
+    for (i = 0; i < DIRNUM; i++) {
+        if (catalog_dir->files[i].d_name == filename) {//查找成功
+            //直接返回
+            return -3;
+        }
+        if (catalog_dir->files[i].d_index == 0)
+            leisure = i;
+    }
+    inode * new_inode;
+    if (i == DIRNUM) {//没查找成功
+        if (leisure == -1)                                             //若目录已满，则返回错误码
+            return -1;
+        //创建新结点
+        file_index = ialloc(1);
+        new_inode = iget(file_index);
+        new_inode->dinode.di_mode = DIFILE;
+        new_inode->ifChange = 1;
+        //修改目录的数据
+        strcpy(catalog_dir->files[leisure].d_name, filename.data());
+        catalog_dir->files[leisure].d_index = file_index;
+        catalog_dir->size++;
+        catalog->ifChange = 1;
+    }
+    return 0;//创建成功
 }

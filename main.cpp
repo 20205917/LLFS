@@ -33,7 +33,8 @@ int main(){
     install();
     string path;
     login("admin");
-   int fd = open_file("test", BUILD_OPEN);
+    int res = createFile("test", BUILD_OPEN);
+    int fd = open_file("test", BUILD_OPEN);
     writeFile(fd, "this is a test");
     return 0;
 //    int j = 1;
