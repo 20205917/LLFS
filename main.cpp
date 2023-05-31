@@ -42,7 +42,7 @@ string cur_path;                          // 当前路径名
 
 int main(){
     int i;
-    initial();
+//    initial();
     // 加载磁盘
     install();
     string path;

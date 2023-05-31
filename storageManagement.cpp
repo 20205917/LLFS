@@ -113,6 +113,8 @@ void file_wirte_back(struct inode* inode){
 // 成组链法的空间回收
 // 要注意第一个组长块只有49块有效，其首位为0
 void bfree(int block_num){
+    if(block_num >= FILEBLK)
+        return;
     if(block_num == 1){
         return;
     }
