@@ -9,7 +9,7 @@
 int judge_path(string pathname) {
     string Subpathname;
     int first;//第一次出现'/'的位置
-    if (pathname == "" || pathname[pathname.length() - 1] == '/')        //最后一个字符为'/'以及string为空时错
+    if (pathname == "" || (pathname[pathname.length() - 1] == '/'&&pathname.length()!=1))        //最后一个字符为'/'以及string为空时错
         return 0;
     if (pathname[0] == '/')//绝对路径
         pathname = pathname.substr(1, pathname.length());      //除去第一个字符'/'

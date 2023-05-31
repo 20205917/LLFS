@@ -15,6 +15,7 @@ bool Split(vector<char*>* token,char* order){
         token->push_back(std::strtok(NULL," "));
     }
     token->pop_back();
+    return true;
 }
 int toUnicode(const char* str)
 {
@@ -40,6 +41,7 @@ string cur_path;                        //当前目录名
 
 int main(){
     int i;
+    int state;//状态
     //初始化
     install();
     string path;
@@ -177,10 +179,39 @@ int main(){
     vector<char*> token;
     char order[50];
     while(1){
+        cout<<cur_path;
         token.resize(0);
         cin.get(order,50);
-        if(Split(&token,order)){
-            cout<<endl<<"指令格式错误";
+        if(Split(&token,order))
+            cout<<endl<<"未找到匹配指令"<<endl<<cur_path;
+
+        switch(toUnicode(token[0])){//匹配指令名
+            case U("login")://用户登录
+                if(token.size()!=2)
+                    cout<<endl<<"指令格式错误"<<endl<<cur_path;
+                else{
+                    state=login(std::string(token[1]));
+                    if(state==-1)
+                        cout<<endl<<"未找到匹配口令"<<endl<<cur_path;
+                    else if(state==-2)
+                        cout<<endl<<"该用户已经处于登录状态"<<endl<<cur_path;
+                    else if(state==0)
+                        cout<<endl<<"成功登录"<<endl<<cur_path;
+                    else
+                        cout<<endl<<"登录用户已达上限"<<endl<<cur_path;
+                }
+
+
+            case U("logout")://用户登出
+                if(token.size()!=2)
+                    cout<<endl<<"指令格式错误"<<endl<<cur_path;
+                else
+                    cout<<endl<<"成功登出"<<endl<<cur_path;
+            
+            case U("open")://打开文件
+                
+                
+
         }
         
     }
