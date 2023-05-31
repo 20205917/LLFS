@@ -25,10 +25,10 @@ extern string cur_path;                        //当前目录名
 // 索引区有DINODEBLK个块，数据区FILEBLK个块
 extern FILE *disk;                               //系统磁盘文件
 
-
+    int hard_link(string &pathname,string &newname);
     // 打开文件
     int openFile(const string& pathname, unsigned short flags);
-    int open_file(string& pathname, int operation);
+    int open_file(string& pathname);
     // 关闭文件
     void closeFile(const string& pathname);
     int close_file(int fd);
@@ -42,7 +42,7 @@ extern FILE *disk;                               //系统磁盘文件
     bool writeFile(const string& pathname, int write_mode, const string& content);
     bool writeFile(int fd, const string& content);
     // 创建新文件
-    int createFile(string pathname, int di_mode);
+    int createFile(string pathname);
     // 删除文件
     int deleteFile(string pathname);
     // 初始化

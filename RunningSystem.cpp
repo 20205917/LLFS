@@ -797,7 +797,7 @@ bool writeFile(int fd, const string& content) {
 }
 
 // 硬链接次数初始化为1
-int createFile(string pathname, int operation){
+int createFile(string pathname){
 //    if (judge_path(pathname) != 2)
 //        return -1;                                               //不是文件格式，返回错误码
     inode *catalog;
