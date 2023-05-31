@@ -55,8 +55,6 @@ int main(){
     string new_name = "b.txt";
     hard_link(file,new_name);
     show_dir();
-    std::cout << "12345";
-
     show_whole_dir();
 
     return 0;
