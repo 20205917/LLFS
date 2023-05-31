@@ -37,7 +37,8 @@ struct PWD pwds[PWDNUM];                  //用户数组
 struct inode *cur_dir_inode;             //当前目录的索引结点
 string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
-string cur_path;                        //当前目录名
+string cur_path;                          // 当前路径名
+
 
 int main(){
     int i;
@@ -46,8 +47,14 @@ int main(){
     install();
     string path;
     login("admin");
-   int fd = open_file("test", BUILD_OPEN);
+    std::string filename = "test";
+    int res = createFile(filename, BUILD_OPEN);
+
+    int fd = open_file(filename, BUILD_OPEN);
     writeFile(fd, "this is a test");
+    std::cout << readFile(fd);
+    close_file(fd);
+    halt();
     return 0;
 //    int j = 1;
 //    for(int i =0 ;i<102 ; i++ ){
@@ -56,8 +63,7 @@ int main(){
 //    halt();
 //    string a;//接收用户输入命令
 
-    login("admin");
-    open_file("test.file", BUILD_OPEN);
+
 
 
 //    string a;//接收用户输入命令

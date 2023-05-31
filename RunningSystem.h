@@ -19,7 +19,7 @@ extern struct PWD pwds[PWDNUM];                  //用户数组
 
 extern struct inode *cur_dir_inode;             //当前目录的索引结点
 extern string cur_user;                          //当前用户
-string cur_path;                        //当前目录名
+extern string cur_path;                        //当前目录名
 // 现在分配有2+DINODEBLK+FILEBLK个磁盘块
 // 前2个为引导快（现在放了用户信息）、超级块
 // 索引区有DINODEBLK个块，数据区FILEBLK个块
@@ -28,11 +28,12 @@ extern FILE *disk;                               //系统磁盘文件
 
     // 打开文件
     int openFile(const string& pathname, unsigned short flags);
-    int open_file(const string& pathname, int operation);
+    int open_file(string& pathname, int operation);
     // 关闭文件
     void closeFile(const string& pathname);
+    int close_file(int fd);
     // 读取文件
-    string readFile(const string& pathname);
+    string readFile(int fd);
     /* 写文件
      write_mode可为W_APPEND W_TRUNC 或其他任意值
      W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写
@@ -41,9 +42,9 @@ extern FILE *disk;                               //系统磁盘文件
     bool writeFile(const string& pathname, int write_mode, const string& content);
     bool writeFile(int fd, const string& content);
     // 创建新文件
-    inode* createFile(string pathname, unsigned short di_mode);
+    int createFile(string pathname, int di_mode);
     // 删除文件
-    bool deleteFile(string pathname);
+    bool deleteFile(string pathname,int operation);
     // 初始化
     void initial();
     // 从磁盘文件加载系统
@@ -68,9 +69,9 @@ extern FILE *disk;                               //系统磁盘文件
 
     // 文件夹路径相关
     int mkdir(string& pathname);     //创建文件夹
-    int chdir(const string& pathname);     //更改系统的当前文件路径
+    int chdir(string& pathname);     //更改系统的当前文件路径
     int show_dir();                 //展示当前文件路径的内容
-    int rmdir(const string& pathname);     //删除该路径下的文件夹
+    int rmdir(string& pathname);     //删除该路径下的文件夹
     struct dir get_dir(unsigned int d_index);//根据d_index，获取dir
 
     // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED
