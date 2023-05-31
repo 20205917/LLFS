@@ -5,7 +5,7 @@
 #include <string>
 #include "RunningSystem.h"
 
-void initial(){
+void initial() {
     // 读硬盘
     disk = fopen(disk_file_name, "wb+");
     char nothing[BLOCKSIZ] = {0};
@@ -18,14 +18,14 @@ void initial(){
     file_system.s_block_size = FILEBLK - 1;
     file_system.s_dinode_size = BLOCKSIZ / DINODESIZ * DINODEBLK;
     file_system.s_free_dinode_num = file_system.s_dinode_size - 1;
-    for(int i = 0; i < NICINOD; i++){
+    for (int i = 0; i < NICINOD; i++) {
         file_system.s_dinodes[i] = i + 2;
     }
     file_system.s_pdinode = 0;
     file_system.s_rdinode = 2;
 
     file_system.s_free_block_size = 0;
-    for(int i = FILEBLK; i > 1; i--){
+    for (int i = FILEBLK; i > 1; i--) {
         bfree(i);
     }
     file_system.s_fmod = '0';
@@ -54,7 +54,7 @@ void initial(){
     // 父目录
     root.files[1].d_index = 1;
     strcpy(root.files[1].d_name, "root");
-    for(int i = 2; i < DIRNUM; i++){
+    for (int i = 2; i < DIRNUM; i++) {
         root.files[i].d_index = 0;
     }
 
@@ -71,7 +71,7 @@ void initial(){
     pwds[1].p_gid = 1;
     strcpy(pwds[1].password, "1");
     // 清空
-    for(int i = 2; i < PWDNUM; i++){
+    for (int i = 2; i < PWDNUM; i++) {
         strcpy(pwds[i].password, "");
     }
     fseek(disk, 0, SEEK_SET);
@@ -90,7 +90,7 @@ void install() {
     // 初始化hinodes
     for (auto &i: hinodes) {
         i = (hinode) malloc(sizeof(struct inode));
-        memset(i,0,sizeof (inode));
+        memset(i, 0, sizeof(inode));
     }
 
     // 初始化system_openfiles
@@ -123,19 +123,20 @@ void install() {
         fseek(disk, addr, SEEK_SET);
         fread((char *) (&root) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
         fseek(disk, addr, SEEK_SET);
-        fread((char *) (&cur_dir) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
+        fread((char *) (&cur_dir_inode->content) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
     id = cur_dir_inode->dinode.di_addr[block_num];
     addr = DATASTART + id * BLOCKSIZ;
     fseek(disk, addr, SEEK_SET);
     fread((char *) (&root) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
     fseek(disk, addr, SEEK_SET);
-    fread((char *) (&cur_dir) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
+    cur_dir_inode->content = malloc(size - BLOCKSIZ * block_num);
+    fread((char *) (cur_dir_inode->content) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
 
 }
 
 // 格式化
-void format(){
+void format() {
     // admin账户
     pwds[0].p_uid = 0;
     pwds[0].p_gid = 0;
@@ -145,7 +146,7 @@ void format(){
     pwds[1].p_gid = 1;
     strcpy(pwds[1].password, "1");
     // 清空
-    for(int i = 2; i < PWDNUM; i++){
+    for (int i = 2; i < PWDNUM; i++) {
         strcpy(pwds[0].password, "");
     }
     fseek(disk, 0, SEEK_SET);
@@ -157,20 +158,20 @@ void format(){
     file_system.s_block_size = FILEBLK - 1;
     file_system.s_dinode_size = BLOCKSIZ / DINODESIZ * DINODEBLK;
     file_system.s_free_dinode_num = file_system.s_dinode_size - 1;
-    for(int i = 0; i < NICINOD; i++){
+    for (int i = 0; i < NICINOD; i++) {
         file_system.s_dinodes[i] = i + 2;
     }
     file_system.s_pdinode = 0;
     file_system.s_rdinode = 2;
 
     file_system.s_free_block_size = FILEBLK - 1;
-    for(int i = FILEBLK; i > 1; i--){
+    for (int i = FILEBLK; i > 1; i--) {
         bfree(i);
     }
     file_system.s_fmod = '0';
 
     // 清空系统打开表
-    for(auto & system_openfile : system_openfiles){
+    for (auto &system_openfile: system_openfiles) {
         system_openfile.i_count = 0;
         system_openfile.fcb.d_index = 0;
     }
@@ -179,8 +180,8 @@ void format(){
     user_openfiles.clear();
 
     // 清空内存结点缓存
-    for(int i = 0; i < NHINO; i++){
-        while(hinodes[i]->i_forw){
+    for (int i = 0; i < NHINO; i++) {
+        while (hinodes[i]->i_forw) {
             iput(hinodes[i]->i_forw);
         }
     }
@@ -196,33 +197,33 @@ void format(){
         id = cur_dir_inode->dinode.di_addr[i];
         addr = DATASTART + id * BLOCKSIZ;
         fseek(disk, addr, SEEK_SET);
-        fread((char *) (&cur_dir) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
+        fread((char *) (&cur_dir_inode->content) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
     id = cur_dir_inode->dinode.di_addr[block_num];
     addr = DATASTART + id * BLOCKSIZ;
     fseek(disk, addr, SEEK_SET);
-    fread((char *) (&cur_dir) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
+    fread((char *) (&cur_dir_inode->content) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
 }
 
 // 关机并保存
-void halt(){
+void halt() {
     // 检查当前用户表，释放
-    for(const auto& data: user_openfiles){
-        user_open_table* tmp = data.second;
-        for(int i = 0; i < NOFILE; i++){
-            if(tmp->items[i].f_inode == nullptr)
+    for (const auto &data: user_openfiles) {
+        user_open_table *tmp = data.second;
+        for (int i = 0; i < NOFILE; i++) {
+            if (tmp->items[i].f_inode == nullptr)
                 continue;
             int id = tmp->items[i].index_to_sysopen;
             system_openfiles[id].i_count--;
-            if(system_openfiles[id].i_count == 0)
+            if (system_openfiles[id].i_count == 0)
                 system_openfiles[id].fcb.d_index = 0;
         }
     }
     user_openfiles.clear();
 
     // 清空缓存
-    for(int i = 0; i < NHINO; i++){
-        while(hinodes[i]->i_forw){
+    for (int i = 0; i < NHINO; i++) {
+        while (hinodes[i]->i_forw) {
             iput(hinodes[i]->i_forw);
         }
     }
@@ -256,7 +257,6 @@ int login(const string &pwd) {
         //设置当前文件为根目录
         cur_user = pwd;
         cur_dir_inode = iget(1);
-        cur_dir = get_dir(1);
         return 0;
     }
     return -3;
@@ -267,10 +267,10 @@ void logout(const string &pwd) {
     //关闭每个文件
     for (auto &item: u->items) {
         short id_to_sysopen = item.index_to_sysopen;
-        if ( id_to_sysopen!= -1) {
+        if (id_to_sysopen != -1) {
             //关闭后打开数为零需要释放内存节点
             system_openfiles[id_to_sysopen].i_count--;
-            if(system_openfiles[id_to_sysopen].i_count == 0){
+            if (system_openfiles[id_to_sysopen].i_count == 0) {
                 iput(iget(system_openfiles[id_to_sysopen].fcb.d_index));
             }
         }
@@ -287,9 +287,9 @@ bool access(int operation, inode *file_inode) {
     user_open_table *T = user_openfiles.find(cur_user)->second;
     bool creator = file_inode->dinode.di_uid == T->p_uid;//文件的uid等于用户的uid 说明是创建者
     bool group = file_inode->dinode.di_gid == T->p_gid;//文件的gid等于用户的gid 说明是组内成员
-    if(file_inode->dinode.di_gid==0&&operation==DELETE)//根目录不能删
+    if (file_inode->dinode.di_gid == 0 && operation == FDELETE)//根目录不能删
         return false;
-    if(creator || group && READ)
+    if (creator || group && READ)
         return true;
     return false;
 }
@@ -330,9 +330,9 @@ struct dir get_dir(unsigned int d_index) {
     inode *dir_inode = iget(d_index);
     // 从磁盘加载目录
     struct dir work_dir{};
-    work_dir.size = dir_inode->dinode.di_size / DIRSIZ ;
-    int i = 0;
-    for (i = 0; i < work_dir.size / (BLOCKSIZ / DIRSIZ ); i++) {
+    work_dir.size = dir_inode->dinode.di_size / DIRSIZ;
+    int i;
+    for (i = 0; i < work_dir.size / (BLOCKSIZ / DIRSIZ); i++) {
         fseek(disk, DATASTART + BLOCKSIZ * dir_inode->dinode.di_addr[i], SEEK_SET);
         fread(&work_dir.files[BLOCKSIZ / DIRSIZ * i], 1, BLOCKSIZ, disk);
     }
@@ -340,124 +340,127 @@ struct dir get_dir(unsigned int d_index) {
     fread(&work_dir.files[BLOCKSIZ / DIRSIZ * i], 1, dir_inode->dinode.di_size % BLOCKSIZ, disk);
     return work_dir;
 }
+
 //打开文件
-int open_file(const string& pathname,int operation){
-    if(judge_path(pathname)!=2)
-        return false;                                               //不是文件格式，返回错误码
+int open_file(const string &pathname, int operation) {
+//    if (judge_path(pathname) != 2)
+//        return -1;                                               //不是文件格式，返回错误码
     inode *catalog;
     string filename;
-    if(pathname.find_last_of('/')==string::npos){//当前目录的子文件     绝对路径
+    if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
         catalog = cur_dir_inode;
         filename = pathname;
-    }
-    else{
+    } else {
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
     }
-    if(access(READ,catalog))
+    if (!access(READ, catalog))
         return -1;                                                  //权限不足，返回错误码
-    struct dir catalog_dir = get_dir(catalog->d_index);
+    auto *catalog_dir = (dir *) catalog->content;
     unsigned int file_index;//文件的硬盘i结点id
     int leisure = -1;//目录下的空闲索引
-    for (int i = 0;i<DIRNUM;i++) {
-        if (catalog_dir.files[i].d_name == filename){//查找成功
+    int i;
+    for (i = 0; i < DIRNUM; i++) {
+        if (catalog_dir->files[i].d_name == filename) {//查找成功
             //查找成功，获取磁盘索引号
-            file_index = catalog_dir.files[i].d_index;
+            file_index = catalog_dir->files[i].d_index;
         }
-        if(catalog_dir.files[i].d_index==0)
+        if (catalog_dir->files[i].d_index == 0)
             leisure = i;
     }
-    if(file_index==-1){//没查找成功
-        if(operation==BUILD_OPEN)//如果不是创建打开，就返回错误码，未找到文件
+    inode * new_inode;
+    if (i == DIRNUM) {//没查找成功
+        if (operation != BUILD_OPEN)//如果不是创建打开，就返回错误码，未找到文件
             return -1;
-        else{//是创建打开                      
-            if(leisure==-1)                                             //若目录已满，则返回错误码
+        else {//是创建打开
+            if (leisure == -1)                                             //若目录已满，则返回错误码
                 return -1;
             //创建新结点
             file_index = ialloc(1);
-            inode *new_inode = iget(file_index);
+            new_inode = iget(file_index);
             new_inode->dinode.di_mode = DIFILE;
             new_inode->ifChange = 1;
             //修改目录的数据
-            strcpy(catalog_dir.files[leisure].d_name,filename.data());
-            catalog_dir.files[leisure].d_index = file_index;
-            catalog_dir.size++;
+            strcpy(catalog_dir->files[leisure].d_name, filename.data());
+            catalog_dir->files[leisure].d_index = file_index;
+            catalog_dir->size++;
             catalog->ifChange = 1;
             //写回文件磁盘i结点内容，写回目录磁盘i结点内容
-            iput(new_inode);
-            iput(catalog);
         }
     }
+    else// 查找成功，找到内存索引节点
+        new_inode = iget(file_index);
     //修改系统打开文件表
     short sys_leisure = 0;
-    for(;sys_leisure< SYSOPENFILE;sys_leisure++){//找到空闲
-        if(system_openfiles[sys_leisure].i_count==0){
+    for (; sys_leisure < SYSOPENFILE; sys_leisure++) {//找到空闲
+        if (system_openfiles[sys_leisure].i_count == 0) {
             system_openfiles[sys_leisure].i_count++;
             system_openfiles[sys_leisure].fcb.d_index = file_index;
-            strcpy(system_openfiles[sys_leisure].fcb.d_name,filename.data());
+            strcpy(system_openfiles[sys_leisure].fcb.d_name, filename.data());
             break;
         }
     }
-    if(sys_leisure == SYSOPENFILE)
+    if (sys_leisure == SYSOPENFILE)
         return -1;//没找到系统打开表空闲的表项
     //修改用户文件打开表
     user_open_table *T = user_openfiles.find(cur_user)->second;
     int usr_leisure = 0;
-    for(;usr_leisure<SYSOPENFILE;usr_leisure++){
-        if(T->items[usr_leisure].f_count==0){
+    for (; usr_leisure < SYSOPENFILE; usr_leisure++) {
+        if (T->items[usr_leisure].f_count == 0) {
             T->items[usr_leisure].f_count++;
-            if(operation==FP_TAIL_OPEN)
-                T->items[usr_leisure].f_offset=iget(file_index)->dinode.di_size;
+            if (operation == FP_TAIL_OPEN)
+                T->items[usr_leisure].f_offset = iget(file_index)->dinode.di_size;
             else
-                T->items[usr_leisure].f_offset=0;
-            T->items[usr_leisure].index_to_sysopen=sys_leisure;
-            T->items[usr_leisure].u_default_mode=BUILD_OPEN;
+                T->items[usr_leisure].f_offset = 0;
+            T->items[usr_leisure].index_to_sysopen = sys_leisure;
+            T->items[usr_leisure].u_default_mode = operation;
+            T->items[usr_leisure].f_inode = new_inode;
             return usr_leisure;//返回用户打开表索引
         }
     }
     return -1;//没找到用户打开表空闲表项
 }
+
 //关闭文件
-int close_file(const string& pathname){
-    if(judge_path(pathname)!=2)
+int close_file(const string &pathname) {
+    if (judge_path(pathname) != 2)
         return false;                                               //不是文件格式，返回错误码
     inode *catalog;
     string filename;
-    if(pathname.find_last_of('/')==string::npos){//当前目录的子文件     绝对路径
+    if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
         catalog = cur_dir_inode;
         filename = pathname;
-    }
-    else{
+    } else {
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
     }
-    if(access(READ,catalog))
+    if (!access(READ, catalog))
         return -1;                                                  //权限不足，返回错误码
-    struct dir catalog_dir = get_dir(catalog->d_index);
+    auto *catalog_dir = (dir *) catalog->content;
     unsigned int file_index = 0;//文件的硬盘i结点id
-    int d_i = 0;
-    for (d_i = 0;d_i<DIRNUM;d_i++) {
-        if (catalog_dir.files[d_i].d_name == filename){
+    int d_i;
+    for (d_i = 0; d_i < DIRNUM; d_i++) {
+        if (catalog_dir->files[d_i].d_name == filename) {
             //查找成功，获取磁盘索引号
-            file_index = catalog_dir.files[d_i].d_index;
+            file_index = catalog_dir->files[d_i].d_index;
             break;
         }
     }
-    if(d_i == DIRNUM)
+    if (d_i == DIRNUM)
         return -1;//要关闭的文件不存在
     int sys_i = 0;
-    for(;sys_i< SYSOPENFILE;sys_i++){//根据磁盘索引号，找到系统打开表的目录项
-        if(system_openfiles[sys_i].i_count!=0&&system_openfiles[sys_i].fcb.d_index==file_index){
+    for (; sys_i < SYSOPENFILE; sys_i++) {//根据磁盘索引号，找到系统打开表的目录项
+        if (system_openfiles[sys_i].i_count != 0 && system_openfiles[sys_i].fcb.d_index == file_index) {
             //移除该文件
             system_openfiles[sys_i].i_count--;
-            if(system_openfiles[sys_i].i_count==0){
+            if (system_openfiles[sys_i].i_count == 0) {
                 iput(iget(file_index));//释放该结点
-                system_openfiles[sys_i].fcb.d_index=0;
-                strcpy(system_openfiles[sys_i].fcb.d_name,"");
+                system_openfiles[sys_i].fcb.d_index = 0;
+                strcpy(system_openfiles[sys_i].fcb.d_name, "");
             }
             break;
         }
@@ -465,152 +468,145 @@ int close_file(const string& pathname){
     //找到用户打开表表项
     user_open_table *T = user_openfiles.find(cur_user)->second;
     int usr_i = 0;
-    for(;usr_i<SYSOPENFILE;usr_i++){
-        if(T->items[usr_i].f_count!=0&&T->items[usr_i].index_to_sysopen==sys_i){
+    for (; usr_i < SYSOPENFILE; usr_i++) {
+        if (T->items[usr_i].f_count != 0 && T->items[usr_i].index_to_sysopen == sys_i) {
             T->items[usr_i].f_count--;
             return 1;//删除成功
         }
     }
     return -1;
 }
+
 // 创建文件夹，输入是文件路径
 int mkdir(string &pathname) {
-    if (judge_path(pathname)!=1) {
-        return false;
-    } else {
-        inode *catalog;
-        struct dir catalog_dir;
-        string filename;
-        if(pathname.find_last_of('/')==std::string::npos){
-            catalog = cur_dir_inode;
-            catalog_dir = cur_dir;
-            filename = pathname;
-        }
-        else{
-            int pos = pathname.find_last_of('/') + 1;
-            string father_path = pathname.substr(0, pos - 1);
-            filename = pathname.substr(pos);
-            catalog = find_file(father_path);
-            if (catalog == nullptr) {
-                return -1;//无该路径，返回错误码
-            }
-            catalog_dir = get_dir(catalog->d_index);
-        }
-        if (access(CHANGE, catalog))
-            return -1;//权限不足，返回错误码
-        //判断目录文件数据区是否有空闲
-        //小于最大目录数，说明空闲
-        if (catalog_dir.size < DIRNUM) {
-            //判断是否重复
-            int leisure;
-            for (int i = 0;i<DIRNUM ;i++ ){
-                if (catalog_dir.files[i].d_name == filename) //如果有已经存在的文件夹，则返回错误码
-                    return -1;
-                if (catalog_dir.files[i].d_index==0)
-                    leisure = i;
-            }
-            //申请索引结点和硬盘数据区
-            int new_d_index = ialloc(1);
-            inode *new_inode = iget(new_d_index);
-            int block_amount = sizeof(dir) / BLOCKSIZ + 1;
-            for (int j = 0; j < block_amount; j++) {
-                new_inode->dinode.di_addr[j] = balloc();
-            }
-            new_inode->dinode.di_mode = DIDIR;
-            new_inode->dinode.di_size = sizeof(dir);
-            //初始化硬盘数据区(索引结点区在ialloc中初始化)
-            struct dir new_dir = get_dir(new_d_index);
-            strcpy(new_dir.files[0].d_name,"root");
-            new_dir.files[0].d_index = 1;
-            new_dir.size = 0;
-            //找到父目录空闲的目录项,写入文件名和文件磁盘结点
-            strcpy(catalog_dir.files[leisure].d_name,filename.data());
-            catalog_dir.files[leisure].d_index = new_d_index;
-            catalog_dir.size++;
-            catalog->ifChange = 1;
-            new_inode->ifChange = 1;
-            //将父目录的内存i结点写入磁盘i结点，将新文件夹的内存i结点写入磁盘i结点
-            iput(catalog);
-            iput(new_inode);
-            return 1;
-        } else {//没有空闲，失败
-            return -1;
-        }
-    }
-}
+    string father_path;
 
-
-int rmdir(const string& pathname) {
-    if (judge_path(pathname)!=1) {
-        return -1;
+    inode *catalog;
+    string filename;
+    if (pathname.find_last_of('/') == std::string::npos) {
+        catalog = cur_dir_inode;
+        filename = pathname;
     } else {
-        inode *father_catalog;
-        string filename;
-        if(pathname.find_last_of('/')==std::string::npos){
-            father_catalog = cur_dir_inode;
-            filename = pathname;
-        }
-        else{
-            int pos = pathname.find_last_of('/') + 1;
-            string father_path = pathname.substr(0, pos - 1);
-            father_catalog = find_file(father_path);
-            if(father_catalog == nullptr)
-                return -1;//无该路径，返回错误码
-            filename = pathname.substr(pos);
-        }
-        inode *catalog = find_file(pathname);
-        if (access(CHANGE, father_catalog))
-            return -1;//权限不足，返回错误码
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
+        int pos = pathname.find_last_of('/') + 1;
+        father_path = pathname.substr(0, pos - 1);
+        filename = pathname.substr(pos);
+        catalog = find_file(father_path);
         if (catalog == nullptr) {
             return -1;//无该路径，返回错误码
         }
-        struct dir catalog_dir = get_dir(catalog->d_index);//得到路径的目录dir数据
-        struct dir father_dir = get_dir(father_catalog->d_index);//得到父目录的dir数据
-        if (catalog_dir.size != 0) {
-            return -1;//该路径的目录有内容，失败。
-        } else {
-            //将父目录里该项内容删除
-            for (auto &i: father_dir.files) {
-                if (i.d_index == catalog->d_index) {//查找该文件的下标
-                    i.d_index = 0;
-                    memset(i.d_name, 0, DIRSIZ);
-                    father_dir.size--;
-                    catalog->ifChange = 1;
-                    father_catalog->ifChange = 1;
-                    catalog->dinode.di_number--;
-                    break;
-                }
-            }
-            //将子目录磁盘i结点删除，释放该结点所指的数据区
-            iput(catalog);
-            //将父目录数据写回磁盘数据区
-            iput(father_catalog);
-            return 1;
+    }
+    if (!access(CHANGE, catalog))
+        return -1;//权限不足，返回错误码
+    //判断目录文件数据区是否有空闲
+    //小于最大目录数，说明空闲
+    dir *catalog_dir = (dir *) catalog->content;
+    if (catalog_dir->size < DIRNUM) {
+        //判断是否重复
+        int leisure;
+        for (int i = 0; i < DIRNUM; i++) {
+            if (catalog_dir->files[i].d_name == filename) //如果有已经存在的文件夹，则返回错误码
+                return -1;
+            if (catalog_dir->files[i].d_index == 0)
+                leisure = i;
         }
+
+
+        //申请索引结点和硬盘数据区
+        int new_d_index = ialloc(1);
+        inode *new_inode = iget(new_d_index);
+        new_inode->dinode.di_addr[0] = balloc();
+        new_inode->dinode.di_mode = DIDIR;
+        new_inode->dinode.di_size = sizeof(dir);
+        new_inode->ifChange = 1;
+
+
+        //初始化硬盘数据区(索引结点区在ialloc中初始化)
+        new_inode->content = malloc(sizeof(dir));
+        memset(new_inode->content, 0, sizeof(dir));
+        strcpy(((dir *) new_inode->content)->files[0].d_name, "root");
+        ((dir *) new_inode->content)->files[0].d_index = 1;
+        strcpy(((dir *) new_inode->content)->files[1].d_name,
+               father_path.substr(0, father_path.find_last_of('/') - 1).c_str());
+        ((dir *) new_inode->content)->files[1].d_index = catalog->d_index;
+        ((dir *) new_inode->content)->size = 2;
+        //找到父目录空闲的目录项,写入文件名和文件磁盘结点
+        strcpy(catalog_dir->files[leisure].d_name, filename.data());
+        catalog_dir->files[leisure].d_index = new_d_index;
+        catalog_dir->size++;
+        catalog->ifChange = 1;
+        return 1;
+    }
+
+    return -1;
+}
+
+
+int rmdir(const string &pathname) {
+    inode *father_catalog;
+    string filename;
+    if (pathname.find_last_of('/') == std::string::npos) {
+        father_catalog = cur_dir_inode;
+    } else {
+        int pos = pathname.find_last_of('/') + 1;
+        string father_path = pathname.substr(0, pos - 1);
+        father_catalog = find_file(father_path);
+        if (father_catalog == nullptr)
+            return -1;//无该路径，返回错误码
+        filename = pathname.substr(pos);
+    }
+    inode *catalog = find_file(pathname);
+    if (!access(CHANGE, father_catalog))
+        return -1;//权限不足，返回错误码
+    if (catalog == nullptr) {
+        return -1;//无该路径，返回错误码
+    }
+    auto *catalog_dir = (dir *) catalog->content;//得到路径的目录dir数据
+    auto *father_dir = (dir *) father_catalog->content;//得到父目录的dir数据
+    if (catalog_dir->size > 2) {
+        return -1;//该路径的目录有内容，失败。
+    } else {
+        //将父目录里该项内容删除
+        for (auto &i: father_dir->files) {
+            if (i.d_index == catalog->d_index) {//查找该文件的下标
+                i.d_index = 0;
+                memset(i.d_name, 0, DIRSIZ);
+                father_dir->size--;
+                catalog->ifChange = 1;
+                father_catalog->ifChange = 1;
+                catalog->dinode.di_number--;
+                break;
+            }
+        }
+        //将子目录磁盘i结点删除，释放该结点所指的数据区
+        iput(catalog);
+        //将父目录数据写回磁盘数据区
+        iput(father_catalog);
+        return 1;
     }
 }
 
 //移动系统当前路径
-int chdir(const string& pathname) {
-    if (judge_path(pathname)!=1) {
+int chdir(const string &pathname) {
+    if (judge_path(pathname) != 1) {
         return -1;
     } else {
         inode *catalog = find_file(pathname);
-        if (access(CHANGE, catalog))
+        if (!access(CHANGE, catalog))
             return -1;//权限不足，返回错误码
         if (catalog == nullptr) {
             return -1;//无该路径，返回错误码
         }
-        cur_dir = get_dir(catalog->d_index);
         cur_dir_inode = catalog;
     }
     return 1;
 }
 
 int show_dir() {
-    if (access(READ, cur_dir_inode))
+    if (!access(READ, cur_dir_inode))
         return -1;//权限不足，返回错误码
-    for (auto & file : cur_dir.files) {
+    for (auto &file: ((dir *) cur_dir_inode->content)->files) {
         if (file.d_index != 0) {
             cout << file.d_name << endl;//输出当前路径下的文件内容
         }
@@ -628,7 +624,7 @@ string whoami() {
 // 修改父目录数据区并写入磁盘，iput()删除文件
 // false删除失败 true删除成功
 // 权限未实现 iput未实现*/
-bool deleteFile(const string& pathname) {
+bool deleteFile(const string &pathname) {
     // 判断文件名是否合法
     if (judge_path(pathname) != 2) {
         return false;
@@ -639,13 +635,13 @@ bool deleteFile(const string& pathname) {
         return false;
     }
     // 判断用户对父目录有写权限和执行权限是否
-    // if(access())
+    // if(!access())
 
     // 修改父目录数据区
     // 更改目录项
     unsigned int index = namei(pathname);
-    cur_dir.files[index].d_index = 0;
-    cur_dir.size--;
+    ((dir *) cur_dir_inode->content)->files[index].d_index = 0;
+    ((dir *) cur_dir_inode->content)->size--;
     // 写入磁盘
     file_wirte_back(cur_dir_inode);
     // iput()删除文件
@@ -656,9 +652,9 @@ bool deleteFile(const string& pathname) {
 
 // 关闭一个已经被用户打开了的文件
 
-void closeFile(const string& pathname) {
+void closeFile(const string &pathname) {
     // 判断文件名是否合法
-    if (judge_path(pathname)!=2) {
+    if (judge_path(pathname) != 2) {
         return;
     }
     // 获取用户的打开表
@@ -699,9 +695,9 @@ void closeFile(const string& pathname) {
 // 从用户以打开的文件中读取内容
 // 以字符形式返回内容
 // 没有实现权限判断
-string readFile(const string& pathname) {
+string readFile(const string &pathname) {
     // 判断文件名是否合法
-    if (judge_path(pathname)!=2) {
+    if (judge_path(pathname) != 2) {
         return {};
     }
 
@@ -754,38 +750,39 @@ string readFile(const string& pathname) {
 }
 
 inode *find_file(string addr) {
-    dir temp_dir=cur_dir;   //用于目录变更
+    dir *temp_dir = (dir *) cur_dir_inode->content;   //用于目录变更
     unsigned int index; //保存根据文件名找到的FCB的d_index
     int isInDir = 0;    //判断是否在目录中
     hinode final;//可以保存退出循环后最后一级的文件或目录的内存i结点
     if (addr[0] == '/') {//绝对路径
         addr = addr.substr(1, addr.length());
-        index = cur_dir.files[0].d_index;
-        temp_dir = get_dir(index);
+
+        temp_dir = (dir *) (iget(1)->content);
+        index = 1;
     }
-    char* ADDR=new char[addr.length()+1];
-    addr.copy(ADDR,addr.length(),0); //addr内容复制到ADDR[]
-    *(ADDR+addr.length())='\0'; //末尾补上'/0'
-    char* token=std::strtok(ADDR,"/");  
-    while(1){
-        for(auto &file: temp_dir.files){
-            if(strcmp(file.d_name, token) == 0){
-                index=file.d_index;
-                isInDir=1;
-                final=iget(file.d_index);
+    char *ADDR = new char[addr.length() + 1];
+    addr.copy(ADDR, addr.length(), 0); //addr内容复制到ADDR[]
+    *(ADDR + addr.length()) = '\0'; //末尾补上'/0'
+    char *token = std::strtok(ADDR, "/");
+    while (true) {
+        for (auto &file: temp_dir->files) {
+            if (strcmp(file.d_name, token) == 0) {
+                index = file.d_index;
+                isInDir = 1;
+                final = iget(file.d_index);
                 break;
             }
         }
-        if (isInDir == 0){//找不到符合的文件名
+        if (isInDir == 0) {//找不到符合的文件名
             free(ADDR);
             return nullptr;
         }
         isInDir = 0;
 
         token = std::strtok(nullptr, " ");
-        if(token==NULL)
+        if (token == nullptr)
             break;
-        temp_dir=get_dir(index);
+        temp_dir = (dir *) iget(index)->content;
     }
     return final;
 
@@ -793,38 +790,24 @@ inode *find_file(string addr) {
 }
 
 // 权限未实现
-//bool writeFile(const string& pathname, int write_mode,const string& content) {
-//bool writeFile(const string& pathname, int write_mode,const string& content) {
-//    // 判断文件名是否合法
-//    if (!is_file(pathname)) {
-//        return {};
-//    }
-    // 判断用户对该文件是否有写权限
-    // if(access())
 
-    // 判断文件是否被用户打开
-    // 获取用户的打开表
-//    user_open_table *userOpenTable = user_openfiles[cur_user];
-//    // 获取用户uid
-//    unsigned short p_uid = userOpenTable->p_uid;
-//
-//    // 遍历查询该文件
-//    unsigned short id;
-//    bool found = false;
-//    int i;
-//    for (i = 0; i < NOFILE; i++) {
-//        if (userOpenTable->items[i].f_inode == nullptr) {
-//            continue;
-//        }
-//        id = userOpenTable->items[i].index_to_sysopen;
-//        if (!strcmp(system_openfiles[id].fcb.d_name, pathname.c_str()) && system_openfiles[id].i_count != 0) {
-//            found = true;
-//            break;
-//        }
-//    }
-//    // 用户没有打开该文件
-//    if (!found)
-//        return false;
-//
-//    // 三种模式
-//}
+bool writeFile(int fd, const string& content) {
+
+ //判断文件是否被用户打开
+ // 获取用户的打开表
+    user_open_table *userOpenTable = user_openfiles[cur_user];
+    // 获取用户uid
+    unsigned short p_uid = userOpenTable->p_uid;
+    // 使用fd获取打开文件
+    struct user_open_item opened_file = userOpenTable->items[fd];
+    // 为0说明读取错误
+    if(opened_file.f_count == 0)
+        return false;
+
+    hinode file_inode = opened_file.f_inode;
+    file_inode->ifChange = '1';
+
+    // 写文件
+    file_inode->content = (char*) malloc(content.size() + 1);
+    strcpy((char*)file_inode->content, content.c_str());
+}

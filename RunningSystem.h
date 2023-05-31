@@ -18,7 +18,6 @@ extern struct super_block file_system;           //超级块
 extern struct PWD pwds[PWDNUM];                  //用户数组
 
 extern struct inode *cur_dir_inode;             //当前目录的索引结点
-extern struct dir cur_dir;                       //当前目录的数据
 extern string cur_user;                          //当前用户
 string cur_path;                        //当前目录名
 // 现在分配有2+DINODEBLK+FILEBLK个磁盘块
@@ -28,7 +27,8 @@ extern FILE *disk;                               //系统磁盘文件
 
 
     // 打开文件
-    int openFile(const string& pathname,unsigned short flags);
+    int openFile(const string& pathname, unsigned short flags);
+    int open_file(const string& pathname, int operation);
     // 关闭文件
     void closeFile(const string& pathname);
     // 读取文件
@@ -39,6 +39,7 @@ extern FILE *disk;                               //系统磁盘文件
      返回值false写失败 true写成功
      */
     bool writeFile(const string& pathname, int write_mode, const string& content);
+    bool writeFile(int fd, const string& content);
     // 创建新文件
     inode* createFile(string pathname, unsigned short di_mode);
     // 删除文件

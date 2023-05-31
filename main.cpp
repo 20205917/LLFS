@@ -34,21 +34,30 @@ struct super_block file_system;           //超级块
 struct PWD pwds[PWDNUM];                  //用户数组
 
 struct inode *cur_dir_inode;             //当前目录的索引结点
-struct dir cur_dir;                       //当前目录的数据
 string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
 string cur_path;                        //当前目录名
 
 int main(){
-//    initial();
+    int i;
     //初始化
     install();
-    // format();
+    string path;
+    login("admin");
+   int fd = open_file("test", BUILD_OPEN);
+    writeFile(fd, "this is a test");
+    return 0;
 //    int j = 1;
 //    for(int i =0 ;i<102 ; i++ ){
 //        j = ialloc(1);
 //    }
 //    halt();
+//    string a;//接收用户输入命令
+
+    login("admin");
+    open_file("test.file", BUILD_OPEN);
+
+
 //    string a;//接收用户输入命令
 //    const char* A;
 //    string b;//命令参数
@@ -166,8 +175,14 @@ int main(){
 //        }
 //    }
     vector<char*> token;
+    char order[50];
     while(1){
-
+        token.resize(0);
+        cin.get(order,50);
+        if(Split(&token,order)){
+            cout<<endl<<"指令格式错误";
+        }
+        
     }
 
 }
