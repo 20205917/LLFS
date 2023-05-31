@@ -438,7 +438,6 @@ int close_file(int fd) {
 // 创建文件夹，输入是文件路径
 int mkdir(string &pathname) {
     string father_path;
-
     inode *catalog;
     string filename;
     if (pathname.find_last_of('/') == std::string::npos) {
@@ -499,7 +498,31 @@ int mkdir(string &pathname) {
 
     return -1;
 }
-
+//硬连接
+int hard_link(string &pathname,string &newname){
+    string father_path;
+    inode *filea;
+    string filename;
+    if (pathname[0] == '/')
+        pathname = "root" + pathname;
+    filea = find_file(pathname);
+    if (!access(READ, filea))
+        return -1;//权限不足，返回错误码
+    int leisure = 0;
+    inode * catalog_b = cur_dir_inode;
+    if(((dir*)catalog_b->content)->size==DIRNUM)
+        return -1;//目录无空闲
+    for(int leisure=0;leisure<DIRNUM;leisure++){
+        if(((dir*)catalog_b->content)->files[leisure].d_index==0){
+            strcpy(((dir*)catalog_b->content)->files[leisure].d_name,newname.data());
+            ((dir*)catalog_b->content)->files[leisure].d_index=filea->d_index;
+            filea->dinode.di_number++;
+            filea->ifChange=1;
+            break;
+        }
+    }
+    return 1;
+}
 
 int rmdir(string &pathname) {
     inode *father_catalog;
