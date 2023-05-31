@@ -342,7 +342,7 @@ struct dir get_dir(unsigned int d_index) {
 }
 
 //打开文件
-int open_file(const string &pathname, int operation) {
+int open_file(string &pathname, int operation) {
 //    if (judge_path(pathname) != 2)
 //        return -1;                                               //不是文件格式，返回错误码
     inode *catalog;
@@ -351,6 +351,8 @@ int open_file(const string &pathname, int operation) {
         catalog = cur_dir_inode;
         filename = pathname;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
@@ -424,7 +426,7 @@ int open_file(const string &pathname, int operation) {
 }
 
 //关闭文件
-int close_file(const string &pathname) {
+int close_file(string &pathname) {
     if (judge_path(pathname) != 2)
         return false;                                               //不是文件格式，返回错误码
     inode *catalog;
@@ -433,6 +435,8 @@ int close_file(const string &pathname) {
         catalog = cur_dir_inode;
         filename = pathname;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
@@ -756,7 +760,6 @@ inode *find_file(string addr) {
     hinode final;//可以保存退出循环后最后一级的文件或目录的内存i结点
     if (addr[0] == '/') {//绝对路径
         addr = addr.substr(1, addr.length());
-
         temp_dir = (dir *) (iget(1)->content);
         index = 1;
     }
