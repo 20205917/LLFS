@@ -700,58 +700,27 @@ void closeFile(const string &pathname) {
 // 从用户以打开的文件中读取内容
 // 以字符形式返回内容
 // 没有实现权限判断
-string readFile(const string &pathname) {
-    // 判断文件名是否合法
-    if (judge_path(pathname) != 2) {
-        return {};
-    }
-
-    // 判断用户对该文件是否有读权限
-    // if(access())
-
-    // 判断文件是否被用户打开
+string readFile(int fd) {
+    //判断文件是否被用户打开
     // 获取用户的打开表
     user_open_table *userOpenTable = user_openfiles[cur_user];
     // 获取用户uid
+    unsigned short p_uid = userOpenTable->p_uid;
+    // 使用fd获取打开文件
+    struct user_open_item opened_file = userOpenTable->items[fd];
+    // 为0说明读取错误
+    if(opened_file.f_count == 0)
+        return "";
 
-    // 遍历查询该文件
-    unsigned short id;
-    bool found = false;
-    int i;
-    for (i = 0; i < NOFILE; i++) {
-        if (userOpenTable->items[i].f_inode == nullptr) {
-            continue;
-        }
-        id = userOpenTable->items[i].index_to_sysopen;
-        if (!strcmp(system_openfiles[id].fcb.d_name, pathname.c_str()) && system_openfiles[id].i_count != 0) {
-            found = true;
-            break;
-        }
-    }
-    // 用户没有打开该文件
-    if (!found)
-        return {};
+    hinode file_inode = opened_file.f_inode;
+    // 判断用户对该文件是否有读权限
+    if(!access(Read, file_inode))
+        return "";
 
-    // 确定打开了
-    unsigned int dinode_id = system_openfiles[id].fcb.d_index;
-    // 加载这个磁盘i节点
-    auto *pdinode = (struct dinode *) malloc(sizeof(struct dinode));
-    long addr = DINODESTART + dinode_id * DINODESIZ;
-    fseek(disk, addr, SEEK_SET);
-    fread(pdinode, DINODESIZ, 1, disk);
-    // 准备读取内容
-    unsigned short size = pdinode->di_size;
-    int block_num = size / BLOCKSIZ;
-    char *res = (char *) malloc(size);
-    for (i = 0; i < block_num; i++) {
-        addr = DATASTART + pdinode->di_addr[i] * BLOCKSIZ;
-        fseek(disk, addr, SEEK_SET);
-        fread(res + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
-    }
-    addr = DATASTART + pdinode->di_addr[i] * BLOCKSIZ;
-    fseek(disk, addr, SEEK_SET);
-    fread(res + i * BLOCKSIZ, size - block_num * BLOCKSIZ, 1, disk);
-    return res;
+    void* content = file_inode->content;
+    if(content == nullptr)
+        return "";
+    return (char*)content;
 }
 
 inode *find_file(string addr) {
@@ -814,6 +783,7 @@ bool writeFile(int fd, const string& content) {
     // 写文件
     file_inode->content = (char*) malloc(content.size() + 1);
     strcpy((char*)file_inode->content, content.c_str());
+    return true;
 }
 
 int createFile(string pathname, int operation){

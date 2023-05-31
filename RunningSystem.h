@@ -27,11 +27,11 @@ extern FILE *disk;                               //系统磁盘文件
 
     // 打开文件
     int openFile(const string& pathname, unsigned short flags);
-    int open_file(const string& pathname, int operation);
+    int open_file(string& pathname, int operation);
     // 关闭文件
     void closeFile(const string& pathname);
     // 读取文件
-    string readFile(const string& pathname);
+    string readFile(int fd);
     /* 写文件
      write_mode可为W_APPEND W_TRUNC 或其他任意值
      W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写

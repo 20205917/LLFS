@@ -33,9 +33,12 @@ int main(){
     install();
     string path;
     login("admin");
-    int res = createFile("test", BUILD_OPEN);
-    int fd = open_file("test", BUILD_OPEN);
+    std::string filename = "test";
+    int res = createFile(filename, BUILD_OPEN);
+
+    int fd = open_file(filename, BUILD_OPEN);
     writeFile(fd, "this is a test");
+    std::cout << readFile(fd);
     return 0;
 //    int j = 1;
 //    for(int i =0 ;i<102 ; i++ ){
@@ -44,8 +47,7 @@ int main(){
 //    halt();
 //    string a;//接收用户输入命令
 
-    login("admin");
-    open_file("test.file", BUILD_OPEN);
+
 
 
 //    string a;//接收用户输入命令
