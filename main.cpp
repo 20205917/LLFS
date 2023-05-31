@@ -47,14 +47,32 @@ int main(){
     install();
     string path;
     login("admin");
-    std::string filename = "test";
-    int res = createFile(filename, BUILD_OPEN);
+    std::string dirname1 = "aaa";
+    std::string dirname2 = "bbb";
+    std::string dirname3 = "ccc";
+    std::string dirname4 = "ddd";
+    std::string dirname5 = "/";
+    std::string dirname11 = "aaab";
+    std::string dirname12 = "aaac";
+    mkdir(dirname1);
+    mkdir(dirname2);
+    mkdir(dirname3);
+    mkdir(dirname4);
+    show_dir();
+    std::cout << std::endl;
+    chdir(dirname1);
+    mkdir(dirname11);
+    mkdir(dirname12);
+    show_dir();
+    std::cout << std::endl;
+    rmdir(dirname11);
+    show_dir();
+    std::cout << std::endl;
+    chdir(dirname5);
+    show_dir();
+    std::cout << std::endl;
 
-    int fd = open_file(filename, BUILD_OPEN);
-    writeFile(fd, "this is a test");
-    std::cout << readFile(fd);
-    close_file(fd);
-    halt();
+
     return 0;
 //    int j = 1;
 //    for(int i =0 ;i<102 ; i++ ){
@@ -182,44 +200,6 @@ int main(){
 //
 //        }
 //    }
-    vector<char*> token;
-    char order[50];
-    while(1){
-        cout<<cur_path;
-        token.resize(0);
-        cin.get(order,50);
-        if(Split(&token,order))
-            cout<<endl<<"未找到匹配指令"<<endl<<cur_path;
 
-        switch(toUnicode(token[0])){//匹配指令名
-            case U("login")://用户登录
-                if(token.size()!=2)
-                    cout<<endl<<"指令格式错误"<<endl<<cur_path;
-                else{
-                    state=login(std::string(token[1]));
-                    if(state==-1)
-                        cout<<endl<<"未找到匹配口令"<<endl<<cur_path;
-                    else if(state==-2)
-                        cout<<endl<<"该用户已经处于登录状态"<<endl<<cur_path;
-                    else if(state==0)
-                        cout<<endl<<"成功登录"<<endl<<cur_path;
-                    else
-                        cout<<endl<<"登录用户已达上限"<<endl<<cur_path;
-                }
-
-
-            case U("logout")://用户登出
-                if(token.size()!=2)
-                    cout<<endl<<"指令格式错误"<<endl<<cur_path;
-                else
-                    cout<<endl<<"成功登出"<<endl<<cur_path;
-            
-            case U("open")://打开文件
-                
-                
-
-        }
-        
-    }
 
 }
