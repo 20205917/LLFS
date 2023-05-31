@@ -36,7 +36,7 @@ void initial() {
 
     // 初始化root磁盘i节点
     cur_dir_inode = (hinode) malloc(sizeof(struct inode));
-    cur_dir_inode->dinode.di_number = 0;
+    cur_dir_inode->dinode.di_number = 1;
     cur_dir_inode->dinode.di_mode = DIDIR;
     cur_dir_inode->dinode.di_uid = 0;
     cur_dir_inode->dinode.di_gid = 0;
@@ -736,8 +736,10 @@ bool writeFile(int fd, const string& content) {
 
     hinode file_inode = opened_file.f_inode;
     file_inode->ifChange = 1;
+    file_inode->dinode.di_size = content.size() + 1;
 
     // 写文件
+    free(file_inode->content);
     file_inode->content = (char*) malloc(content.size() + 1);
     strcpy((char*)file_inode->content, content.c_str());
     return true;

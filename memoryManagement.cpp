@@ -65,23 +65,47 @@ hinode iget(unsigned int dinode_id){
 // 释放i节点回磁盘
 // 如果被更改需要写回
 // 如果硬连接数为0
+// 好像这么写会有空间浪费
 bool iput(inode* inode){
     if(inode->dinode.di_number == 0){
+        // 删除对应的数据块
         if(inode->dinode.di_size>0){
             //TODO 多级索引释放数据区
+            int blocks = inode->dinode.di_size / BLOCKSIZ + 1;
+            for(int i= 0; i < blocks; i++){
+                bfree(inode->dinode.di_addr[i]);
+                inode->dinode.di_addr[i] = 0;
+            }
         }
+        inode->dinode.di_size = 0;
         //修改文件类型为空
         inode->ifChange = 1;
-        inode->dinode.di_mode = ENOTEMPTY;
+        inode->dinode.di_mode = DIEMPTY;
 
         // 释放磁盘i节点，只释放点
         ifree(inode->d_index);
     }
 
+    // 写回磁盘
     if(inode->ifChange != 0){
+        // 索引区操作
         long addr = DINODESTART + inode->d_index * DINODESIZ;
         fseek(disk, addr, SEEK_SET);
         fwrite(&inode->dinode, DINODESIZ, 1, disk);
+
+        // 数据区操作
+        if(inode->dinode.di_size != 0){
+            int blocks = inode->dinode.di_size / BLOCKSIZ + 1;
+            for(int i= 0; i < blocks; i++){
+                bfree(inode->dinode.di_addr[i]);
+            }
+
+            for(int i = 0; i < blocks; i++){
+                unsigned int block_num = balloc();
+            }
+            write_data_back((void*)(inode->content), inode->dinode.di_addr, inode->dinode.di_size, disk);
+        }
+
     }
 
     // 从散列表中释放
