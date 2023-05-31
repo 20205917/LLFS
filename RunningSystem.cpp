@@ -47,6 +47,7 @@ void initial() {
     fseek(disk, addr, SEEK_SET);
     fwrite(&(cur_dir_inode->dinode), DINODESIZ, 1, disk);
 
+    struct dir root;
     // 初始化root目录数据块内容
     root.size = 2;
     // 根目录
@@ -122,14 +123,10 @@ void install() {
         id = cur_dir_inode->dinode.di_addr[i];
         addr = DATASTART + id * BLOCKSIZ;
         fseek(disk, addr, SEEK_SET);
-        fread((char *) (&root) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
-        fseek(disk, addr, SEEK_SET);
         fread((char *) (&cur_dir_inode->content) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
     id = cur_dir_inode->dinode.di_addr[block_num];
     addr = DATASTART + id * BLOCKSIZ;
-    fseek(disk, addr, SEEK_SET);
-    fread((char *) (&root) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
     fseek(disk, addr, SEEK_SET);
     cur_dir_inode->content = malloc(size - BLOCKSIZ * block_num);
     fread((char *) (cur_dir_inode->content) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
@@ -516,6 +513,7 @@ int hard_link(string &pathname,string &newname){
         if(((dir*)catalog_b->content)->files[leisure].d_index==0){
             strcpy(((dir*)catalog_b->content)->files[leisure].d_name,newname.data());
             ((dir*)catalog_b->content)->files[leisure].d_index=filea->d_index;
+            ((dir*)catalog_b->content)->size++;
             filea->dinode.di_number++;
             filea->ifChange=1;
             break;
@@ -594,9 +592,71 @@ int show_dir() {
 //        }
 //    }
     for(int i = 2; i < DIRNUM; i++){
-        if(((dir *) cur_dir_inode->content)->files[i].d_index != 0){
+        unsigned int id = ((dir *) cur_dir_inode->content)->files[i].d_index;
+        if(id != 0){
+            bool inMemory = true;
+            inode* tmp = findHinode(id);
+            if(tmp == nullptr){
+                inMemory = false;
+                tmp = getDinodeFromDisk(id);
+            }
+            if(tmp->dinode.di_mode == DIDIR)
+                std::cout << "<DIR>  ";
+            else
+                std::cout << "<FILE> ";
             std::cout << ((dir *) cur_dir_inode->content)->files[i].d_name << std::endl;
+            if(!inMemory){
+                free(tmp);
+            }
         }
+    }
+    return 0;
+}
+
+int show_whole_dir(){
+    // 从root开始
+    std::cout << "<DIR>  " << "root" << std::endl;
+    show_dir_tree(1, 1);
+    return 0;
+}
+
+int show_dir_tree(unsigned int id, int depth){
+    inode* tmp = findHinode(id);
+    bool inMemory = true;
+    if(tmp == nullptr){
+        inMemory = false;
+        tmp = getDinodeFromDisk(id);
+    }
+    dir* dirs = (dir*)(tmp->content);
+    int size = dirs->size;
+    for(int i = 2; i < DIRNUM; i++){
+        if(size == 2)
+            break;
+        unsigned int id = dirs->files[i].d_index;
+        if(id != 0) {
+            for(int j = 0; j < 4 * depth; j++){
+                std::cout << " ";
+            }
+            bool inMemory = true;
+            inode* tmp = findHinode(id);
+            if(tmp == nullptr){
+                inMemory = false;
+                tmp = getDinodeFromDisk(id);
+            }
+            if(tmp->dinode.di_mode == DIDIR){
+                std::cout << "<DIR>  ";
+                std::cout << dirs->files[i].d_name << std::endl;
+                show_dir_tree(dirs->files[i].d_index, depth + 1);
+            }
+            else{
+                std::cout << "<FILE> ";
+                std::cout << dirs->files[i].d_name << std::endl;
+            }
+            size--;
+        }
+    }
+    if(!inMemory){
+        free(tmp);
     }
     return 0;
 }
@@ -797,6 +857,8 @@ bool writeFile(int fd, const string& content) {
 }
 
 // 硬链接次数初始化为1
+// 需要考虑文件偏移量，此处未实现
+// int createFile(string pathname, int operation){
 int createFile(string pathname){
 //    if (judge_path(pathname) != 2)
 //        return -1;                                               //不是文件格式，返回错误码
@@ -806,6 +868,8 @@ int createFile(string pathname){
         catalog = cur_dir_inode;
         filename = pathname;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
@@ -841,6 +905,7 @@ int createFile(string pathname){
         catalog_dir->files[leisure].d_index = file_index;
         catalog_dir->size++;
         catalog->ifChange = 1;
+
     }
     return 0;//创建成功
 }
