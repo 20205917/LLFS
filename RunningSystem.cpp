@@ -377,10 +377,10 @@ int open_file(string &pathname, int operation) {
     inode * new_inode;
     if (i == DIRNUM) {//没查找成功
         if (operation != BUILD_OPEN)//如果不是创建打开，就返回错误码，未找到文件
-            return -1;
+            return -2;
         else {//是创建打开
             if (leisure == -1)                                             //若目录已满，则返回错误码
-                return -1;
+                return -3;
             //创建新结点
             file_index = ialloc(1);
             new_inode = iget(file_index);
@@ -407,7 +407,7 @@ int open_file(string &pathname, int operation) {
         }
     }
     if (sys_leisure == SYSOPENFILE)
-        return -1;//没找到系统打开表空闲的表项
+        return -4;//没找到系统打开表空闲的表项
     //修改用户文件打开表
     user_open_table *T = user_openfiles.find(cur_user)->second;
     int usr_leisure = 0;
@@ -424,7 +424,7 @@ int open_file(string &pathname, int operation) {
             return usr_leisure;//返回用户打开表索引
         }
     }
-    return -1;//没找到用户打开表空闲表项
+    return -5;//没找到用户打开表空闲表项
 }
 
 //关闭文件
@@ -581,7 +581,7 @@ string whoami() {
 // 修改父目录数据区并写入磁盘，iput()删除文件
 // false删除失败 true删除成功
 // 权限未实现 iput未实现*/
-bool deleteFile(string &pathname,int operation) {
+int deleteFile(string &pathname,int operation) {
     inode *catalog;
     string filename;
     if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
@@ -596,7 +596,7 @@ bool deleteFile(string &pathname,int operation) {
         catalog = find_file(father_path);//获取目录文件的内存索引节点
     }
     if (!access(READ, catalog))
-        return -1;                                                  //权限不足，返回错误码
+        return PERMISSION_DD;                                                  //权限不足，返回错误码
     auto *catalog_dir = (dir *) catalog->content;
     unsigned int file_index;//文件的硬盘i结点id
     int leisure = -1;//目录下的空闲索引
@@ -612,7 +612,7 @@ bool deleteFile(string &pathname,int operation) {
     }
     inode * file_inode;
     if (i == DIRNUM) {//没查找成功
-        return -1;//无该文件，删除失败，返回错误码
+        return NOT_FOUND;//无该文件，删除失败，返回错误码
     }
     //查找成功，找到内存索引节点
     file_inode = iget(file_index);
@@ -620,7 +620,7 @@ bool deleteFile(string &pathname,int operation) {
     short sys_i = 0;
     for (; sys_i < SYSOPENFILE; sys_i++) {//找系统打开表的表项
         if (system_openfiles[sys_i].fcb.d_index == file_index) {
-            return -1;//该文件正在被系统打开
+            return -3;//该文件正在被系统打开
         }
     }
     //删除文件，若文件硬连接次数为0，则释放将索引节点中内容指针置为空
@@ -781,7 +781,7 @@ int createFile(string pathname, int operation){
         catalog = find_file(father_path);//获取目录文件的内存索引节点
     }
     if (!access(Write, catalog))
-        return -2;                                                  //权限不足，返回错误码
+        return -1;                                                  //权限不足，返回错误码
     auto *catalog_dir = (dir *) catalog->content;
     unsigned int file_index;//文件的硬盘i结点id
     int leisure = -1;//目录下的空闲索引
@@ -789,7 +789,7 @@ int createFile(string pathname, int operation){
     for (i = 0; i < DIRNUM; i++) {
         if (catalog_dir->files[i].d_name == filename) {//查找成功
             //直接返回
-            return -3;
+            return -2;
         }
         if (catalog_dir->files[i].d_index == 0)
             leisure = i;
@@ -797,7 +797,7 @@ int createFile(string pathname, int operation){
     inode * new_inode;
     if (i == DIRNUM) {//没查找成功
         if (leisure == -1)                                             //若目录已满，则返回错误码
-            return -1;
+            return -3;
         //创建新结点
         file_index = ialloc(1);
         new_inode = iget(file_index);
