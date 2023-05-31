@@ -68,9 +68,9 @@ extern FILE *disk;                               //系统磁盘文件
 
     // 文件夹路径相关
     int mkdir(string& pathname);     //创建文件夹
-    int chdir(const string& pathname);     //更改系统的当前文件路径
+    int chdir(string& pathname);     //更改系统的当前文件路径
     int show_dir();                 //展示当前文件路径的内容
-    int rmdir(const string& pathname);     //删除该路径下的文件夹
+    int rmdir(string& pathname);     //删除该路径下的文件夹
     struct dir get_dir(unsigned int d_index);//根据d_index，获取dir
 
     // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED

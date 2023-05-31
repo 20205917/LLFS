@@ -499,12 +499,14 @@ int mkdir(string &pathname) {
 }
 
 
-int rmdir(const string &pathname) {
+int rmdir(string &pathname) {
     inode *father_catalog;
     string filename;
     if (pathname.find_last_of('/') == std::string::npos) {
         father_catalog = cur_dir_inode;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         father_catalog = find_file(father_path);
@@ -544,10 +546,12 @@ int rmdir(const string &pathname) {
 }
 
 //移动系统当前路径
-int chdir(const string &pathname) {
+int chdir(string &pathname) {
     if (judge_path(pathname) != 1) {
         return -1;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         inode *catalog = find_file(pathname);
         if (!access(CHANGE, catalog))
             return -1;//权限不足，返回错误码
