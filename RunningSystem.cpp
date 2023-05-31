@@ -513,6 +513,7 @@ int hard_link(string &pathname,string &newname){
         if(((dir*)catalog_b->content)->files[leisure].d_index==0){
             strcpy(((dir*)catalog_b->content)->files[leisure].d_name,newname.data());
             ((dir*)catalog_b->content)->files[leisure].d_index=filea->d_index;
+            ((dir*)catalog_b->content)->size++;
             filea->dinode.di_number++;
             filea->ifChange=1;
             break;
@@ -867,6 +868,8 @@ int createFile(string pathname){
         catalog = cur_dir_inode;
         filename = pathname;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
