@@ -47,8 +47,8 @@ int main(){
     install();
     string path;
     login("admin");
-    std::string file = "/aaa.txt";
-    std::string dirname2 = "bbb";
+    string file = "/aaa.txt";
+    string dirname2 = "bbb";
     createFile(file);
     mkdir(dirname2);
     show_dir();
@@ -56,7 +56,7 @@ int main(){
     string new_name = "b.txt";
     hard_link(file,new_name);
     show_dir();
-    std::cout << std::endl;
+    std::cout << "12345";
 
 
     return 0;
