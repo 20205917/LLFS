@@ -3,9 +3,19 @@
 #include<string.h>
 #include <windows.h>
 #include "RunningSystem.h"
+#include<vector>
 using namespace std;
 
 
+bool Split(vector<char*>* token,char* order){
+    if(order[0]==' ')
+        return false;
+    token->push_back(std::strtok(order," "));
+    while(token->back()!=NULL){
+        token->push_back(std::strtok(NULL," "));
+    }
+    token->pop_back();
+}
 int toUnicode(const char* str)
 {
     return str[0] + (str[1] ? toUnicode(str + 1) : 0);
@@ -26,6 +36,7 @@ struct PWD pwds[PWDNUM];                  //用户数组
 struct inode *cur_dir_inode;             //当前目录的索引结点
 string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
+string cur_path;                        //当前目录名
 
 int main(){
     int i;
@@ -58,7 +69,6 @@ int main(){
 //    cout<<"Hello World!"<<endl;
 //    cout<<">>";
 //    while(1){
-//
 //        cin>>a;
 //        A=a.data();
 //        switch(toUnicode(A)){
@@ -150,8 +160,8 @@ int main(){
 //                break;
 //
 //            case U("whoami")://查看当前用户
-//                // string user=Runningsystem.whoami();
-//                // cout<<user<<endl<<path;
+//                string user=Runningsystem.whoami();
+//                cout<<user<<endl<<path;
 //                break;
 //
 //            case U("chmod")://权限更改
@@ -161,9 +171,18 @@ int main(){
 //
 //            default:
 //                cout<<"'"<<a<<"'"<<"不是可执行命令"<<endl;
-//                cout<<path;
-//                break;
+//
 //        }
 //    }
+    vector<char*> token;
+    char order[50];
+    while(1){
+        token.resize(0);
+        cin.get(order,50);
+        if(Split(&token,order)){
+            cout<<endl<<"指令格式错误";
+        }
+        
+    }
 
 }
