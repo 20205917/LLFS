@@ -29,7 +29,6 @@ constexpr inline int U(const char* str)
 
 struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
 map<string, user_open_table*> user_openfiles;        //用户打开表组
-struct dir root;                          //root目录
 hinode hinodes[NHINO];                    //内存节点缓存
 struct super_block file_system;           //超级块
 struct PWD pwds[PWDNUM];                  //用户数组
@@ -58,6 +57,7 @@ int main(){
     show_dir();
     std::cout << std::endl;
 
+    show_whole_dir();
 
     return 0;
 //    int j = 1;
