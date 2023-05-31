@@ -3,6 +3,8 @@
 //
 #include "RunningSystem.h"
 
+
+
 //查看某个磁盘i节点id对应的内存i节点是否存在
 inode* findHinode(int dinode_id){
     int inode_id = dinode_id % NHINO;

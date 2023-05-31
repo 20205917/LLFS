@@ -12,7 +12,7 @@ using namespace std;
 
 extern struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
 extern map<string, user_open_table*> user_openfiles;        //用户打开表组
-extern struct dir root;                          //root目录
+
 extern hinode hinodes[NHINO];                    //内存节点缓存
 extern struct super_block file_system;           //超级块
 extern struct PWD pwds[PWDNUM];                  //用户数组
@@ -25,10 +25,10 @@ extern string cur_path;                        //当前目录名
 // 索引区有DINODEBLK个块，数据区FILEBLK个块
 extern FILE *disk;                               //系统磁盘文件
 
-
+    int hard_link(string &pathname,string &newname);
     // 打开文件
     int openFile(const string& pathname, unsigned short flags);
-    int open_file(string& pathname, int operation);
+    int open_file(string& pathname);
     // 关闭文件
     void closeFile(const string& pathname);
     int close_file(int fd);
@@ -42,9 +42,9 @@ extern FILE *disk;                               //系统磁盘文件
     bool writeFile(const string& pathname, int write_mode, const string& content);
     bool writeFile(int fd, const string& content);
     // 创建新文件
-    int createFile(string pathname, int di_mode);
+    int createFile(string pathname);
     // 删除文件
-    bool deleteFile(string pathname,int operation);
+    int deleteFile(string pathname);
     // 初始化
     void initial();
     // 从磁盘文件加载系统
@@ -71,6 +71,8 @@ extern FILE *disk;                               //系统磁盘文件
     int mkdir(string& pathname);     //创建文件夹
     int chdir(string& pathname);     //更改系统的当前文件路径
     int show_dir();                 //展示当前文件路径的内容
+    int show_whole_dir();           // 展示文件系统整个目录结构
+    int show_dir_tree(unsigned int id, int depth);
     int rmdir(string& pathname);     //删除该路径下的文件夹
     struct dir get_dir(unsigned int d_index);//根据d_index，获取dir
 
@@ -94,5 +96,10 @@ extern FILE *disk;                               //系统磁盘文件
     unsigned int namei(string name);
 
     void file_wirte_back(struct inode* inode);
+
+    inode* getDinodeFromDisk(int dinode_id);
+
+//查看某个磁盘i节点id对应的内存i节点是否存在
+    inode* findHinode(int dinode_id);
 
 #endif //LLFS_RUNNINGSYSTEM_H

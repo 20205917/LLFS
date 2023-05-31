@@ -47,6 +47,7 @@ void initial() {
     fseek(disk, addr, SEEK_SET);
     fwrite(&(cur_dir_inode->dinode), DINODESIZ, 1, disk);
 
+    struct dir root;
     // 初始化root目录数据块内容
     root.size = 2;
     // 根目录
@@ -122,14 +123,10 @@ void install() {
         id = cur_dir_inode->dinode.di_addr[i];
         addr = DATASTART + id * BLOCKSIZ;
         fseek(disk, addr, SEEK_SET);
-        fread((char *) (&root) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
-        fseek(disk, addr, SEEK_SET);
         fread((char *) (&cur_dir_inode->content) + i * BLOCKSIZ, BLOCKSIZ, 1, disk);
     }
     id = cur_dir_inode->dinode.di_addr[block_num];
     addr = DATASTART + id * BLOCKSIZ;
-    fseek(disk, addr, SEEK_SET);
-    fread((char *) (&root) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
     fseek(disk, addr, SEEK_SET);
     cur_dir_inode->content = malloc(size - BLOCKSIZ * block_num);
     fread((char *) (cur_dir_inode->content) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
@@ -438,7 +435,6 @@ int close_file(int fd) {
 // 创建文件夹，输入是文件路径
 int mkdir(string &pathname) {
     string father_path;
-
     inode *catalog;
     string filename;
     if (pathname.find_last_of('/') == std::string::npos) {
@@ -499,7 +495,32 @@ int mkdir(string &pathname) {
 
     return -1;
 }
-
+//硬连接
+int hard_link(string &pathname,string &newname){
+    string father_path;
+    inode *filea;
+    string filename;
+    if (pathname[0] == '/')
+        pathname = "root" + pathname;
+    filea = find_file(pathname);
+    if (!access(READ, filea))
+        return -1;//权限不足，返回错误码
+    int leisure = 0;
+    inode * catalog_b = cur_dir_inode;
+    if(((dir*)catalog_b->content)->size==DIRNUM)
+        return -1;//目录无空闲
+    for(int leisure=0;leisure<DIRNUM;leisure++){
+        if(((dir*)catalog_b->content)->files[leisure].d_index==0){
+            strcpy(((dir*)catalog_b->content)->files[leisure].d_name,newname.data());
+            ((dir*)catalog_b->content)->files[leisure].d_index=filea->d_index;
+            ((dir*)catalog_b->content)->size++;
+            filea->dinode.di_number++;
+            filea->ifChange=1;
+            break;
+        }
+    }
+    return 1;
+}
 
 int rmdir(string &pathname) {
     inode *father_catalog;
@@ -549,6 +570,8 @@ int chdir(string &pathname) {
         return -1;
     
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         inode *catalog = find_file(pathname);
         if (!access(CHANGE, catalog))
             return -1;//权限不足，返回错误码
@@ -563,10 +586,77 @@ int chdir(string &pathname) {
 int show_dir() {
     if (!access(READ, cur_dir_inode))
         return -1;//权限不足，返回错误码
-    for (auto &file: ((dir *) cur_dir_inode->content)->files) {
-        if (file.d_index != 0) {
-            cout << file.d_name << endl;//输出当前路径下的文件内容
+//    for (auto &file: ((dir *) cur_dir_inode->content)->files) {
+//        if (file.d_index != 0) {
+//            cout << file.d_name << endl;//输出当前路径下的文件内容
+//        }
+//    }
+    for(int i = 2; i < DIRNUM; i++){
+        unsigned int id = ((dir *) cur_dir_inode->content)->files[i].d_index;
+        if(id != 0){
+            bool inMemory = true;
+            inode* tmp = findHinode(id);
+            if(tmp == nullptr){
+                inMemory = false;
+                tmp = getDinodeFromDisk(id);
+            }
+            if(tmp->dinode.di_mode == DIDIR)
+                std::cout << "<DIR>  ";
+            else
+                std::cout << "<FILE> ";
+            std::cout << ((dir *) cur_dir_inode->content)->files[i].d_name << std::endl;
+            if(!inMemory){
+                free(tmp);
+            }
         }
+    }
+    return 0;
+}
+
+int show_whole_dir(){
+    // 从root开始
+    std::cout << "<DIR>  " << "root" << std::endl;
+    show_dir_tree(1, 1);
+    return 0;
+}
+
+int show_dir_tree(unsigned int id, int depth){
+    inode* tmp = findHinode(id);
+    bool inMemory = true;
+    if(tmp == nullptr){
+        inMemory = false;
+        tmp = getDinodeFromDisk(id);
+    }
+    dir* dirs = (dir*)(tmp->content);
+    int size = dirs->size;
+    for(int i = 2; i < DIRNUM; i++){
+        if(size == 2)
+            break;
+        unsigned int id = dirs->files[i].d_index;
+        if(id != 0) {
+            for(int j = 0; j < 4 * depth; j++){
+                std::cout << " ";
+            }
+            bool inMemory = true;
+            inode* tmp = findHinode(id);
+            if(tmp == nullptr){
+                inMemory = false;
+                tmp = getDinodeFromDisk(id);
+            }
+            if(tmp->dinode.di_mode == DIDIR){
+                std::cout << "<DIR>  ";
+                std::cout << dirs->files[i].d_name << std::endl;
+                show_dir_tree(dirs->files[i].d_index, depth + 1);
+            }
+            else{
+                std::cout << "<FILE> ";
+                std::cout << dirs->files[i].d_name << std::endl;
+            }
+            size--;
+        }
+    }
+    if(!inMemory){
+        free(tmp);
     }
     return 0;
 }
@@ -581,7 +671,7 @@ string whoami() {
 // 修改父目录数据区并写入磁盘，iput()删除文件
 // false删除失败 true删除成功
 // 权限未实现 iput未实现*/
-int deleteFile(string &pathname,int operation) {
+int deleteFile(string pathname) {
     inode *catalog;
     string filename;
     if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
@@ -599,7 +689,6 @@ int deleteFile(string &pathname,int operation) {
         return PERMISSION_DD;                                                  //权限不足，返回错误码
     auto *catalog_dir = (dir *) catalog->content;
     unsigned int file_index;//文件的硬盘i结点id
-    int leisure = -1;//目录下的空闲索引
     int i;
     for (i = 0; i < DIRNUM; i++) {
         if (catalog_dir->files[i].d_name == filename) {//查找成功
@@ -607,8 +696,6 @@ int deleteFile(string &pathname,int operation) {
             file_index = catalog_dir->files[i].d_index;
             break;
         }
-        if (catalog_dir->files[i].d_index == 0)
-            leisure = i;
     }
     inode * file_inode;
     if (i == DIRNUM) {//没查找成功
@@ -619,6 +706,8 @@ int deleteFile(string &pathname,int operation) {
     //修改系统打开文件表
     short sys_i = 0;
     for (; sys_i < SYSOPENFILE; sys_i++) {//找系统打开表的表项
+        if (system_openfiles[sys_i].fcb.d_index == file_index && system_openfiles[sys_i].i_count!=0) {
+            return -1;//该文件正在被系统打开
         if (system_openfiles[sys_i].fcb.d_index == file_index) {
             return -3;//该文件正在被系统打开
         }
@@ -628,6 +717,9 @@ int deleteFile(string &pathname,int operation) {
     if(file_inode->dinode.di_number==0){
         free(file_inode->content);
         file_inode->content = nullptr;
+        catalog_dir->files[i].d_index=0;
+        catalog_dir->size--;
+        catalog->ifChange=1;
     }
     file_inode->ifChange = 1;
     return 0;//成功删除
@@ -766,7 +858,10 @@ bool writeFile(int fd, const string& content) {
     return true;
 }
 
-int createFile(string pathname, int operation){
+// 硬链接次数初始化为1
+// 需要考虑文件偏移量，此处未实现
+// int createFile(string pathname, int operation){
+int createFile(string pathname){
 //    if (judge_path(pathname) != 2)
 //        return -1;                                               //不是文件格式，返回错误码
     inode *catalog;
@@ -775,6 +870,8 @@ int createFile(string pathname, int operation){
         catalog = cur_dir_inode;
         filename = pathname;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
@@ -803,11 +900,14 @@ int createFile(string pathname, int operation){
         new_inode = iget(file_index);
         new_inode->dinode.di_mode = DIFILE;
         new_inode->ifChange = 1;
+        //
+        new_inode->dinode.di_number = 1;
         //修改目录的数据
         strcpy(catalog_dir->files[leisure].d_name, filename.data());
         catalog_dir->files[leisure].d_index = file_index;
         catalog_dir->size++;
         catalog->ifChange = 1;
+
     }
     return 0;//创建成功
 }

@@ -82,7 +82,6 @@ void HelpOut2(char* order){
 
 struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
 map<string, user_open_table*> user_openfiles;        //用户打开表组
-struct dir root;                          //root目录
 hinode hinodes[NHINO];                    //内存节点缓存
 struct super_block file_system;           //超级块
 struct PWD pwds[PWDNUM];                  //用户数组
@@ -191,7 +190,7 @@ int main(){
 
             case U("delete"):
                 if(token.size()!=3)
-                    cout<<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl<<cur_path;
                 else{
                     try{
                         state=deleteFile(std::string(token[1]),std::stoi(token[2]));
