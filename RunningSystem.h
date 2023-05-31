@@ -19,7 +19,7 @@ extern struct PWD pwds[PWDNUM];                  //用户数组
 
 extern struct inode *cur_dir_inode;             //当前目录的索引结点
 extern string cur_user;                          //当前用户
-string cur_path;                        //当前目录名
+extern string cur_path;                        //当前目录名
 // 现在分配有2+DINODEBLK+FILEBLK个磁盘块
 // 前2个为引导快（现在放了用户信息）、超级块
 // 索引区有DINODEBLK个块，数据区FILEBLK个块
@@ -31,6 +31,7 @@ extern FILE *disk;                               //系统磁盘文件
     int open_file(string& pathname, int operation);
     // 关闭文件
     void closeFile(const string& pathname);
+    int close_file(int fd);
     // 读取文件
     string readFile(int fd);
     /* 写文件

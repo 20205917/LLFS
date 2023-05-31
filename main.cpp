@@ -15,6 +15,7 @@ bool Split(vector<char*>* token,char* order){
         token->push_back(std::strtok(NULL," "));
     }
     token->pop_back();
+    return true;
 }
 int toUnicode(const char* str)
 {
@@ -36,11 +37,13 @@ struct PWD pwds[PWDNUM];                  //用户数组
 struct inode *cur_dir_inode;             //当前目录的索引结点
 string cur_user;                          //当前用户
 FILE *disk;                               //系统磁盘文件
-string cur_path;                        //当前目录名
+string cur_path;                          // 当前路径名
+
 
 int main(){
     int i;
-    //初始化
+    initial();
+    // 加载磁盘
     install();
     string path;
     login("admin");
@@ -50,6 +53,8 @@ int main(){
     int fd = open_file(filename, BUILD_OPEN);
     writeFile(fd, "this is a test");
     std::cout << readFile(fd);
+    close_file(fd);
+    halt();
     return 0;
 //    int j = 1;
 //    for(int i =0 ;i<102 ; i++ ){

@@ -10,7 +10,8 @@ void initial() {
     disk = fopen(disk_file_name, "wb+");
     char nothing[BLOCKSIZ] = {0};
     fseek(disk, 0, SEEK_SET);
-    fwrite(nothing, BLOCKSIZ, FILEBLK + DINODEBLK + 2, disk);
+    for(int i = 0; i < FILEBLK + DINODEBLK + 2; i++)
+        fwrite(nothing, BLOCKSIZ, 1, disk);
 
     // 初始化超级块
     // 此时只有root对应的磁盘i节点和数据块
@@ -734,7 +735,7 @@ bool writeFile(int fd, const string& content) {
         return false;
 
     hinode file_inode = opened_file.f_inode;
-    file_inode->ifChange = '1';
+    file_inode->ifChange = 1;
 
     // 写文件
     file_inode->content = (char*) malloc(content.size() + 1);
