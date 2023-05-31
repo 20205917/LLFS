@@ -427,59 +427,11 @@ int open_file(string &pathname, int operation) {
 }
 
 //关闭文件
-int close_file(string &pathname) {
-    if (judge_path(pathname) != 2)
-        return false;                                               //不是文件格式，返回错误码
-    inode *catalog;
-    string filename;
-    if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
-        catalog = cur_dir_inode;
-        filename = pathname;
-    } else {
-        if (pathname[0] == '/')
-            pathname = "root" + pathname;
-        int pos = pathname.find_last_of('/') + 1;
-        string father_path = pathname.substr(0, pos - 1);
-        filename = pathname.substr(pos);
-        catalog = find_file(father_path);//获取目录文件的内存索引节点
-    }
-    if (!access(READ, catalog))
-        return -1;                                                  //权限不足，返回错误码
-    auto *catalog_dir = (dir *) catalog->content;
-    unsigned int file_index = 0;//文件的硬盘i结点id
-    int d_i;
-    for (d_i = 0; d_i < DIRNUM; d_i++) {
-        if (catalog_dir->files[d_i].d_name == filename) {
-            //查找成功，获取磁盘索引号
-            file_index = catalog_dir->files[d_i].d_index;
-            break;
-        }
-    }
-    if (d_i == DIRNUM)
-        return -1;//要关闭的文件不存在
-    int sys_i = 0;
-    for (; sys_i < SYSOPENFILE; sys_i++) {//根据磁盘索引号，找到系统打开表的目录项
-        if (system_openfiles[sys_i].i_count != 0 && system_openfiles[sys_i].fcb.d_index == file_index) {
-            //移除该文件
-            system_openfiles[sys_i].i_count--;
-            if (system_openfiles[sys_i].i_count == 0) {
-                iput(iget(file_index));//释放该结点
-                system_openfiles[sys_i].fcb.d_index = 0;
-                strcpy(system_openfiles[sys_i].fcb.d_name, "");
-            }
-            break;
-        }
-    }
-    //找到用户打开表表项
+int close_file(int fd) {
     user_open_table *T = user_openfiles.find(cur_user)->second;
-    int usr_i = 0;
-    for (; usr_i < SYSOPENFILE; usr_i++) {
-        if (T->items[usr_i].f_count != 0 && T->items[usr_i].index_to_sysopen == sys_i) {
-            T->items[usr_i].f_count--;
-            return 1;//删除成功
-        }
-    }
-    return -1;
+    T->items[fd].f_count--;//用户打开表进程数-1
+    system_openfiles[T->items[fd].index_to_sysopen].i_count--;
+    return 1;
 }
 
 // 创建文件夹，输入是文件路径
@@ -548,12 +500,14 @@ int mkdir(string &pathname) {
 }
 
 
-int rmdir(const string &pathname) {
+int rmdir(string &pathname) {
     inode *father_catalog;
     string filename;
     if (pathname.find_last_of('/') == std::string::npos) {
         father_catalog = cur_dir_inode;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         int pos = pathname.find_last_of('/') + 1;
         string father_path = pathname.substr(0, pos - 1);
         father_catalog = find_file(father_path);
@@ -593,10 +547,12 @@ int rmdir(const string &pathname) {
 }
 
 //移动系统当前路径
-int chdir(const string &pathname) {
+int chdir(string &pathname) {
     if (judge_path(pathname) != 1) {
         return -1;
     } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
         inode *catalog = find_file(pathname);
         if (!access(CHANGE, catalog))
             return -1;//权限不足，返回错误码
