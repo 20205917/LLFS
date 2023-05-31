@@ -44,7 +44,7 @@ extern FILE *disk;                               //系统磁盘文件
     // 创建新文件
     int createFile(string pathname, int di_mode);
     // 删除文件
-    bool deleteFile(string pathname);
+    bool deleteFile(string pathname,int operation);
     // 初始化
     void initial();
     // 从磁盘文件加载系统

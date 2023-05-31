@@ -539,10 +539,6 @@ int rmdir(string &pathname) {
                 break;
             }
         }
-        //将子目录磁盘i结点删除，释放该结点所指的数据区
-        iput(catalog);
-        //将父目录数据写回磁盘数据区
-        iput(father_catalog);
         return 1;
     }
 }
@@ -586,30 +582,56 @@ string whoami() {
 // 修改父目录数据区并写入磁盘，iput()删除文件
 // false删除失败 true删除成功
 // 权限未实现 iput未实现*/
-bool deleteFile(const string &pathname) {
-    // 判断文件名是否合法
-    if (judge_path(pathname) != 2) {
-        return false;
+bool deleteFile(string &pathname,int operation) {
+    inode *catalog;
+    string filename;
+    if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
+        catalog = cur_dir_inode;
+        filename = pathname;
+    } else {
+        if (pathname[0] == '/')
+            pathname = "root" + pathname;
+        int pos = pathname.find_last_of('/') + 1;
+        string father_path = pathname.substr(0, pos - 1);
+        filename = pathname.substr(pos);
+        catalog = find_file(father_path);//获取目录文件的内存索引节点
     }
-    hinode res_inode = find_file(pathname);
-    // 是否在父目录数据区里有该文件
-    if (res_inode->d_index == 0) {
-        return false;
+    if (!access(READ, catalog))
+        return -1;                                                  //权限不足，返回错误码
+    auto *catalog_dir = (dir *) catalog->content;
+    unsigned int file_index;//文件的硬盘i结点id
+    int leisure = -1;//目录下的空闲索引
+    int i;
+    for (i = 0; i < DIRNUM; i++) {
+        if (catalog_dir->files[i].d_name == filename) {//查找成功
+            //查找成功，获取磁盘索引号
+            file_index = catalog_dir->files[i].d_index;
+            break;
+        }
+        if (catalog_dir->files[i].d_index == 0)
+            leisure = i;
     }
-    // 判断用户对父目录有写权限和执行权限是否
-    // if(!access())
-
-    // 修改父目录数据区
-    // 更改目录项
-    unsigned int index = namei(pathname);
-    ((dir *) cur_dir_inode->content)->files[index].d_index = 0;
-    ((dir *) cur_dir_inode->content)->size--;
-    // 写入磁盘
-    file_wirte_back(cur_dir_inode);
-    // iput()删除文件
-    // iput(res_inode);
-
-    return true;
+    inode * file_inode;
+    if (i == DIRNUM) {//没查找成功
+        return -1;//无该文件，删除失败，返回错误码
+    }
+    //查找成功，找到内存索引节点
+    file_inode = iget(file_index);
+    //修改系统打开文件表
+    short sys_i = 0;
+    for (; sys_i < SYSOPENFILE; sys_i++) {//找系统打开表的表项
+        if (system_openfiles[sys_i].fcb.d_index == file_index) {
+            return -1;//该文件正在被系统打开
+        }
+    }
+    //删除文件，若文件硬连接次数为0，则释放将索引节点中内容指针置为空
+    file_inode->dinode.di_number--;
+    if(file_inode->dinode.di_number==0){
+        free(file_inode->content);
+        file_inode->content = nullptr;
+    }
+    file_inode->ifChange = 1;
+    return 0;//成功删除
 }
 
 // 关闭一个已经被用户打开了的文件
