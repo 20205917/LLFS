@@ -890,7 +890,33 @@ bool writeFile(int fd, const string& content) {
     strcpy((char*)file_inode->content, content.c_str());
     return true;
 }
-
+int file_seek(int fd,int offset,int fseek_mode){
+    user_open_table *T = user_openfiles.find(cur_user)->second;
+    int cur_offset = T->items[fd].f_offset;
+    int file_capacity = T->items[fd].f_inode->dinode.di_size;
+    switch (fseek_mode)
+    {
+    case HEAD_FSEEK://从头移动
+        cur_offset = offset;
+        break;
+    case CUR_SEEK://从当前移动
+        cur_offset += offset;
+        break;
+    default:
+        break;
+    }
+    if(cur_offset>file_capacity){
+        file_capacity = cur_offset + 1;
+        T->items[fd].f_inode->dinode.di_size = file_capacity;
+        void *new_content = malloc(file_capacity);
+        memset(new_content,0,file_capacity);
+        strcpy((char *)new_content,(char *)T->items[fd].f_inode->content);
+        free(T->items[fd].f_inode->content);
+        T->items[fd].f_inode->content = new_content;
+    }
+    T->items[fd].f_offset = cur_offset;
+    return 1;
+}
 // 硬链接次数初始化为1
 // 需要考虑文件偏移量，此处未实现
 // int createFile(string pathname, int operation){
