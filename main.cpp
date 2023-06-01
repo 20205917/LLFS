@@ -120,7 +120,6 @@ void HelpOut2(char* order){
             cout<<"show dir all"<<endl;
             cout<<"show user all"<<endl;
             cout<<"show user file"<<endl;
-            cout<<"show user file"<<endl;
             cout<<"show sys all"<<endl;
             break;
         
@@ -153,13 +152,7 @@ int main(){
     //初始化
     install();
     login("admin");
-    std::string test = "test";
-    std::string ok = "ok";
-    std::string root = "root";
-    mkdir(test);
-    chdir(test);
-    mkdir(ok);
-    chdir(root);
+
 
 
 
@@ -352,7 +345,8 @@ int main(){
                     cout<<"指令格式错误"<<endl;
                 else{
                     try{
-                        state=change_file_owner(std::string(token[1]),std::stoi(token[2]));
+                        std::string tmp = std::string(token[1]);
+                        state=change_file_owner(tmp, std::stoi(token[2]));
                         switch(state){
                             case -1:cout<<"无效路径"<<endl;break;
                             case -2:cout<<"没有修改权限"<<endl;break;
@@ -370,7 +364,8 @@ int main(){
                     cout<<"指令格式错误"<<endl;
                 else{
                     try{
-                        state=change_file_group(std::string(token[1]),std::stoi(token[2]));
+                        std::string tmp = std::string(token[1]);
+                        state=change_file_group(tmp, std::stoi(token[2]));
                         switch(state){
                             case -1:cout<<"无效路径"<<endl;break;
                             case -2:cout<<"没有修改权限"<<endl;break;
@@ -449,7 +444,7 @@ int main(){
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"login"))
                     show_login_users();
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"all"))
-                    show_all_users;
+                    show_all_users();
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"file"))
                     show_user_opened_files();
                 else if(token.size()==3 && !strcmp(token[1],"sys")&&!strcmp(token[2],"file"))
@@ -475,8 +470,11 @@ int main(){
             case U("HALT")://保存，退出
                 if(token.size()!=1)
                     cout<<"指令格式错误";
-                else
+                else{
                     halt();
+                    std::cout << "系统关闭";
+                    exit(1);
+                }
                 break;
                 cout<<endl;
             default: cout<<"未知指令"<<endl;break;
