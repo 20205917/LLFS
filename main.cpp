@@ -1,8 +1,7 @@
-#include<stdio.h>
+#include<cstdio>
 #include<iostream>
-#include<string.h>
+#include<cstring>
 #include<string>
-#include <windows.h>
 #include "RunningSystem.h"
 #include<vector>
 using namespace std;
@@ -14,8 +13,8 @@ bool Split(vector<char*>* token,char* order){
     if(order[0]==' ')
         return false;
     token->push_back(std::strtok(order," "));
-    while(token->back()!=NULL){
-        token->push_back(std::strtok(NULL," "));
+    while(token->back()!=nullptr){
+        token->push_back(std::strtok(nullptr," "));
     }
     token->pop_back();
     return true;
@@ -97,9 +96,7 @@ string cur_path;                          // 当前路径名
 
 
 int main(){
-    int i;
     int state;//状态
-    int fd=-1;//记录打开表
     //初始化
     install();
     login("admin");
@@ -194,7 +191,7 @@ int main(){
                             case -1:cout<<endl<<"权限不足"<<endl;break;
                             case -2:cout<<endl<<"该文件名已存在"<<endl;break;
                             case -3:cout<<endl<<"目录区已满"<<endl;break;
-                            default: continue;break;
+                            default: continue;
                         }
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
@@ -215,7 +212,7 @@ int main(){
                             case -1:cout<<endl<<"权限不足"<<endl;break;
                             case -2:cout<<endl<<"不存在该文件"<<endl;break;
                             case -3:cout<<endl<<"文件正在被系统打开"<<endl;break;
-                            default: continue;break;
+                            default: continue;
                         }
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
@@ -243,11 +240,11 @@ int main(){
 
 
             case U("read"):
-                if(token.size()!=2)
+                if(token.size()!=3)
                     cout<<"指令格式错误"<<endl;
                 else{
                   try{
-                        cout<<readFile(std::stoi(token[1] , token[2]))<<endl;break;
+                        cout<<readFile(std::stoi(token[1]),std::stoi(token[2]))<<endl;break;
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
                     }
