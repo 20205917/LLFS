@@ -104,6 +104,7 @@ bool iput(inode* inode){
 
             for(int i = 0; i < blocks; i++){
                 unsigned int block_num = balloc();
+                inode->dinode.di_addr[i] = block_num;
             }
             write_data_back((void*)(inode->content), inode->dinode.di_addr, inode->dinode.di_size, disk);
         }
