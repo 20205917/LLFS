@@ -105,7 +105,12 @@ int main(){
     install();
     login("admin");
     std::string test = "test";
+    std::string ok = "ok";
+    std::string root = "root";
     mkdir(test);
+    chdir(test);
+    mkdir(ok);
+    chdir(root);
 
 
 
@@ -175,7 +180,6 @@ int main(){
                     cout<<"指令格式错误"<<endl;
                 else{
                     closeFile(std::string(token[1]));
-                    cout;
                 }
                 break;
 
@@ -186,7 +190,7 @@ int main(){
                 else{
                     try{
                         std::string tmp = std::string(token[1]);
-                        state=createFile(std::string(tmp ,std::stoi(token[2])));
+                        state=createFile(std::string(tmp));
                         switch(state){
                             case -1:cout<<endl<<"权限不足"<<endl;break;
                             case -2:cout<<endl<<"该文件名已存在"<<endl;break;
@@ -274,7 +278,14 @@ int main(){
                     cout<<"指令格式错误"<<endl;
                 else{
                     s=token[1];
-                    chdir(s);
+                    state = chdir(s);
+                    if(state == -1)
+                        std::cout << "路径错误" << std::endl;
+                    else if(state == -2)
+                        std::cout << "路径无效" << std::endl;
+                    else if(state == -3)
+                        std::cout << "权限不足" << std::endl;
+
                 }
                 break;
 

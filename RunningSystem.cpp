@@ -600,7 +600,7 @@ int chdir(string &pathname) {
             return -2;//无该路径，返回错误码
         }
         if (!access(CHANGE, catalog))
-            return -1;//权限不足，返回错误码
+            return -3;//权限不足，返回错误码
         if(value){
             cur_path=pathname;
         } else{
@@ -855,7 +855,7 @@ inode *find_file(string addr) {
         }
         isInDir = 0;
 
-        token = std::strtok(nullptr, " ");
+        token = std::strtok(nullptr, "/");
         if (token == nullptr)
             break;
         temp_dir = (dir *) iget(index)->content;
