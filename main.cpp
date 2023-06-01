@@ -100,6 +100,9 @@ int main(){
     int fd=-1;//记录打开表
     //初始化
     install();
+    login("admin");
+    std::string test = "test";
+    mkdir(test);
 
 
 
@@ -292,19 +295,13 @@ int main(){
 
             case U("show")://展示目录结构
                 if(token.size()==1)
-                    show_dir();
-                else if(token.size()==2&&strcmp(token[1],"all"))
+                    show_dir(); // dir ls
+                else if(token.size()==2 && !strcmp(token[1],"all"))
                     show_whole_dir();
-                else if(token.size()==3&&strcmp(token[1],"tree")){
-                  try{
-                    show_dir_tree(cur_dir_inode->d_index,std::stoi(token[2]));
-                    }catch(const std::invalid_argument& e){
-                        cout<<"错误操作码";
-                     }
-                }
                 else    
                     cout<<"指令格式错误";
                 cout<<endl;
+                break;
                 
 
 

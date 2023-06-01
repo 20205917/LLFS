@@ -647,6 +647,7 @@ int show_whole_dir(){
 
 int show_dir_tree(unsigned int id, int depth){
     inode* tmp = findHinode(id);
+
     bool inMemory = true;
     if(tmp == nullptr){
         inMemory = false;
@@ -657,13 +658,13 @@ int show_dir_tree(unsigned int id, int depth){
     for(int i = 2; i < DIRNUM; i++){
         if(size == 2)
             break;
-        unsigned int id = dirs->files[i].d_index;
+        id = dirs->files[i].d_index;
         if(id != 0) {
             for(int j = 0; j < 4 * depth; j++){
                 std::cout << " ";
             }
-            bool inMemory = true;
-            inode* tmp = findHinode(id);
+            inMemory = true;
+            tmp = findHinode(id);
             if(tmp == nullptr){
                 inMemory = false;
                 tmp = getDinodeFromDisk(id);
