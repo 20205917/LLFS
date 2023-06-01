@@ -440,22 +440,6 @@ int main(){
                 }
                 break;
 
-            case U("user")://显示所有用户
-                if(token.size()!=1)
-                    cout<<"指令格式错误";
-                else
-                    show_all_users();
-                cout<<endl;
-                break;
-
-            case U("showlogin")://显示登录用户
-                if(token.size()!=1)
-                    cout<<"指令格式错误";
-                else
-                    show_login_users();
-                cout<<endl;
-                break;
-
 
             case U("whoami")://查看当前用户
                 if(token.size()!=1)
@@ -486,7 +470,20 @@ int main(){
             case U("connect")://文件指向同一磁盘区域
                 if(token.size()!=3)
                     cout<<"指令格式错误"<<endl;
-                else
+                else{
+                    //std::string s1(token[1]);
+                    std::string s1=std::string(token[1]);
+                    std::string s2=std::string(token[2]);
+                    state=hard_link(s1,s2);
+                    if(state==-1)
+                        cout<<"没有找到指定路径";
+                    else if(state==-2)
+                        cout<<"权限不足";
+                    else if(state==-3)
+                        cout<<"目录区满";
+                    cout<<endl;
+                }
+                break;
                     
 
             case U("help")://帮助，打印命令和格式

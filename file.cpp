@@ -144,10 +144,10 @@ int hard_link(string &pathname,string &newname){
     if (filea == nullptr)
         return -1;//无该路径，返回错误码
     if (!access(READ, filea))
-        return -1;//权限不足，返回错误码
+        return -2;//权限不足，返回错误码
     inode * catalog_b = cur_dir_inode;
     if(((dir*)catalog_b->content)->size==DIRNUM)
-        return -1;//目录无空闲
+        return -3;//目录无空闲
     for(int leisure=0;leisure<DIRNUM;leisure++){
         if(((dir*)catalog_b->content)->files[leisure].d_index==0){
             strcpy(((dir*)catalog_b->content)->files[leisure].d_name,newname.data());
