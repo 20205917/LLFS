@@ -874,7 +874,7 @@ int writeFile(int fd, const string& content) {
 
     file_inode->dinode.di_size = tmp.size() + 1;
     userOpenTable->items[fd].f_offset = tmp.size();
-    return true;
+    return 1;
 }
 
 // 硬链接次数初始化为1
