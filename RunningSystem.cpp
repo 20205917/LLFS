@@ -714,7 +714,7 @@ int deleteFile(string pathname) {
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
         if (catalog == nullptr)
-            return -1;//无该路径，返回错误码
+            return -2;//无该路径，返回错误码
     }
     if (!access(READ, catalog))
         return PERMISSION_DD;                                                  //权限不足，返回错误码
@@ -738,10 +738,7 @@ int deleteFile(string pathname) {
     short sys_i = 0;
     for (; sys_i < SYSOPENFILE; sys_i++) {//找系统打开表的表项
         if (system_openfiles[sys_i].fcb.d_index == file_index && system_openfiles[sys_i].i_count != 0) {
-            return -1;//该文件正在被系统打开
-            if (system_openfiles[sys_i].fcb.d_index == file_index) {
-                return -3;//该文件正在被系统打开
-            }
+            return -3;//该文件正在被系统打开
         }
         //删除文件，若文件硬连接次数为0，则释放将索引节点中内容指针置为空
         file_inode->dinode.di_number--;
@@ -755,7 +752,7 @@ int deleteFile(string pathname) {
         file_inode->ifChange = 1;
         return 0;//成功删除
     }
-    return -1;
+    return -2;
 }
 
 // 关闭一个已经被用户打开了的文件
@@ -1072,4 +1069,49 @@ int change_file_group(string& pathname, int gid){
         }
     }
     return -1;
+}
+
+// 显示当前用户打开的文件信息
+void show_user_opened_files(){
+    auto items = user_openfiles.find(cur_user)->second->items;
+    std::cout << "filename" << "         fd" << "    count"<< "    offset" << std::endl;
+    for(int i = 0; i < NOFILE; i++){
+        if(items[i].f_count != 0)
+            std::cout << system_openfiles[items[i].index_to_sysopen].fcb.d_name
+                      << " " << items[i].index_to_sysopen
+                      << "    " << items[i].f_count
+                      << "    " << items[i].f_offset
+                      << std::endl;
+    }
+}
+// 显示所有用户打开的文件信息
+void show_opened_files(){
+
+    std::cout <<"uid" << "    filename" << "         fd" << "    count"<< "    offset" << std::endl;
+    for(auto user_openfile: user_openfiles){
+        if(user_openfile.second == nullptr)
+            continue;
+        auto items = user_openfile.second->items;
+        for(int i = 0; i < NOFILE; i++){
+            if(items[i].f_count != 0)
+                std::cout << user_openfile.second->p_uid
+                          << "    " << system_openfiles[items[i].index_to_sysopen].fcb.d_name
+                          << " " << items[i].index_to_sysopen
+                          << "    " << items[i].f_count
+                          << "    " << items[i].f_offset
+                          << std::endl;
+        }
+    }
+}
+// 显示系统打开表
+void show_sys_opened_files(){
+    std::cout << "filename" << "         d_index" << "    count" << std::endl;
+    for(int i = 0; i < SYSOPENFILE; i++){
+        if(system_openfiles[i].i_count != 0){
+            std::cout << system_openfiles[i].fcb.d_name
+                      << " " << system_openfiles[i].fcb.d_index
+                      << "    " << system_openfiles[i].i_count
+                      << std::endl;
+        }
+    }
 }

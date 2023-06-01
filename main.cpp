@@ -166,7 +166,7 @@ int main(){
                             case -3:cout<<endl<<"目录区满"<<endl;break;
                             case -4:cout<<endl<<"未找到空闲系统打开表项"<<endl;break;
                             case -5:cout<<endl<<"未找到空闲用户打开表项"<<endl;break;
-                            default: cout<<endl<<"打开成功,文件描述符为:"+state<<endl;break;
+                            default: cout<<endl<<"打开成功,文件描述符为:" << state << endl;break;
                         }
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
