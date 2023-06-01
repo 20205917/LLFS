@@ -8,7 +8,6 @@
 #include <cstdio>
 #include <malloc.h>
 #include <cstring>
-#include "RunningSystem.h"
 #include <iostream>
 using namespace std;
 
