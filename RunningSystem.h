@@ -27,13 +27,12 @@ extern FILE *disk;                               //系统磁盘文件
 
     int hard_link(string &pathname,string &newname);
     // 打开文件
-    int openFile(const string& pathname, unsigned short flags);
     int open_file(string& pathname, int operation);
     // 关闭文件
     void closeFile(const string& pathname);
     int close_file(int fd);
     // 读取文件
-    string readFile(int fd);
+    string readFile(int fd,int len);
     /* 写文件
      write_mode可为W_APPEND W_TRUNC 或其他任意值
      W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写
@@ -85,7 +84,8 @@ extern FILE *disk;                               //系统磁盘文件
 
     // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED
     bool isOpened(string pathname);
-
+    // 移动文件指针
+    int file_seek(int fd,int offset,int fseek_mode);
     // 磁盘i节点分配
     int ialloc(unsigned int);
 
@@ -101,10 +101,10 @@ extern FILE *disk;                               //系统磁盘文件
 
     unsigned int namei(string name);
 
-    inode* getDinodeFromDisk(int dinode_id);
+    inode* getDinodeFromDisk(unsigned int dinode_id);
 
 //查看某个磁盘i节点id对应的内存i节点是否存在
-    inode* findHinode(int dinode_id);
+    inode* findHinode(unsigned int dinode_id);
 
     void show_user_opened_files();
     void show_opened_files();

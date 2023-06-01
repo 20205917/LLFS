@@ -176,5 +176,5 @@ struct sys_open_item{
 // 路径是否合法
 int judge_path(string pathname);
 
-void write_data_back(void *data_address, unsigned short *di_addr, int size, FILE *fp);
+void write_data_back(void *data_address, const unsigned short *di_addr, int size, FILE *fp);
 #endif //LLFS_CONFIG_H
