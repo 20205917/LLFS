@@ -9,6 +9,8 @@ using namespace std;
 
 
 bool Split(vector<char*>* token,char* order){
+    if(order[0] == 0)
+        return false;
     if(order[0]==' ')
         return false;
     token->push_back(std::strtok(order," "));
@@ -151,10 +153,16 @@ int main(){
     int state;//状态
     int fd=-1;//记录打开表
     //初始化
+    initial();
     install();
     login("admin");
     std::string test = "test";
+    std::string ok = "ok";
+    std::string root = "root";
     mkdir(test);
+    chdir(test);
+    mkdir(ok);
+    chdir(root);
 
 
 
@@ -210,7 +218,7 @@ int main(){
                             case -3:cout<<endl<<"目录区满"<<endl;break;
                             case -4:cout<<endl<<"未找到空闲系统打开表项"<<endl;break;
                             case -5:cout<<endl<<"未找到空闲用户打开表项"<<endl;break;
-                            default: cout<<endl<<"打开成功,文件描述符为:"+state<<endl;break;
+                            default: cout<<endl<<"打开成功,文件描述符为:" << state << endl;break;
                         }
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
@@ -224,7 +232,6 @@ int main(){
                     cout<<"指令格式错误"<<endl;
                 else{
                     closeFile(std::string(token[1]));
-                    cout;
                 }
                 break;
 
@@ -235,7 +242,7 @@ int main(){
                 else{
                     try{
                         std::string tmp = std::string(token[1]);
-                        state=createFile(std::string(tmp ,std::stoi(token[2])));
+                        state=createFile(std::string(tmp));
                         switch(state){
                             case -1:cout<<endl<<"权限不足"<<endl;break;
                             case -2:cout<<endl<<"该文件名已存在"<<endl;break;
@@ -317,13 +324,20 @@ int main(){
                     mkdir(s);
                 }
                 break;
-            
+
             case U("cd")://改变目录
                 if(token.size()!=2)
                     cout<<"指令格式错误"<<endl;
                 else{
                     s=token[1];
-                    chdir(s);
+                    state = chdir(s);
+                    if(state == -1)
+                        std::cout << "路径错误" << std::endl;
+                    else if(state == -2)
+                        std::cout << "路径无效" << std::endl;
+                    else if(state == -3)
+                        std::cout << "权限不足" << std::endl;
+
                 }
                 break;
 
@@ -434,11 +448,11 @@ int main(){
                     show_dir(); // dir ls
                 else if(token.size()==2 && !strcmp(token[1],"all"))
                     show_whole_dir();
-                else    
+                else
                     cout<<"指令格式错误";
                 cout<<endl;
                 break;
-                
+
 
 
             case U("help")://帮助，打印命令和格式

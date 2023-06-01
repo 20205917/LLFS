@@ -349,20 +349,7 @@ bool access(int operation, inode *file_inode) {
 //        return j;
 //    }
 //}
-struct dir get_dir(unsigned int d_index) {
-    inode *dir_inode = iget(d_index);
-    // 从磁盘加载目录
-    struct dir work_dir{};
-    work_dir.size = dir_inode->dinode.di_size / DIRSIZ;
-    int i;
-    for (i = 0; i < work_dir.size / (BLOCKSIZ / DIRSIZ); i++) {
-        fseek(disk, DATASTART + BLOCKSIZ * dir_inode->dinode.di_addr[i], SEEK_SET);
-        fread(&work_dir.files[BLOCKSIZ / DIRSIZ * i], 1, BLOCKSIZ, disk);
-    }
-    fseek(disk, DATASTART + BLOCKSIZ * dir_inode->dinode.di_addr[i], SEEK_SET);
-    fread(&work_dir.files[BLOCKSIZ / DIRSIZ * i], 1, dir_inode->dinode.di_size % BLOCKSIZ, disk);
-    return work_dir;
-}
+
 
 //打开文件
 int open_file(string &pathname, int operation) {
@@ -380,6 +367,9 @@ int open_file(string &pathname, int operation) {
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
+        if (catalog == nullptr) {
+            return -1;//无该路径，返回错误码
+        }
     }
     if (!access(READ, catalog))
         return -1;                                                  //权限不足，返回错误码
@@ -528,6 +518,8 @@ int hard_link(string &pathname,string &newname){
     if (pathname[0] == '/')
         pathname = "root" + pathname;
     filea = find_file(pathname);
+    if (filea == nullptr)
+            return -1;//无该路径，返回错误码
     if (!access(READ, filea))
         return -1;//权限不足，返回错误码
     int leisure = 0;
@@ -563,11 +555,10 @@ int rmdir(string &pathname) {
         filename = pathname.substr(pos);
     }
     inode *catalog = find_file(pathname);
+    if (catalog == nullptr)
+            return -1;//无该路径，返回错误码
     if (!access(CHANGE, father_catalog))
         return -1;//权限不足，返回错误码
-    if (catalog == nullptr) {
-        return -1;//无该路径，返回错误码
-    }
     auto *catalog_dir = (dir *) catalog->content;//得到路径的目录dir数据
     auto *father_dir = (dir *) father_catalog->content;//得到父目录的dir数据
     if (catalog_dir->size > 2) {
@@ -594,24 +585,27 @@ int chdir(string &pathname) {
     int value=0;//判断是否是绝对路径
     if (judge_path(pathname) != 1) {
         return -1;
-    
-    } else {
+    }
+    else {
         if (pathname[0] == '/'){
+            if(pathname.size() == 1)
+                pathname = "";
             pathname = "root" + pathname;
             value=1;
         }
+        else if(pathname[0]=='r'&&pathname[1]=='o'&&pathname[2]=='o'&&pathname[3]=='t')
+            value = 1;
         inode *catalog = find_file(pathname);
-        if (!access(CHANGE, catalog))
-            return -1;//权限不足，返回错误码
         if (catalog == nullptr) {
             return -2;//无该路径，返回错误码
         }
-        if(value==1)
-            if(!strcmp(pathname.c_str(),"root/"))
-                cur_path="root>";
-            else
-                cur_path=pathname+'>';
-        cur_path=cur_path.substr(0,cur_path.length()-2)+'/'+pathname+'>';
+        if (!access(CHANGE, catalog))
+            return -3;//权限不足，返回错误码
+        if(value){
+            cur_path=pathname;
+        } else{
+            cur_path=cur_path+'/'+pathname;
+        }
         cur_dir_inode = catalog;
     }
     return 1;
@@ -719,6 +713,8 @@ int deleteFile(string pathname) {
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
+        if (catalog == nullptr)
+            return -2;//无该路径，返回错误码
     }
     if (!access(READ, catalog))
         return PERMISSION_DD;                                                  //权限不足，返回错误码
@@ -742,10 +738,7 @@ int deleteFile(string pathname) {
     short sys_i = 0;
     for (; sys_i < SYSOPENFILE; sys_i++) {//找系统打开表的表项
         if (system_openfiles[sys_i].fcb.d_index == file_index && system_openfiles[sys_i].i_count != 0) {
-            return -1;//该文件正在被系统打开
-            if (system_openfiles[sys_i].fcb.d_index == file_index) {
-                return -3;//该文件正在被系统打开
-            }
+            return -3;//该文件正在被系统打开
         }
         //删除文件，若文件硬连接次数为0，则释放将索引节点中内容指针置为空
         file_inode->dinode.di_number--;
@@ -759,7 +752,7 @@ int deleteFile(string pathname) {
         file_inode->ifChange = 1;
         return 0;//成功删除
     }
-    return -1;
+    return -2;
 }
 
 // 关闭一个已经被用户打开了的文件
@@ -859,7 +852,7 @@ inode *find_file(string addr) {
         }
         isInDir = 0;
 
-        token = std::strtok(nullptr, " ");
+        token = std::strtok(nullptr, "/");
         if (token == nullptr)
             break;
         temp_dir = (dir *) iget(index)->content;
@@ -913,6 +906,8 @@ int createFile(string pathname){
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
+        if (catalog == nullptr)
+            return -1;//无该路径，返回错误码
     }
     if (!access(Write, catalog))
         return -1;                                                  //权限不足，返回错误码
@@ -991,6 +986,7 @@ int switch_user(const string& pwd){
         cur_user = pwd;
         return 0; // 切换用户成功
     }
+    return -1;
 }
 
 // 更改用户所在组
@@ -1049,6 +1045,7 @@ int change_file_owner(string& pathname, int uid){
             return 0;
         }
     }
+    return -1;
 }
 
 int change_file_group(string& pathname, int gid){
@@ -1069,6 +1066,52 @@ int change_file_group(string& pathname, int gid){
             // 同组用户也可以改
             pwds[i].p_gid = gid;
             return 0;
+        }
+    }
+    return -1;
+}
+
+// 显示当前用户打开的文件信息
+void show_user_opened_files(){
+    auto items = user_openfiles.find(cur_user)->second->items;
+    std::cout << "filename" << "         fd" << "    count"<< "    offset" << std::endl;
+    for(int i = 0; i < NOFILE; i++){
+        if(items[i].f_count != 0)
+            std::cout << system_openfiles[items[i].index_to_sysopen].fcb.d_name
+                      << " " << items[i].index_to_sysopen
+                      << "    " << items[i].f_count
+                      << "    " << items[i].f_offset
+                      << std::endl;
+    }
+}
+// 显示所有用户打开的文件信息
+void show_opened_files(){
+
+    std::cout <<"uid" << "    filename" << "         fd" << "    count"<< "    offset" << std::endl;
+    for(auto user_openfile: user_openfiles){
+        if(user_openfile.second == nullptr)
+            continue;
+        auto items = user_openfile.second->items;
+        for(int i = 0; i < NOFILE; i++){
+            if(items[i].f_count != 0)
+                std::cout << user_openfile.second->p_uid
+                          << "    " << system_openfiles[items[i].index_to_sysopen].fcb.d_name
+                          << " " << items[i].index_to_sysopen
+                          << "    " << items[i].f_count
+                          << "    " << items[i].f_offset
+                          << std::endl;
+        }
+    }
+}
+// 显示系统打开表
+void show_sys_opened_files(){
+    std::cout << "filename" << "         d_index" << "    count" << std::endl;
+    for(int i = 0; i < SYSOPENFILE; i++){
+        if(system_openfiles[i].i_count != 0){
+            std::cout << system_openfiles[i].fcb.d_name
+                      << " " << system_openfiles[i].fcb.d_index
+                      << "    " << system_openfiles[i].i_count
+                      << std::endl;
         }
     }
 }

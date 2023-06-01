@@ -39,7 +39,6 @@ extern FILE *disk;                               //系统磁盘文件
      W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写
      返回值false写失败 true写成功
      */
-    bool writeFile(const string& pathname, int write_mode, const string& content);
     bool writeFile(int fd, const string& content);
     // 创建新文件
     int createFile(string pathname);
@@ -79,7 +78,6 @@ extern FILE *disk;                               //系统磁盘文件
     int show_whole_dir();           // 展示文件系统整个目录结构
     int show_dir_tree(unsigned int id, int depth);
     int rmdir(string& pathname);     //删除该路径下的文件夹
-    struct dir get_dir(unsigned int d_index);//根据d_index，获取dir
 
     //文件所属相关
     int change_file_owner(string& pathname, int uid);   //改变文件所属用户
@@ -88,7 +86,6 @@ extern FILE *disk;                               //系统磁盘文件
     // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED
     bool isOpened(string pathname);
 
-    int seek_catalog_leisure();
     // 磁盘i节点分配
     int ialloc(unsigned int);
 
@@ -104,11 +101,14 @@ extern FILE *disk;                               //系统磁盘文件
 
     unsigned int namei(string name);
 
-    void file_wirte_back(struct inode* inode);
-
     inode* getDinodeFromDisk(int dinode_id);
 
 //查看某个磁盘i节点id对应的内存i节点是否存在
     inode* findHinode(int dinode_id);
+
+    void show_user_opened_files();
+    void show_opened_files();
+    void show_sys_opened_files();
+
 
 #endif //LLFS_RUNNINGSYSTEM_H
