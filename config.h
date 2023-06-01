@@ -36,28 +36,7 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 #define DIEMPTY     00000
 #define DIFILE      01000
 #define DIDIR       02000
-#define UDIREAD     00001
-#define UDIWRITE    00002
-#define UDIEXICUTE  00004
-#define GDIREAD     00010
-#define GDIWRITE    00020
-#define GDIEXICUTE  00040
-#define ODIREAD     00100
-#define ODIWRITE    00200
-#define ODIEXICUTE  00400
 
-/*
-#define SEEK_SET 0
-#define SEEK_CUR 1
-#define SEEK_END 2
-*/
-
-#define O_RDONLY 00
-#define O_WRONLY 01
-#define O_RDWR 02
-#define O_CREAT 0100
-#define O_TRUNC  01000
-#define O_APPEND 02000
 
 #define EXICUTE     3
 #define DEFAULTMODE 00777
@@ -172,7 +151,6 @@ struct sys_open_item{
     FCB fcb;                     // FCB
     unsigned int i_count;        // 打开次数
 };
-
 
 // 路径是否合法
 int judge_path(string pathname);

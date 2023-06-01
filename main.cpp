@@ -51,6 +51,7 @@ void HelpOut1(){
     cout<<"connect      使文件指向同一块磁盘区域"<<endl;
     cout<<"help        查看命令含义和格式"<<endl;
 }
+
 void HelpOut2(char* order){
     switch(toUnicode(order)){
         case U("login"):
@@ -84,7 +85,7 @@ void HelpOut2(char* order){
         case U("read"):
             cout<<"read [fd]"<<endl;
             break;
-        
+
         case U("mkdir"):
             cout<<"mkdir [pathname]"<<endl;
             break;
@@ -109,7 +110,6 @@ void HelpOut2(char* order){
             cout<<"usermod [uid][gid]"<<endl;
             break;
 
-
         case U("useradd"):
             cout<<"useradd [gid][PWD]"<<endl;
             break;
@@ -123,7 +123,7 @@ void HelpOut2(char* order){
             cout<<"show user file"<<endl;
             cout<<"show sys all"<<endl;
             break;
-        
+
         case U("format"):
             cout<<"format"<<endl;
             break;
@@ -138,8 +138,6 @@ void HelpOut2(char* order){
         default: cout<<"该指令不存在"<<endl;break;
     }
 }
-
-
 struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
 map<string, user_open_table*> user_openfiles;        //用户打开表组
 hinode hinodes[NHINO];                    //内存节点缓存
@@ -155,17 +153,26 @@ string cur_path;                          // 当前路径名
 int main(){
     int state;//状态
     //初始化
+    initial();
     install();
     login("admin");
-
-
+    std::string test = "test";
+    std::string ok = "ok";
+    std::string root = "root";
+    mkdir(test);
+    chdir(test);
+    mkdir(ok);
+    chdir(root);
+    createFile("1.1");
+    root = "1.1";
+    writeFile(open_file(root,1),"aaaabbbb1111");
 
 
 
     string s;//作为string& 的参数
     vector<char*> token;
     char order[50];
-    while(1){
+    while(true){
         cout<<cur_path << ">";
         for(int i=0;i<token.size();i++){
             free(token.back());
@@ -285,7 +292,7 @@ int main(){
                         state=writeFile(std::stoi(token[1]),std::string(token[2]));
                         switch(state){
                             case 0:cout<<endl<<"读取错误"<<endl;break;
-                            default: continue;break;
+                            default: continue;
                         }
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
@@ -299,14 +306,28 @@ int main(){
                     cout<<"指令格式错误"<<endl;
                 else{
                   try{
-                        cout<<readFile(std::stoi(token[1]),std::stoi(token[2]))<<endl;break;
+                        cout<<readFile(stoi(token[1]),stoi(token[2]))<<endl;break;
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
                     }
                 }
                 break;
 
-
+            case U("seek"):
+                if(token.size()!=4)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    try {
+                        state = file_seek(stoi(token[1]),stoi(token[2]),stoi(token[3]));
+                        if(state<0)
+                            cout<<"移动偏移量出界";
+                        else
+                            cout<<"文件描述符号:"<< stoi(token[1])<<"   offset:"<<state<<endl;
+                    }catch(const std::invalid_argument& e){
+                        cout<<"错误操作码"<<endl;
+                    }
+                }
+                break;
             case U("format")://格式化
                 if(token.size()!=1)
                     cout<<"指令格式错误"<<endl;
@@ -440,15 +461,13 @@ int main(){
                 if(token.size()!=1)
                     cout<<"指令格式错误"<<endl;
                 else
-                    cout<<whoami()<<endl;
+                    whoami();
                 break;
 
-            case U("show")://显示相关
-                if(token.size()==2&& !strcmp(token[1],"dir"))//展示目录结构
+            case U("show")://展示目录结构
+                if(token.size()==1)
                     show_dir(); // dir ls
-                else if(token.size()==2&&!strcmp(token[1],"file"))
-                    show_opened_files();
-                else if(token.size()==3 && !strcmp(token[1],"dir")&&!strcmp(token[2],"all"))
+                else if(token.size()==2 && !strcmp(token[1],"all"))
                     show_whole_dir();
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"login"))
                     show_login_users();
@@ -490,14 +509,7 @@ int main(){
                     exit(1);
                 }
                 break;
-                cout<<endl;
             default: cout<<"未知指令"<<endl;break;
-
-
-
-
-
-
         }
 
     }
