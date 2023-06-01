@@ -3,6 +3,7 @@
 //
 
 #include <string>
+#include <iomanip>
 #include "RunningSystem.h"
 
 void initial() {
@@ -76,7 +77,7 @@ void initial() {
     // 清空
     for (int i = 2; i < PWDNUM; i++) {
         pwds[i].p_uid = 0;
-        strcpy(pwds[i].password, "");
+        memset(pwds[i].password, 0, 12);
     }
     fseek(disk, 0, SEEK_SET);
     fwrite(pwds, sizeof(PWD), PWDNUM, disk);
@@ -216,7 +217,7 @@ void format() {
     // 清空
     for (int j = 2; j < PWDNUM; j++) {
         pwds[j].p_uid = 0;
-        strcpy(pwds[j].password, "");
+        memset(pwds[j].password, 0, 12);
     }
     fseek(disk, 0, SEEK_SET);
     fwrite(pwds, sizeof(PWD), PWDNUM, disk);
@@ -985,11 +986,11 @@ int file_seek(int fd,int offset,int fseek_mode){
 }
 // 展示所有用户
 void show_all_users(){
-    std::cout << "uid" << "     gid" << "     pwd";
+    std::cout << "uid" << "     gid" << "     pwd" << std::endl;
     for(int i = 0; i < USERNUM; i++){
-        if(!strcmp(pwds[i].password, "")){
-            std::cout << pwds[i].p_uid << "     "
-            << pwds[i].p_gid << "     "
+        if(pwds[i].password[0] != '\0'){
+            std::cout << pwds[i].p_uid << "       "
+            << pwds[i].p_gid << "       "
             << pwds[i].password << std::endl;
         }
     }
@@ -997,12 +998,12 @@ void show_all_users(){
 
 // 展示所有登录用户
 void show_login_users(){
-    std::cout << "uid" << "     gid" << "     pwd";
+    std::cout << "uid" << "     gid" << "     pwd" << std::endl;
     for(const auto& user: user_openfiles){
         for(int i = 0; i < USERNUM; i++){
             if(!strcmp(pwds[i].password, user.first.c_str())){
-                std::cout << pwds[i].p_uid << "     "
-                          << pwds[i].p_gid << "     "
+                std::cout << pwds[i].p_uid << "       "
+                          << pwds[i].p_gid << "       "
                           << pwds[i].password << std::endl;
             }
         }
@@ -1113,13 +1114,13 @@ int change_file_group(string& pathname, int gid){
 // 显示当前用户打开的文件信息
 void show_user_opened_files(){
     auto items = user_openfiles.find(cur_user)->second->items;
-    std::cout << "filename" << "         fd" << "    count"<< "    offset" << std::endl;
+    std::cout << "filename" << "          fd" << "   count"<< "    offset" << std::endl;
     for(int i = 0; i < NOFILE; i++){
         if(items[i].f_count != 0)
-            std::cout << system_openfiles[items[i].index_to_sysopen].fcb.d_name
-                      << " " << items[i].index_to_sysopen
-                      << "    " << items[i].f_count
-                      << "    " << items[i].f_offset
+            std::cout << setiosflags(ios::left)  << setw(17) << system_openfiles[items[i].index_to_sysopen].fcb.d_name
+                      << items[i].index_to_sysopen
+                      << "     " << items[i].f_count
+                      << "        " << items[i].f_offset
                       << std::endl;
     }
 }
@@ -1133,8 +1134,8 @@ void show_opened_files(){
         auto items = user_openfile.second->items;
         for(int i = 0; i < NOFILE; i++){
             if(items[i].f_count != 0)
-                std::cout << user_openfile.second->p_uid
-                          << "    " << system_openfiles[items[i].index_to_sysopen].fcb.d_name
+                std::cout << setiosflags(ios::left)  << user_openfile.second->p_uid
+                          << "      "<< setw(17) << system_openfiles[items[i].index_to_sysopen].fcb.d_name
                           << " " << items[i].index_to_sysopen
                           << "    " << items[i].f_count
                           << std::endl;
@@ -1146,9 +1147,9 @@ void show_sys_opened_files(){
     std::cout << "filename" << "         d_index" << "    count" << std::endl;
     for(int i = 0; i < SYSOPENFILE; i++){
         if(system_openfiles[i].i_count != 0){
-            std::cout << system_openfiles[i].fcb.d_name
-                      << " " << system_openfiles[i].fcb.d_index
-                      << "    " << system_openfiles[i].i_count
+            std::cout << setiosflags(ios::left) << setw(17) << system_openfiles[i].fcb.d_name
+                      << system_openfiles[i].fcb.d_index
+                      << "          " << system_openfiles[i].i_count
                       << std::endl;
         }
     }

@@ -51,34 +51,83 @@ void HelpOut2(char* order){
     switch(toUnicode(order)){
         case U("login"):
             cout<<"login [PWD]"<<endl;
+            break;
 
         case U("logout"):
             cout<<"logout [PWD]"<<endl;
+            break;
 
         case U("create"):
             cout<<"create [pathname][operation]"<<endl;
+            break;
 
         case U("delete"):
             cout<<"delete [pathname][operation]"<<endl;
+            break;
 
         case U("open"):
             cout<<"open [pathname][operation]"<<endl;
+            break;
 
         case U("close"):
             cout<<"close [pathname]"<<endl;
+            break;
 
         case U("write"):
             cout<<"write [fd][content]"<<endl;
+            break;
 
         case U("read"):
             cout<<"read [fd]"<<endl;
+            break;
+        
+        case U("mkdir"):
+            cout<<"mkdir [pathname]"<<endl;
+            break;
 
+        case U("cd"):
+            cout<<"cd [pathname]"<<endl;
+            break;
+
+        case U("rm"):
+            cout<<"rm [pathname]"<<endl;
+            break;
+
+        case U("chown"):
+            cout<<"chown [pathname][uid]"<<endl;
+            break;
+
+        case U("chgrp"):
+            cout<<"chgrp [pathname][gid]"<<endl;
+            break;
+
+        case U("usermod"):
+            cout<<"usermod [uid][gid]"<<endl;
+            break;
+
+
+        case U("useradd"):
+            cout<<"useradd [gid][PWD]"<<endl;
+            break;
+
+
+        case U("show"):
+            cout<<"show dir"<<endl;
+            cout<<"show file"<<endl;
+            cout<<"show dir all"<<endl;
+            cout<<"show user all"<<endl;
+            cout<<"show user file"<<endl;
+            cout<<"show sys all"<<endl;
+            break;
+        
         case U("format"):
             cout<<"format"<<endl;
+            break;
 
         case U("help"):
             cout<<"help [order]"<<endl;
-        default: cout<<"该指令不存在"<<endl;
+            break;
+        default: cout<<"该指令不存在"<<endl;break;
     }
 }
 
@@ -306,6 +355,92 @@ int main(){
                 }
                 break;
 
+            case U("chown")://文件所属用户更改
+                if(token.size()!=3)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    try{
+                        std::string tmp = std::string(token[1]);
+                        state=change_file_owner(tmp, std::stoi(token[2]));
+                        switch(state){
+                            case -1:cout<<"无效路径"<<endl;break;
+                            case -2:cout<<"没有修改权限"<<endl;break;
+                            default: cout<<"修改成功"<<endl;break;
+                        }
+                    }catch(const std::invalid_argument& e){
+                        cout<<"错误操作码"<<endl;
+                    }
+                }
+                break;
+
+
+            case U("chgrp")://文件所在组更改
+                if(token.size()!=3)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    try{
+                        std::string tmp = std::string(token[1]);
+                        state=change_file_group(tmp, std::stoi(token[2]));
+                        switch(state){
+                            case -1:cout<<"无效路径"<<endl;break;
+                            case -2:cout<<"没有修改权限"<<endl;break;
+                            default: cout<<"修改成功"<<endl;break;
+                        }
+                    }catch(const std::invalid_argument& e){
+                        cout<<"错误操作码"<<endl;
+                    }
+                }
+                break;
+
+
+            case U("usermod")://修改用户所在组
+                if(token.size()!=3)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    try{
+                        state=usermod(std::stoi(token[1]),std::stoi(token[2]));
+                        switch(state){
+                            case -1:cout<<"无效uid"<<endl;break;
+                            default: cout<<"修改成功"<<endl;break;
+                        }
+                    }catch(const std::invalid_argument& e){
+                        cout<<"错误操作码"<<endl;
+                    }
+                }
+                break;
+
+            case U("useradd")://在组中新增用户
+                if(token.size()!=3)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    try{
+                        state=useradd(std::stoi(token[1]),std::string(token[2]));
+                        switch(state){
+                            case -1:cout<<"无效uid"<<endl;break;
+                            default: cout<<"修改成功"<<endl;
+                        }
+                    }catch(const std::invalid_argument& e){
+                        cout<<"错误操作码"<<endl;
+                    }
+                }
+                break;
+
+            case U("user")://显示所有用户
+                if(token.size()!=1)
+                    cout<<"指令格式错误";
+                else
+                    show_all_users();
+                cout<<endl;
+                break;
+
+            case U("showlogin")://显示登录用户
+                if(token.size()!=1)
+                    cout<<"指令格式错误";
+                else
+                    show_login_users();
+                cout<<endl;
+                break;
+
 
             case U("whoami")://查看当前用户
                 if(token.size()!=1)
@@ -319,6 +454,14 @@ int main(){
                     show_dir(); // dir ls
                 else if(token.size()==2 && !strcmp(token[1],"all"))
                     show_whole_dir();
+                else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"login"))
+                    show_login_users();
+                else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"all"))
+                    show_all_users();
+                else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"file"))
+                    show_user_opened_files();
+                else if(token.size()==3 && !strcmp(token[1],"sys")&&!strcmp(token[2],"file"))
+                    show_sys_opened_files();
                 else
                     cout<<"指令格式错误";
                 cout<<endl;
@@ -336,6 +479,23 @@ int main(){
                         HelpOut2(token[1]);
                 }
                 break;
+
+            case U("HALT")://保存，退出
+                if(token.size()!=1)
+                    cout<<"指令格式错误";
+                else{
+                    halt();
+                    std::cout << "系统关闭";
+                    exit(1);
+                }
+                break;
+                cout<<endl;
+            default: cout<<"未知指令"<<endl;break;
+
+
+
+
+
 
         }
 
