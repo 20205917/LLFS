@@ -41,6 +41,8 @@ void HelpOut1(){
     cout<<"cd          更改当前目录"<<endl;
     cout<<"rm          移动目录"<<endl;
     cout<<"format      硬盘格式化"<<endl;
+    cout<<"whoami      查看当前用户"<<endl;
+
     //待补充
     cout<<"help        查看命令含义和格式"<<endl;
 }
@@ -98,151 +100,11 @@ int main(){
     int fd=-1;//记录打开表
     //初始化
     install();
-//    string path;
-//    login("admin");
-//    string file = "/aaa.txt";
-//    string dirname2 = "bbb";
-//    createFile(file);
-//    mkdir(dirname2);
-//    show_dir();
-//    std::cout << std::endl;
-//    string new_name = "b.txt";
-//    hard_link(file,new_name);
-//    show_dir();
-//
-//    show_whole_dir();
-
-    //return 0;
-//    int j = 1;
-//    for(int i =0 ;i<102 ; i++ ){
-//        j = ialloc(1);
-//    }
-//    halt();
-//    string a;//接收用户输入命令
 
 
 
 
-//    string a;//接收用户输入命令
-//    const char* A;
-//    string b;//命令参数
-//    string c;//命令参数
-//    string d;//命令参数
-//    int state=0;//保存调用接口服务返回的状态
-//    string path=">>";//命令窗口输入命令前的路径
-//    system("cls");
-//    cout<<"Hello World!"<<endl;
-//    cout<<">>";
-//    while(1){
-//        cin>>a;
-//        A=a.data();
-//        switch(toUnicode(A)){
-//            case U("login")://用户登录
-//                cin>>b;//输入用户名
-//                //1.补:非法用户名需要输出错误提示信息
-//                state=login(b);
-//                if(state==-1)
-//                    cout<<"口令错误";
-//                else if(state==-2)
-//                    cout<<"该用户已经处于登录状态";
-//                else if(state==-3)
-//                    cout<<"已达登录上限";
-//                else
-//                    cout<<"登录成功";
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("logout")://用户登出
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("open")://打开文件
-//                cin>>b;//输入文件路径
-//                //state=system.openFile();
-//                if(state==0)
-//                    cout<<"未能成功打开文件";
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("close")://关闭文件
-//                cin>>b;//输入文件路径
-//                //state=system.closeFile();返回值有问题
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("create")://创建文件
-//                cin>>b;//输入文件路径
-//                //state=system.createFile();
-//                if(state==0)
-//                    cout<<"创建文件失败";
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("delete")://删除文件
-//                cin>>b;//输入文件路径
-//                //state=system.deleteFile();
-//                if(state==0)
-//                    cout<<"删除文件失败";
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("write")://写入文件
-//                cin>>b;//输入文件名
-//                cin>>c;//输入写入内容
-//                //state=system.writeFile();
-//                if(state==0)
-//                    cout<<"未打开文件，请先打开文件再写入";
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("read")://从文件读
-//                cin>>b;//输入文件名
-//                cin>>c;//c代表从哪读
-//                //state=system.writeFile();
-//                if(state==0)
-//                    cout<<"未打开文件，请先打开文件再读出";
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("format")://磁盘格式化
-//                //system.format();
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("install")://从磁盘文件加载系统
-//                //system.install();
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("halt")://从磁盘文件加载系统
-//                //system.halt();
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("user")://查看所有用户
-//                //system.user()
-//                cout<<endl<<path;
-//                break;
-//
-//            case U("whoami")://查看当前用户
-//                string user=Runningsystem.whoami();
-//                cout<<user<<endl<<path;
-//                break;
-//
-//            case U("chmod")://权限更改
-//                //system.chmod
-//                cout<<endl<<path;
-//                break;
-//
-//            default:
-//                cout<<"'"<<a<<"'"<<"不是可执行命令"<<endl;
-//
-//        }
-//    }
-
-
-
-
+    string s;//作为string& 的参数
     vector<char*> token;
     char order[50];
     while(1){
@@ -391,6 +253,60 @@ int main(){
                 else
                     format();
                 break;
+
+            case U("mkdir")://创建目录
+                if(token.size()!=2)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    s=token[1];
+                    mkdir(s);
+                }
+                break;
+            
+            case U("cd")://改变目录
+                if(token.size()!=2)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    s=token[1];
+                    chdir(s);
+                }
+                break;
+
+
+            case U("rm")://移动目录
+                if(token.size()!=2)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    s=token[1];
+                    rmdir(s);
+                }
+                break;
+
+
+            case U("whoami")://查看当前用户
+                if(token.size()!=1)
+                    cout<<"指令格式错误"<<endl;
+                else
+                    whoami();
+                break;
+
+            case U("show")://展示目录结构
+                if(token.size()==1)
+                    show_dir();
+                else if(token.size()==2&&strcmp(token[1],"all"))
+                    show_whole_dir();
+                else if(token.size()==3&&strcmp(token[1],"tree")){
+                  try{
+                    show_dir_tree(cur_dir_inode->d_index,std::stoi(token[2]));
+                    }catch(const std::invalid_argument& e){
+                        cout<<"错误操作码";
+                     }
+                }
+                else    
+                    cout<<"指令格式错误";
+                cout<<endl;
+                
+
 
             case U("help")://帮助，打印命令和格式
                 if(token.size()!=1 && token.size()!=2)
