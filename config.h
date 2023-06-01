@@ -172,8 +172,6 @@ struct sys_open_item{
 
 // 路径是否合法
 int judge_path(string pathname);
-// 文件名是否合法
-bool is_file( string filename);
 
 void write_data_back(void *data_address, unsigned short *di_addr, int size, FILE *fp);
 #endif //LLFS_CONFIG_H

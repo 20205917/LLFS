@@ -349,20 +349,7 @@ bool access(int operation, inode *file_inode) {
 //        return j;
 //    }
 //}
-struct dir get_dir(unsigned int d_index) {
-    inode *dir_inode = iget(d_index);
-    // 从磁盘加载目录
-    struct dir work_dir{};
-    work_dir.size = dir_inode->dinode.di_size / DIRSIZ;
-    int i;
-    for (i = 0; i < work_dir.size / (BLOCKSIZ / DIRSIZ); i++) {
-        fseek(disk, DATASTART + BLOCKSIZ * dir_inode->dinode.di_addr[i], SEEK_SET);
-        fread(&work_dir.files[BLOCKSIZ / DIRSIZ * i], 1, BLOCKSIZ, disk);
-    }
-    fseek(disk, DATASTART + BLOCKSIZ * dir_inode->dinode.di_addr[i], SEEK_SET);
-    fread(&work_dir.files[BLOCKSIZ / DIRSIZ * i], 1, dir_inode->dinode.di_size % BLOCKSIZ, disk);
-    return work_dir;
-}
+
 
 //打开文件
 int open_file(string &pathname, int operation) {
@@ -594,24 +581,25 @@ int chdir(string &pathname) {
     int value=0;//判断是否是绝对路径
     if (judge_path(pathname) != 1) {
         return -1;
-    
-    } else {
+    }
+    else {
         if (pathname[0] == '/'){
+            if(pathname.size() == 1)
+                pathname = "";
             pathname = "root" + pathname;
             value=1;
         }
         inode *catalog = find_file(pathname);
-        if (!access(CHANGE, catalog))
-            return -1;//权限不足，返回错误码
         if (catalog == nullptr) {
             return -2;//无该路径，返回错误码
         }
-        if(value==1)
-            if(!strcmp(pathname.c_str(),"root/"))
-                cur_path="root";
-            else
-                cur_path=pathname;
-        cur_path=cur_path.substr(0,cur_path.length())+'/'+pathname;
+        if (!access(CHANGE, catalog))
+            return -1;//权限不足，返回错误码
+        if(value){
+            cur_path=pathname;
+        } else{
+            cur_path=cur_path+'/'+pathname;
+        }
         cur_dir_inode = catalog;
     }
     return 1;
@@ -991,6 +979,7 @@ int switch_user(const string& pwd){
         cur_user = pwd;
         return 0; // 切换用户成功
     }
+    return -1;
 }
 
 // 更改用户所在组
@@ -1049,6 +1038,7 @@ int change_file_owner(string& pathname, int uid){
             return 0;
         }
     }
+    return -1;
 }
 
 int change_file_group(string& pathname, int gid){
@@ -1071,4 +1061,5 @@ int change_file_group(string& pathname, int gid){
             return 0;
         }
     }
+    return -1;
 }

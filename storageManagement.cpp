@@ -103,12 +103,6 @@ void ifree(unsigned int dinode_id) {
     }
 }
 
-//文件内容写回
-void file_wirte_back(struct inode* inode){
-    //TODO 多级索引
-    // 需要抹除所占用的磁盘块
-}
-
 // 释放磁盘块
 // 成组链法的空间回收
 // 要注意第一个组长块只有49块有效，其首位为0

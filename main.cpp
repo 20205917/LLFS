@@ -101,6 +101,7 @@ int main(){
     int state;//状态
     int fd=-1;//记录打开表
     //初始化
+    initial();
     install();
     login("admin");
     std::string test = "test";
@@ -267,7 +268,7 @@ int main(){
                     mkdir(s);
                 }
                 break;
-            
+
             case U("cd")://改变目录
                 if(token.size()!=2)
                     cout<<"指令格式错误"<<endl;
@@ -300,11 +301,11 @@ int main(){
                     show_dir(); // dir ls
                 else if(token.size()==2 && !strcmp(token[1],"all"))
                     show_whole_dir();
-                else    
+                else
                     cout<<"指令格式错误";
                 cout<<endl;
                 break;
-                
+
 
 
             case U("help")://帮助，打印命令和格式
@@ -317,12 +318,6 @@ int main(){
                         HelpOut2(token[1]);
                 }
                 break;
-
-
-
-
-
-
 
         }
 
