@@ -38,7 +38,7 @@ extern FILE *disk;                               //系统磁盘文件
      W_APPEND追加写 W_TRUNC重置 任意值表示从指定位置写
      返回值false写失败 true写成功
      */
-    bool writeFile(int fd, const string& content);
+    int writeFile(int fd, const string& content);
     // 创建新文件
     int createFile(string pathname);
     // 删除文件
