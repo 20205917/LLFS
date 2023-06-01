@@ -117,9 +117,10 @@ void HelpOut2(char* order){
 
         case U("show"):
             cout<<"show dir"<<endl;
-            cout<<"show file"<<endl;
             cout<<"show dir all"<<endl;
+            cout<<"show dir"<<endl;
             cout<<"show user all"<<endl;
+            cout<<"show user login"<<endl;
             cout<<"show user file"<<endl;
             cout<<"show sys all"<<endl;
             break;
@@ -152,6 +153,7 @@ string cur_path;                          // 当前路径名
 
 int main(){
     int state;//状态
+//    initial();
     //初始化
     install();
     login("admin");
@@ -182,6 +184,8 @@ int main(){
                         cout<<"该用户已经处于登录状态"<<endl;
                     else if(state==0)
                         cout<<"成功登录"<<endl;
+                    else if(state == -3)
+                        std::cout << "该用户已登录，将自动切换" << std::endl;
                     else
                         cout<<"登录用户已达上限"<<endl;
                 }
@@ -430,18 +434,20 @@ int main(){
                 if(token.size()!=1)
                     cout<<"指令格式错误"<<endl;
                 else
-                    whoami();
+                    std::cout << whoami() << std::endl;
                 break;
 
-            case U("show")://展示目录结构
-                if(token.size()==1)
+            case U("show")://显示相关
+                if(token.size()==2&& !strcmp(token[1],"dir"))//展示目录结构
                     show_dir(); // dir ls
-                else if(token.size()==2 && !strcmp(token[1],"all"))
+                else if(token.size()==2&&!strcmp(token[1],"file"))
+                    show_opened_files();
+                else if(token.size()==3 && !strcmp(token[1],"dir")&&!strcmp(token[2],"all"))
                     show_whole_dir();
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"login"))
                     show_login_users();
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"all"))
-                    show_all_users();
+                    show_all_users;
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"file"))
                     show_user_opened_files();
                 else if(token.size()==3 && !strcmp(token[1],"sys")&&!strcmp(token[2],"file"))

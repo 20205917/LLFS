@@ -45,6 +45,7 @@ int mkdir(string &pathname) {
         new_inode->dinode.di_mode = DIDIR;
         new_inode->dinode.di_size = sizeof(dir);
         new_inode->ifChange = 1;
+        new_inode->dinode.di_number = 1;
 
 
         //初始化硬盘数据区(索引结点区在ialloc中初始化)
@@ -191,13 +192,13 @@ int show_dir_tree(unsigned int id, int depth){
             for(int j = 0; j < 4 * depth; j++){
                 std::cout << " ";
             }
-            inMemory = true;
-            tmp = findHinode(id);
-            if(tmp == nullptr){
-                inMemory = false;
-                tmp = getDinodeFromDisk(id);
+            bool _inMemory = true;
+            inode* _tmp = findHinode(id);
+            if(_tmp == nullptr){
+                _inMemory = false;
+                _tmp = getDinodeFromDisk(id);
             }
-            if(tmp->dinode.di_mode == DIDIR){
+            if(_tmp->dinode.di_mode == DIDIR){
                 std::cout << "<DIR>  ";
                 std::cout << dirs->files[i].d_name << std::endl;
                 show_dir_tree(dirs->files[i].d_index, depth + 1);
@@ -206,11 +207,15 @@ int show_dir_tree(unsigned int id, int depth){
                 std::cout << "<FILE> ";
                 std::cout << dirs->files[i].d_name << std::endl;
             }
+            if(!_inMemory){
+                free(_tmp);
+            }
             size--;
         }
     }
     if(!inMemory){
         free(tmp);
+        free(dirs);
     }
     return 0;
 }

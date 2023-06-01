@@ -109,9 +109,9 @@ void ifree(unsigned int dinode_id) {
 void bfree(int block_num){
     if(block_num >= FILEBLK)
         return;
-    if(block_num == 1){
-        return;
-    }
+//    if(block_num == 1){
+//        return;
+//    }
     if(file_system.s_pfree_block == NICFREE){
         // 栈满已经成组
         // 先写回磁盘
