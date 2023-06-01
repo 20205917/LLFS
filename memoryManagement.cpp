@@ -6,9 +6,9 @@
 
 
 //查看某个磁盘i节点id对应的内存i节点是否存在
-inode* findHinode(int dinode_id){
-    int inode_id = dinode_id % NHINO;
-    if(hinodes[inode_id]->i_forw != NULL) {
+inode* findHinode(unsigned int dinode_id){
+    unsigned int inode_id = dinode_id % NHINO;
+    if(hinodes[inode_id]->i_forw != nullptr) {
         hinode tmp = hinodes[inode_id]->i_forw;
         while (tmp) {
             if (tmp->d_index == dinode_id) {
@@ -18,7 +18,7 @@ inode* findHinode(int dinode_id){
                 tmp = tmp->i_forw;
         }
     }
-    return NULL; 
+    return nullptr;
 }
 
 //TODO iget iput,对于内容的释放
@@ -28,23 +28,23 @@ inode* findHinode(int dinode_id){
 // 申请了额外空间,//插入内存i节点  情况: 1-Hash缓冲区对应桶号已达可容纳i节点数上限7  2-未达上限，直接插入
 // 这里初始化了新的inode
 hinode iget(unsigned int dinode_id){
-    int inode_id = dinode_id % NHINO;
+    unsigned int inode_id = dinode_id % NHINO;
     hinode temp=findHinode(dinode_id);
-    if(temp!=NULL)
+    if(temp!=nullptr)
         return temp;
     // 内存中不存在,需要创建
     long addr = DINODESTART + dinode_id * DINODESIZ;
-    hinode newinode = (hinode)malloc(sizeof(struct inode));
+    auto newinode = (hinode)malloc(sizeof(struct inode));
     fseek(disk, addr, SEEK_SET);
     fread(&(newinode->dinode.di_number), DINODESIZ, 1, disk);
     temp=hinodes[inode_id];
-    for(int i=0;temp->i_forw!=NULL;i++){
+    for(int i=0;temp->i_forw!=nullptr;i++){
         if(i==6)
             iput(hinodes[inode_id]);
         temp=temp->i_forw;
     }
     temp->i_forw=newinode;
-    newinode->i_forw=NULL;
+    newinode->i_forw=nullptr;
     newinode->i_back=temp;
     newinode->d_index = dinode_id;
     newinode->ifChange = '0';
@@ -72,7 +72,6 @@ bool iput(inode* inode){
     if(inode->dinode.di_number == 0){
         // 删除对应的数据块
         if(inode->dinode.di_size>0){
-            //TODO 多级索引释放数据区
             int blocks = inode->dinode.di_size / BLOCKSIZ + 1;
             for(int i= 0; i < blocks; i++){
                 bfree(inode->dinode.di_addr[i]);
