@@ -591,18 +591,27 @@ int rmdir(string &pathname) {
 
 //移动系统当前路径
 int chdir(string &pathname) {
+    int value=0;//判断是否是绝对路径
     if (judge_path(pathname) != 1) {
         return -1;
     
     } else {
-        if (pathname[0] == '/')
+        if (pathname[0] == '/'){
             pathname = "root" + pathname;
+            value=1;
+        }
         inode *catalog = find_file(pathname);
         if (!access(CHANGE, catalog))
             return -1;//权限不足，返回错误码
         if (catalog == nullptr) {
             return -1;//无该路径，返回错误码
         }
+        if(value==1)
+            if(!strcmp(pathname.c_str(),"root/"))
+                cur_path="root>";
+            else
+                cur_path=pathname+'>';
+        cur_path=cur_path.substr(0,cur_path.length()-2)+'/'+pathname+'>';
         cur_dir_inode = catalog;
     }
     return 1;
