@@ -36,6 +36,7 @@ void HelpOut1(){
     cout<<"delete       删除文件"<<endl;
     cout<<"open         打开文件"<<endl;
     cout<<"close        关闭文件"<<endl;
+    cout<<"seek         移动文件指针"<<endl;
     cout<<"write        写入文件"<<endl;
     cout<<"read         从文件读"<<endl;
     cout<<"mkdir        创建目录"<<endl;
@@ -75,7 +76,7 @@ void HelpOut2(char* order){
             break;
 
         case U("close"):
-            cout<<"close [pathname]"<<endl;
+            cout<<"close [fd]"<<endl;
             break;
 
         case U("write"):
@@ -83,7 +84,7 @@ void HelpOut2(char* order){
             break;
 
         case U("read"):
-            cout<<"read [fd]"<<endl;
+            cout<<"read [fd][len]"<<endl;
             break;
 
         case U("mkdir"):
@@ -136,6 +137,11 @@ void HelpOut2(char* order){
         case U("connect"):
             cout<<"connect [pathname][pathname]"<<endl;
             break;
+        case U("seek"):
+            cout << "seek [fd][offset][mode]" << endl;
+            std::cout << "mode:1-head 2-cur 3-last" << std::endl;
+            break;
+
         default: cout<<"该指令不存在"<<endl;break;
     }
 }
@@ -226,7 +232,7 @@ int main(){
                 if(token.size()!=2)
                     cout<<"指令格式错误"<<endl;
                 else{
-                    closeFile(std::string(token[1]));
+                    close_file(std::stoi(token[1]));
                 }
                 break;
 
@@ -420,8 +426,8 @@ int main(){
                     try{
                         state=useradd(std::stoi(token[1]),std::string(token[2]));
                         switch(state){
-                            case -1:cout<<"无效uid"<<endl;break;
-                            default: cout<<"修改成功"<<endl;
+                            case -1:cout<<"添加失败"<<endl;break;
+                            case 0: cout<<"添加成功"<<endl;
                         }
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
@@ -447,7 +453,7 @@ int main(){
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"login"))
                     show_login_users();
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"all"))
-                    show_all_users;
+                    show_all_users();
                 else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"file"))
                     show_user_opened_files();
                 else if(token.size()==3 && !strcmp(token[1],"sys")&&!strcmp(token[2],"file"))

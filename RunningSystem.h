@@ -33,6 +33,7 @@ int open_file(string &pathname, int operation);
 // 关闭文件
 void closeFile(const string &pathname);
 
+int close_file(int fd);
 // 读取文件
 string readFile(int fd, int len);
 

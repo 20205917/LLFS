@@ -123,7 +123,7 @@ int chdir(string &pathname) {
             pathname = "root" + pathname;
             value=1;
         }
-        else if(pathname[0]=='r'&&pathname[1]=='o'&&pathname[2]=='o'&&pathname[3]=='t')
+        else if(pathname[0]=='r'&&pathname[1]=='o'&&pathname[2]=='o'&&pathname[3]=='t'&&(pathname.size() == 4 || pathname[4]=='/'))
             value = 1;
         inode *catalog = find_file(pathname);
         if (catalog == nullptr) {

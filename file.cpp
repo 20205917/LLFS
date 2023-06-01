@@ -277,6 +277,15 @@ int deleteFile(string pathname) {
 
 // 关闭一个已经被用户打开了的文件
 
+int close_file(int fd) {
+    user_open_table *T = user_openfiles.find(cur_user)->second;
+    if(T->items[fd].f_count <= 0)
+        return 0;
+    T->items[fd].f_count--;//用户打开表进程数-1
+    system_openfiles[T->items[fd].index_to_sysopen].i_count--;
+    return 1;
+}
+
 void closeFile(const string &pathname) {
     // 判断文件名是否合法
     if (judge_path(pathname) != 2) {
