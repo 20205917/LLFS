@@ -57,10 +57,10 @@ hinode iget(unsigned int dinode_id){
     int i;
     for (i = 0; i < newinode->dinode.di_size / BLOCKSIZ ; i++) {
         fseek(disk, DATASTART + BLOCKSIZ * newinode->dinode.di_addr[i], SEEK_SET);
-        fread(newinode->content, 1, BLOCKSIZ, disk);
+        fread(newinode->content, BLOCKSIZ, 1, disk);
     }
     fseek(disk, DATASTART + BLOCKSIZ * newinode->dinode.di_addr[i], SEEK_SET);
-    fread(newinode->content, 1, newinode->dinode.di_size % BLOCKSIZ, disk);
+    fread(newinode->content, newinode->dinode.di_size % BLOCKSIZ, 1, disk);
     return newinode;
 }
 

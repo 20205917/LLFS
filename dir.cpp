@@ -208,6 +208,7 @@ int show_dir_tree(unsigned int id, int depth){
                 std::cout << dirs->files[i].d_name << std::endl;
             }
             if(!_inMemory){
+                free(_tmp->content);
                 free(_tmp);
             }
             size--;

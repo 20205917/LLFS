@@ -172,5 +172,11 @@ inode* getDinodeFromDisk(unsigned int dinode_id){
     auto* new_inode = (inode*)malloc(sizeof(struct inode));
     fseek(disk, addr, SEEK_SET);
     fread(&(new_inode->dinode.di_number), DINODESIZ, 1, disk);
+    if(new_inode->dinode.di_mode == DIDIR){
+        addr = DATASTART + new_inode->dinode.di_addr[0] * BLOCKSIZ;
+        fseek(disk, addr, SEEK_SET);
+        new_inode->content = malloc(new_inode->dinode.di_size);
+        fread(new_inode->content, new_inode->dinode.di_size, 1, disk);
+    }
     return new_inode;
 }
