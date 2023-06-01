@@ -48,6 +48,7 @@ void HelpOut1(){
     cout<<"show         显示相关信息"<<endl;
     cout<<"format       硬盘格式化"<<endl; 
     cout<<"whoami       查看当前用户"<<endl;
+    cout<<"connect      使文件指向同一块磁盘区域"<<endl;
     cout<<"help        查看命令含义和格式"<<endl;
 }
 void HelpOut2(char* order){
@@ -129,6 +130,10 @@ void HelpOut2(char* order){
 
         case U("help"):
             cout<<"help [order]"<<endl;
+            break;
+
+        case U("connect"):
+            cout<<"connect [pathname][pathname]"<<endl;
             break;
         default: cout<<"该指令不存在"<<endl;break;
     }
@@ -459,6 +464,11 @@ int main(){
                 break;
 
 
+            case U("connect")://文件指向同一磁盘区域
+                if(token.size()!=3)
+                    cout<<"指令格式错误"<<endl;
+                else
+                    
 
             case U("help")://帮助，打印命令和格式
                 if(token.size()!=1 && token.size()!=2)
