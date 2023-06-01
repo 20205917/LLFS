@@ -3,6 +3,7 @@
 //
 
 #include <string>
+#include <iomanip>
 #include "RunningSystem.h"
 
 void initial() {
@@ -76,7 +77,7 @@ void initial() {
     // 清空
     for (int i = 2; i < PWDNUM; i++) {
         pwds[i].p_uid = 0;
-        strcpy(pwds[i].password, "");
+        memset(pwds[i].password, 0, 12);
     }
     fseek(disk, 0, SEEK_SET);
     fwrite(pwds, sizeof(PWD), PWDNUM, disk);
@@ -216,7 +217,7 @@ void format() {
     // 清空
     for (int j = 2; j < PWDNUM; j++) {
         pwds[j].p_uid = 0;
-        strcpy(pwds[j].password, "");
+        memset(pwds[j].password, 0, 12);
     }
     fseek(disk, 0, SEEK_SET);
     fwrite(pwds, sizeof(PWD), PWDNUM, disk);
@@ -873,36 +874,9 @@ int writeFile(int fd, const string& content) {
 
     file_inode->dinode.di_size = tmp.size() + 1;
     userOpenTable->items[fd].f_offset = tmp.size();
-    return true;
-}
-int file_seek(int fd,int offset,int fseek_mode){
-    user_open_table *T = user_openfiles.find(cur_user)->second;
-    int cur_offset = T->items[fd].f_offset;
-    int file_capacity = T->items[fd].f_inode->dinode.di_size;
-    switch (fseek_mode)
-    {
-    case HEAD_FSEEK://从头移动
-        cur_offset = offset;
-        break;
-    case CUR_SEEK://从当前移动
-        cur_offset += offset;
-        break;
-    default:
-        return -1;//输入格式错误
-        break;
-    }
-    if(cur_offset>file_capacity){
-        file_capacity = cur_offset + 1;
-        T->items[fd].f_inode->dinode.di_size = file_capacity;
-        void *new_content = malloc(file_capacity);
-        memset(new_content,0,file_capacity);
-        strcpy((char *)new_content,(char *)T->items[fd].f_inode->content);
-        free(T->items[fd].f_inode->content);
-        T->items[fd].f_inode->content = new_content;
-    }
-    T->items[fd].f_offset = cur_offset;
     return 1;
 }
+
 // 硬链接次数初始化为1
 // 需要考虑文件偏移量，此处未实现
 // int createFile(string pathname, int operation){
@@ -958,14 +932,45 @@ int createFile(string pathname){
     }
     return 0;//创建成功
 }
-
+int file_seek(int fd,int offset,int fseek_mode){
+    user_open_table *T = user_openfiles.find(cur_user)->second;
+    int cur_offset = T->items[fd].f_offset;
+    int file_capacity = T->items[fd].f_inode->dinode.di_size;
+    switch (fseek_mode)
+    {
+    case HEAD_FSEEK://从头移动
+        cur_offset = offset;
+        break;
+    case CUR_SEEK://从当前移动
+        cur_offset += offset;
+        break;
+    case LAST_SEEK://从末尾移动
+        cur_offset = file_capacity + offset;
+    default:
+        cur_offset += offset;
+        break;
+    }
+    if(cur_offset<0)
+        return -1;//移动偏移量出界
+    if(cur_offset>file_capacity){
+        file_capacity = cur_offset + 1;
+        T->items[fd].f_inode->dinode.di_size = file_capacity;
+        void *new_content = malloc(file_capacity);
+        memset(new_content,0,file_capacity);
+        strcpy((char *)new_content,(char *)T->items[fd].f_inode->content);
+        free(T->items[fd].f_inode->content);
+        T->items[fd].f_inode->content = new_content;
+    }
+    T->items[fd].f_offset = cur_offset;
+    return cur_offset;
+}
 // 展示所有用户
 void show_all_users(){
-    std::cout << "uid" << "     gid" << "     pwd";
+    std::cout << "uid" << "     gid" << "     pwd" << std::endl;
     for(int i = 0; i < USERNUM; i++){
-        if(!strcmp(pwds[i].password, "")){
-            std::cout << pwds[i].p_uid << "     "
-            << pwds[i].p_gid << "     "
+        if(pwds[i].password[0] != '\0'){
+            std::cout << pwds[i].p_uid << "       "
+            << pwds[i].p_gid << "       "
             << pwds[i].password << std::endl;
         }
     }
@@ -973,12 +978,12 @@ void show_all_users(){
 
 // 展示所有登录用户
 void show_login_users(){
-    std::cout << "uid" << "     gid" << "     pwd";
+    std::cout << "uid" << "     gid" << "     pwd" << std::endl;
     for(const auto& user: user_openfiles){
         for(int i = 0; i < USERNUM; i++){
             if(!strcmp(pwds[i].password, user.first.c_str())){
-                std::cout << pwds[i].p_uid << "     "
-                          << pwds[i].p_gid << "     "
+                std::cout << pwds[i].p_uid << "       "
+                          << pwds[i].p_gid << "       "
                           << pwds[i].password << std::endl;
             }
         }
@@ -1089,13 +1094,13 @@ int change_file_group(string& pathname, int gid){
 // 显示当前用户打开的文件信息
 void show_user_opened_files(){
     auto items = user_openfiles.find(cur_user)->second->items;
-    std::cout << "filename" << "         fd" << "    count"<< "    offset" << std::endl;
+    std::cout << "filename" << "          fd" << "   count"<< "    offset" << std::endl;
     for(int i = 0; i < NOFILE; i++){
         if(items[i].f_count != 0)
-            std::cout << system_openfiles[items[i].index_to_sysopen].fcb.d_name
-                      << " " << items[i].index_to_sysopen
-                      << "    " << items[i].f_count
-                      << "    " << items[i].f_offset
+            std::cout << setiosflags(ios::left)  << setw(17) << system_openfiles[items[i].index_to_sysopen].fcb.d_name
+                      << items[i].index_to_sysopen
+                      << "     " << items[i].f_count
+                      << "        " << items[i].f_offset
                       << std::endl;
     }
 }
@@ -1109,8 +1114,8 @@ void show_opened_files(){
         auto items = user_openfile.second->items;
         for(int i = 0; i < NOFILE; i++){
             if(items[i].f_count != 0)
-                std::cout << user_openfile.second->p_uid
-                          << "    " << system_openfiles[items[i].index_to_sysopen].fcb.d_name
+                std::cout << setiosflags(ios::left)  << user_openfile.second->p_uid
+                          << "      "<< setw(17) << system_openfiles[items[i].index_to_sysopen].fcb.d_name
                           << " " << items[i].index_to_sysopen
                           << "    " << items[i].f_count
                           << std::endl;
@@ -1122,9 +1127,9 @@ void show_sys_opened_files(){
     std::cout << "filename" << "         d_index" << "    count" << std::endl;
     for(int i = 0; i < SYSOPENFILE; i++){
         if(system_openfiles[i].i_count != 0){
-            std::cout << system_openfiles[i].fcb.d_name
-                      << " " << system_openfiles[i].fcb.d_index
-                      << "    " << system_openfiles[i].i_count
+            std::cout << setiosflags(ios::left) << setw(17) << system_openfiles[i].fcb.d_name
+                      << system_openfiles[i].fcb.d_index
+                      << "          " << system_openfiles[i].i_count
                       << std::endl;
         }
     }

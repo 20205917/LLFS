@@ -92,6 +92,7 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 //移动文件指针的位置
 #define HEAD_FSEEK  1
 #define CUR_SEEK    2
+#define LAST_SEEK   3
 struct dinode{
     unsigned short di_number;    // 硬连接次数
     unsigned short di_mode;      // 文件类型，目录和文件
