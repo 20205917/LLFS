@@ -41,6 +41,8 @@ void HelpOut1(){
     cout<<"cd          更改当前目录"<<endl;
     cout<<"rm          移动目录"<<endl;
     cout<<"format      硬盘格式化"<<endl;
+    cout<<"whoami      查看当前用户"<<endl;
+
     //待补充
     cout<<"help        查看命令含义和格式"<<endl;
 }
@@ -99,6 +101,10 @@ int main(){
     //初始化
     install();
 
+
+
+
+    string s;//作为string& 的参数
     vector<char*> token;
     char order[50];
     while(1){
@@ -247,6 +253,60 @@ int main(){
                 else
                     format();
                 break;
+
+            case U("mkdir")://创建目录
+                if(token.size()!=2)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    s=token[1];
+                    mkdir(s);
+                }
+                break;
+            
+            case U("cd")://改变目录
+                if(token.size()!=2)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    s=token[1];
+                    chdir(s);
+                }
+                break;
+
+
+            case U("rm")://移动目录
+                if(token.size()!=2)
+                    cout<<"指令格式错误"<<endl;
+                else{
+                    s=token[1];
+                    rmdir(s);
+                }
+                break;
+
+
+            case U("whoami")://查看当前用户
+                if(token.size()!=1)
+                    cout<<"指令格式错误"<<endl;
+                else
+                    whoami();
+                break;
+
+            case U("show")://展示目录结构
+                if(token.size()==1)
+                    show_dir();
+                else if(token.size()==2&&strcmp(token[1],"all"))
+                    show_whole_dir();
+                else if(token.size()==3&&strcmp(token[1],"tree")){
+                  try{
+                    show_dir_tree(cur_dir_inode->d_index,std::stoi(token[2]));
+                    }catch(const std::invalid_argument& e){
+                        cout<<"错误操作码";
+                     }
+                }
+                else    
+                    cout<<"指令格式错误";
+                cout<<endl;
+                
+
 
             case U("help")://帮助，打印命令和格式
                 if(token.size()!=1 && token.size()!=2)
