@@ -214,9 +214,9 @@ void format() {
     pwds[1].p_gid = 1;
     strcpy(pwds[1].password, "1");
     // 清空
-    for (int i = 2; i < PWDNUM; i++) {
-        pwds[i].p_uid = 0;
-        strcpy(pwds[i].password, "");
+    for (int j = 2; j < PWDNUM; j++) {
+        pwds[j].p_uid = 0;
+        strcpy(pwds[j].password, "");
     }
     fseek(disk, 0, SEEK_SET);
     fwrite(pwds, sizeof(PWD), PWDNUM, disk);
@@ -324,39 +324,10 @@ bool access(int operation, inode *file_inode) {
 //具体待修改.(暂定）
 
 
-/* 目录文件数据区是否有空闲，是否在父目录数据区里有已存在文件(findfile()实现)，有空闲
- 申请磁盘i结点，初始化磁盘i结点，磁盘i结点写回磁盘，父目录数据区写回磁盘。
- 申请磁盘i节点未实现*/
-//inode* createFile(string pathname, unsigned short di_mode){
-//    if(cur_user == "")
-//        return nullptr;
-//
-//    FCB  fcb;
-//    int i, j;
-//    //查找文件
-//    fcb = addFile(pathname);
-//    //文件已经存在
-//    if (fcb.d_index != 0)
-//        return NULL;
-//    else
-//    {
-//        struct inode* inode = ialloc(*this);
-//        //在目录中加入
-//        ;
-//        inode->dinode.di_mode = 1;
-//        inode->dinode.di_uid = user_openfiles.find(cur_user)->second->p_uid;
-//        inode->dinode.di_gid = user_openfiles.find(cur_user)->second->p_gid;
-//        inode->dinode.di_size = 0;
-//        inode->ifChange = 1;                //需要重新写回
-//        return j;
-//    }
-//}
-
-
 //打开文件
 int open_file(string &pathname, int operation) {
-//    if (judge_path(pathname) != 2)
-//        return -1;                                               //不是文件格式，返回错误码
+    if (judge_path(pathname) != 2)
+        return -1;                                               //不是文件格式，返回错误码
     inode *catalog;
     string filename;
     if (pathname.find_last_of('/') == string::npos) {//当前目录的子文件     绝对路径
@@ -524,7 +495,6 @@ int hard_link(string &pathname,string &newname){
             return -1;//无该路径，返回错误码
     if (!access(READ, filea))
         return -1;//权限不足，返回错误码
-    int leisure = 0;
     inode * catalog_b = cur_dir_inode;
     if(((dir*)catalog_b->content)->size==DIRNUM)
         return -1;//目录无空闲
@@ -737,24 +707,24 @@ int deleteFile(string pathname) {
     //查找成功，找到内存索引节点
     file_inode = iget(file_index);
     //修改系统打开文件表
-    short sys_i = 0;
-    for (; sys_i < SYSOPENFILE; sys_i++) {//找系统打开表的表项
-        if (system_openfiles[sys_i].fcb.d_index == file_index && system_openfiles[sys_i].i_count != 0) {
-            return -3;//该文件正在被系统打开
-        }
-        //删除文件，若文件硬连接次数为0，则释放将索引节点中内容指针置为空
-        file_inode->dinode.di_number--;
-        if (file_inode->dinode.di_number == 0) {
+    for (short sys_i = 0; sys_i < SYSOPENFILE; sys_i++) {//找系统打开表的表项
+        if (system_openfiles[sys_i].fcb.d_index == file_index && system_openfiles[sys_i].i_count != 0)
+            return -1;//该文件正在被系统打开
+    }
+    //删除文件，若文件硬连接次数为0，则释放将索引节点中内容指针置为空
+    file_inode->dinode.di_number--;
+    if (file_inode->dinode.di_number == 0) {
+        if(file_inode->content){
             free(file_inode->content);
             file_inode->content = nullptr;
-            catalog_dir->files[i].d_index = 0;
-            catalog_dir->size--;
-            catalog->ifChange = 1;
         }
-        file_inode->ifChange = 1;
-        return 0;//成功删除
+        file_inode->content = nullptr;
+        catalog_dir->files[i].d_index = 0;
+        catalog_dir->size--;
+        catalog->ifChange = 1;
     }
-    return -2;
+    file_inode->ifChange = 1;
+    return 0;//成功删除
 }
 
 // 关闭一个已经被用户打开了的文件
@@ -802,7 +772,7 @@ void closeFile(const string &pathname) {
 // 从用户以打开的文件中读取内容
 // 以字符形式返回内容
 // 没有实现权限判断
-string readFile(int fd) {
+string readFile(int fd,int len) {
     //判断文件是否被用户打开
     // 获取用户的打开表
     user_open_table *userOpenTable = user_openfiles[cur_user];
@@ -810,19 +780,28 @@ string readFile(int fd) {
     unsigned short p_uid = userOpenTable->p_uid;
     // 使用fd获取打开文件
     struct user_open_item opened_file = userOpenTable->items[fd];
+
     // 为0说明读取错误
     if(opened_file.f_count == 0)
         return "";
 
     hinode file_inode = opened_file.f_inode;
+
     // 判断用户对该文件是否有读权限
     if(!access(Read, file_inode))
         return "";
 
-    void* content = file_inode->content;
-    if(content == nullptr)
-        return "";
-    return (char*)content;
+    if(opened_file.f_offset+len > file_inode->dinode.di_size){
+        len = file_inode->dinode.di_size - opened_file.f_offset;
+    }
+
+    //读取
+    string result = string((char*)file_inode->content+opened_file.f_offset,len);
+
+    //修改offset
+    opened_file.f_offset +=len;
+
+    return result;
 }
 
 inode *find_file(string addr) {
@@ -859,9 +838,8 @@ inode *find_file(string addr) {
             break;
         temp_dir = (dir *) iget(index)->content;
     }
+    free(ADDR);
     return final;
-
-
 }
 
 // 权限未实现
@@ -897,7 +875,34 @@ int writeFile(int fd, const string& content) {
     userOpenTable->items[fd].f_offset = tmp.size();
     return true;
 }
-
+int file_seek(int fd,int offset,int fseek_mode){
+    user_open_table *T = user_openfiles.find(cur_user)->second;
+    int cur_offset = T->items[fd].f_offset;
+    int file_capacity = T->items[fd].f_inode->dinode.di_size;
+    switch (fseek_mode)
+    {
+    case HEAD_FSEEK://从头移动
+        cur_offset = offset;
+        break;
+    case CUR_SEEK://从当前移动
+        cur_offset += offset;
+        break;
+    default:
+        return -1;//输入格式错误
+        break;
+    }
+    if(cur_offset>file_capacity){
+        file_capacity = cur_offset + 1;
+        T->items[fd].f_inode->dinode.di_size = file_capacity;
+        void *new_content = malloc(file_capacity);
+        memset(new_content,0,file_capacity);
+        strcpy((char *)new_content,(char *)T->items[fd].f_inode->content);
+        free(T->items[fd].f_inode->content);
+        T->items[fd].f_inode->content = new_content;
+    }
+    T->items[fd].f_offset = cur_offset;
+    return 1;
+}
 // 硬链接次数初始化为1
 // 需要考虑文件偏移量，此处未实现
 // int createFile(string pathname, int operation){
