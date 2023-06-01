@@ -880,6 +880,7 @@ int file_seek(int fd,int offset,int fseek_mode){
         cur_offset += offset;
         break;
     default:
+        return -1;//ÊäÈë¸ñÊ½´íÎó
         break;
     }
     if(cur_offset>file_capacity){

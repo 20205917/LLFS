@@ -80,7 +80,8 @@ extern FILE *disk;                               //系统磁盘文件
 
     // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED
     bool isOpened(string pathname);
-
+    // 移动文件指针
+    int file_seek(int fd,int offset,int fseek_mode);
     // 磁盘i节点分配
     int ialloc(unsigned int);
 
