@@ -844,7 +844,7 @@ inode *find_file(string addr) {
 
 // 权限未实现
 
-bool writeFile(int fd, const string& content) {
+int writeFile(int fd, const string& content) {
 
  //判断文件是否被用户打开
  // 获取用户的打开表
@@ -855,16 +855,24 @@ bool writeFile(int fd, const string& content) {
     struct user_open_item opened_file = userOpenTable->items[fd];
     // 为0说明读取错误
     if(opened_file.f_count == 0)
-        return false;
+        return -1; // 文件标识符错误
 
     hinode file_inode = opened_file.f_inode;
     file_inode->ifChange = 1;
-    file_inode->dinode.di_size = content.size() + 1;
+    unsigned long offset = opened_file.f_offset;
+
 
     // 写文件
+    std::string tmp((char*)file_inode->content);
+    tmp = tmp.substr(0, offset);
+    tmp += content;
+
     free(file_inode->content);
-    file_inode->content = (char*) malloc(content.size() + 1);
-    strcpy((char*)file_inode->content, content.c_str());
+    file_inode->content = (char*) malloc(tmp.size() + 1);
+    strcpy((char*)file_inode->content, tmp.c_str());
+
+    file_inode->dinode.di_size = tmp.size() + 1;
+    userOpenTable->items[fd].f_offset = tmp.size();
     return true;
 }
 int file_seek(int fd,int offset,int fseek_mode){
