@@ -601,7 +601,7 @@ int chdir(string &pathname) {
         if (!access(CHANGE, catalog))
             return -1;//权限不足，返回错误码
         if (catalog == nullptr) {
-            return -1;//无该路径，返回错误码
+            return -2;//无该路径，返回错误码
         }
         cur_dir_inode = catalog;
     }
@@ -824,7 +824,7 @@ inode *find_file(string addr) {
     dir *temp_dir = (dir *) cur_dir_inode->content;   //用于目录变更
     unsigned int index; //保存根据文件名找到的FCB的d_index
     int isInDir = 0;    //判断是否在目录中
-    hinode final;//可以保存退出循环后最后一级的文件或目录的内存i结点
+    hinode final = nullptr;//可以保存退出循环后最后一级的文件或目录的内存i结点
     if (addr[0] == '/') {//绝对路径
         addr = addr.substr(1, addr.length());
         temp_dir = (dir *) (iget(1)->content);
@@ -1020,11 +1020,45 @@ int useradd(int gid, const std::string& pwd){
 }
 
 int change_file_owner(string& pathname, int uid){
+    inode* tmp =  find_file(pathname);
+    if(tmp == nullptr)
+        return -1; // 路径无效
+    int o_uid = tmp->dinode.di_uid;
 
-    // 当前文件被占用
-
+    for(int i = 0; i < USERNUM; i++){
+        if(!strcmp(pwds[i].password, cur_user.c_str())){
+            if(pwds[i].p_uid == 0){
+                pwds[i].p_uid = uid;
+                return 0; // 管理员可以直接改
+            }
+            else if(o_uid != pwds[i].p_uid){
+                return -2; // 其他非创建者无法修改
+            }
+            // 创建者也可以改
+            pwds[i].p_uid = uid;
+            return 0;
+        }
+    }
 }
 
-int change_file_group(){
+int change_file_group(string& pathname, int gid){
+    inode* tmp =  find_file(pathname);
+    if(tmp == nullptr)
+        return -1; // 路径无效
+    int o_gid = tmp->dinode.di_gid;
 
+    for(int i = 0; i < USERNUM; i++){
+        if(!strcmp(pwds[i].password, cur_user.c_str())){
+            if(pwds[i].p_uid == 0){
+                pwds[i].p_gid = gid;
+                return 0; // 管理员可以直接改
+            }
+            else if(o_gid != pwds[i].p_gid){
+                return -2; // 其他非同组用户无法修改
+            }
+            // 同组用户也可以改
+            pwds[i].p_gid = gid;
+            return 0;
+        }
+    }
 }
