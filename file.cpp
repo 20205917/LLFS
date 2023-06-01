@@ -367,18 +367,22 @@ int writeFile(int fd, const string& content) {
     file_inode->ifChange = 1;
     unsigned long offset = opened_file.f_offset;
 
-
     // 写文件
-    std::string tmp = string ((char*)file_inode->content,file_inode->dinode.di_size);
-    tmp = tmp.substr(0, offset);
-    tmp += content;
 
-    free(file_inode->content);
-    file_inode->content = (char*) malloc(tmp.size() + 1);
-    strcpy((char*)file_inode->content, tmp.c_str());
+    //文件数据区不足
+    if(offset+content.size() > file_inode->dinode.di_size){
+        auto tmp = (char*)malloc(offset+content.size());
+        memset(tmp,0,offset+content.size());
+        strncpy(tmp,(char*)file_inode->content,file_inode->dinode.di_size);
+        if(file_inode->content!= nullptr)
+            free(file_inode->content);
+        file_inode->content = tmp;
+        file_inode->dinode.di_size = offset+content.size();
+    }
 
-    file_inode->dinode.di_size = tmp.size() + 1;
-    userOpenTable->items[fd].f_offset = tmp.size();
+    strncpy((char*)file_inode->content+offset,content.c_str(),content.size());
+
+    userOpenTable->items[fd].f_offset += content.size();
     return 1;
 }
 

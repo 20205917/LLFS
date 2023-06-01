@@ -7,7 +7,7 @@
 
 #include <map>
 #include "config.h"
-
+#include <vector>
 using namespace std;
 
 extern struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表

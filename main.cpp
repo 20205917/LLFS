@@ -153,20 +153,8 @@ string cur_path;                          // 当前路径名
 int main(){
     int state;//状态
     //初始化
-    initial();
     install();
     login("admin");
-    std::string test = "test";
-    std::string ok = "ok";
-    std::string root = "root";
-    mkdir(test);
-    chdir(test);
-    mkdir(ok);
-    chdir(root);
-    createFile("1.1");
-    root = "1.1";
-    writeFile(open_file(root,1),"aaaabbbb1111");
-
 
 
     string s;//作为string& 的参数
@@ -174,11 +162,8 @@ int main(){
     char order[50];
     while(true){
         cout<<cur_path << ">";
-        for(int i=0;i<token.size();i++){
-            free(token.back());
-            token.pop_back();
-        }
-        //token.resize(0);
+
+        token.resize(0);
         cin.getline(order, 50);
         if(!Split(&token,order)){
             cout<<"未找到匹配指令"<<endl;

@@ -62,9 +62,7 @@ enum operation{Open,Read,Write};       //定义操作 打开 读 写
 //openfile返回错误码
 #define PERMISSION_DD  -1//权限不足
 #define NOT_FOUND      -2//未找到文件
-#define DIR_FULL       -3//目录区已满
-#define SYS_TABLE_FULL -4//未找到系统打开表空闲表项
-#define UER_TABLE_FULL -5//未找到用户打开表空闲表项
+
 
 
 #define USER_UNOPENED (-1)      // 当前用户未打开
