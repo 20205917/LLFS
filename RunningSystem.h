@@ -64,7 +64,7 @@ extern FILE *disk;                               //系统磁盘文件
     void logout(const string& pwd);
     //判断用户权限是否足够某操作
     bool access(int operation, inode *file_inode);
-    // 返回当前用户ss
+    // 返回当前用户
     string whoami();
     void show_all_users();
     void show_login_users();
@@ -80,6 +80,10 @@ extern FILE *disk;                               //系统磁盘文件
     int show_dir_tree(unsigned int id, int depth);
     int rmdir(string& pathname);     //删除该路径下的文件夹
     struct dir get_dir(unsigned int d_index);//根据d_index，获取dir
+
+    //文件所属相关
+    int change_file_owner(string& pathname, int uid);   //改变文件所属用户
+    int change_file_group(string& pathname, int gid);   //改变文件所在组
 
     // 判断是否被当前用户打开,若打开返回用户打开表下表,未打开返回USER_UNOPENED
     bool isOpened(string pathname);
