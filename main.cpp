@@ -6,23 +6,6 @@
 #include<vector>
 using namespace std;
 
-
-bool Split(vector<char*>* token,char* order){
-    if(order[0] == 0)
-        return false;
-    if(order[0]==' ')
-        return false;
-    token->push_back(std::strtok(order," "));
-    while(token->back()!=nullptr){
-        token->push_back(std::strtok(nullptr," "));
-    }
-    token->pop_back();
-    return true;
-}
-int toUnicode(const char* str)
-{
-    return str[0] + (str[1] ? toUnicode(str + 1) : 0);
-}
 constexpr inline int U(const char* str)
 {
     return str[0] + (str[1] ? U(str + 1) : 0);
@@ -47,6 +30,7 @@ void HelpOut1(){
     //待补充
     cout<<"help        查看命令含义和格式"<<endl;
 }
+
 void HelpOut2(char* order){
     switch(toUnicode(order)){
         case U("login"):
@@ -80,7 +64,7 @@ void HelpOut2(char* order){
         case U("read"):
             cout<<"read [fd]"<<endl;
             break;
-        
+
         case U("mkdir"):
             cout<<"mkdir [pathname]"<<endl;
             break;
@@ -105,7 +89,6 @@ void HelpOut2(char* order){
             cout<<"usermod [uid][gid]"<<endl;
             break;
 
-
         case U("useradd"):
             cout<<"useradd [gid][PWD]"<<endl;
             break;
@@ -119,7 +102,7 @@ void HelpOut2(char* order){
             cout<<"show user file"<<endl;
             cout<<"show sys all"<<endl;
             break;
-        
+
         case U("format"):
             cout<<"format"<<endl;
             break;
@@ -130,8 +113,6 @@ void HelpOut2(char* order){
         default: cout<<"该指令不存在"<<endl;break;
     }
 }
-
-
 struct sys_open_item system_openfiles[SYSOPENFILE];  //系统打开表
 map<string, user_open_table*> user_openfiles;        //用户打开表组
 hinode hinodes[NHINO];                    //内存节点缓存
@@ -147,6 +128,7 @@ string cur_path;                          // 当前路径名
 int main(){
     int state;//状态
     //初始化
+    initial();
     install();
     login("admin");
     std::string test = "test";
@@ -165,7 +147,7 @@ int main(){
     string s;//作为string& 的参数
     vector<char*> token;
     char order[50];
-    while(1){
+    while(true){
         cout<<cur_path << ">";
         token.resize(0);
         cin.getline(order, 50);
@@ -308,11 +290,15 @@ int main(){
                 else{
                     try {
                         state = file_seek(stoi(token[1]),stoi(token[2]),stoi(token[3]));
-                        cout<<"文件描述符号:"<< stoi(token[1])<<"   offset:"<<state;
+                        if(state<0)
+                            cout<<"移动偏移量出界";
+                        else
+                            cout<<"文件描述符号:"<< stoi(token[1])<<"   offset:"<<state<<endl;
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
                     }
                 }
+                break;
             case U("format")://格式化
                 if(token.size()!=1)
                     cout<<"指令格式错误"<<endl;
@@ -489,14 +475,7 @@ int main(){
                     exit(1);
                 }
                 break;
-                cout<<endl;
             default: cout<<"未知指令"<<endl;break;
-
-
-
-
-
-
         }
 
     }

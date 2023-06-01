@@ -9,7 +9,7 @@ static struct dinode block_buf[BLOCKSIZ / DINODESIZ];
 // 从当前目录查找name对应的i节点
 // 将会返回在数组中的下标，若为DIRNUM表明没找到
 // 可能有问题
-unsigned int namei(string name){
+unsigned int namei(const string& name){
     // 从磁盘加载目录文件
     int size = cur_dir_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
@@ -148,4 +148,29 @@ unsigned int balloc(){
         file_system.s_pfree_block--;
     }
     return block_num;
+}
+
+
+//将数据区内容写回磁盘 内存中数据地址，硬盘索引数组，数据长度，文件指针
+void write_data_back(void *data_address, const unsigned short *di_addr, int size, FILE *fp){
+    int block_num = size / BLOCKSIZ;
+    long addr;
+    int i;
+    for(i = 0; i < block_num; i++){
+        addr = DATASTART + di_addr[i] * BLOCKSIZ;
+        fseek(fp, addr, SEEK_SET);
+        fwrite((char*)data_address+i*BLOCKSIZ, BLOCKSIZ, 1, fp);
+    }
+    addr = DATASTART + di_addr[i] * BLOCKSIZ;
+    fseek(fp, addr, SEEK_SET);
+    fwrite((char*)data_address+i*BLOCKSIZ, size-block_num*BLOCKSIZ, 1, fp);
+}
+
+// 从硬盘读取一个硬盘i节点
+inode* getDinodeFromDisk(unsigned int dinode_id){
+    long addr = DINODESTART + dinode_id * DINODESIZ;
+    auto* new_inode = (inode*)malloc(sizeof(struct inode));
+    fseek(disk, addr, SEEK_SET);
+    fread(&(new_inode->dinode.di_number), DINODESIZ, 1, disk);
+    return new_inode;
 }
