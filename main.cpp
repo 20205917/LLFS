@@ -46,8 +46,7 @@ void HelpOut1(){
     cout<<"chgrp        改变文件所在组"<<endl;
     cout<<"usermod      用户所在组更改"<<endl;
     cout<<"useradd      用户添加入组"<<endl;
-    cout<<"user         查看所有用户"<<endl; 
-    cout<<"showlogin    查看所有登录用户"<<endl;    
+    cout<<"show         显示相关信息"<<endl;
     cout<<"format       硬盘格式化"<<endl; 
     cout<<"whoami       查看当前用户"<<endl;
     cout<<"help        查看命令含义和格式"<<endl;
@@ -116,12 +115,14 @@ void HelpOut2(char* order){
             break;
 
 
-        case U("user"):
-            cout<<"user"<<endl;
-            break;
-
-        case U("showlogin"):
-            cout<<"showlogin"<<endl;
+        case U("show"):
+            cout<<"show dir"<<endl;
+            cout<<"show file"<<endl;
+            cout<<"show dir all"<<endl;
+            cout<<"show user all"<<endl;
+            cout<<"show user file"<<endl;
+            cout<<"show user file"<<endl;
+            cout<<"show sys all"<<endl;
             break;
         
         case U("format"):
@@ -443,11 +444,21 @@ int main(){
                     cout<<whoami()<<endl;
                 break;
 
-            case U("show")://展示目录结构
-                if(token.size()==1)
+            case U("show")://显示相关
+                if(token.size()==2&& !strcmp(token[1],"dir"))//展示目录结构
                     show_dir(); // dir ls
-                else if(token.size()==2 && !strcmp(token[1],"all"))
+                else if(token.size()==2&&!strcmp(token[1],"file"))
+                    show_opened_files();
+                else if(token.size()==3 && !strcmp(token[1],"dir")&&!strcmp(token[2],"all"))
                     show_whole_dir();
+                else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"login"))
+                    show_login_users();
+                else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"all"))
+                    show_all_users;
+                else if(token.size()==3 && !strcmp(token[1],"user")&&!strcmp(token[2],"file"))
+                    show_user_opened_files();
+                else if(token.size()==3 && !strcmp(token[1],"sys")&&!strcmp(token[2],"file"))
+                    show_sys_opened_files();
                 else
                     cout<<"指令格式错误";
                 cout<<endl;
@@ -466,6 +477,13 @@ int main(){
                 }
                 break;
 
+            case U("HALT")://保存，退出
+                if(token.size()!=1)
+                    cout<<"指令格式错误";
+                else
+                    halt();
+                break;
+                cout<<endl;
             default: cout<<"未知指令"<<endl;break;
 
 
