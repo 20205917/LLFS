@@ -26,6 +26,7 @@ void initial() {
     file_system.s_rdinode = 2;
 
     file_system.s_free_block_size = 0;
+    file_system.s_pfree_block = 0;
     for (int i = FILEBLK; i > 1; i--) {
         bfree(i);
     }
@@ -164,7 +165,8 @@ void format() {
     file_system.s_pdinode = 0;
     file_system.s_rdinode = 2;
 
-    file_system.s_free_block_size = FILEBLK - 1;
+    file_system.s_free_block_size = 0;
+    file_system.s_pfree_block = 0;
     for (int i = FILEBLK; i > 1; i--) {
         bfree(i);
     }
@@ -1087,7 +1089,7 @@ void show_user_opened_files(){
 // 显示所有用户打开的文件信息
 void show_opened_files(){
 
-    std::cout <<"uid" << "    filename" << "         fd" << "    count"<< "    offset" << std::endl;
+    std::cout <<"uid" << "    filename" << "         fd" << "    count" << std::endl;
     for(auto user_openfile: user_openfiles){
         if(user_openfile.second == nullptr)
             continue;
@@ -1098,7 +1100,6 @@ void show_opened_files(){
                           << "    " << system_openfiles[items[i].index_to_sysopen].fcb.d_name
                           << " " << items[i].index_to_sysopen
                           << "    " << items[i].f_count
-                          << "    " << items[i].f_offset
                           << std::endl;
         }
     }

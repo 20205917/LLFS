@@ -101,18 +101,9 @@ int main(){
     int state;//状态
     int fd=-1;//记录打开表
     //初始化
-    initial();
+    // initial();
     install();
     login("admin");
-    std::string test = "test";
-    std::string ok = "ok";
-    std::string root = "root";
-    mkdir(test);
-    chdir(test);
-    mkdir(ok);
-    chdir(root);
-
-
 
 
     string s;//作为string& 的参数
