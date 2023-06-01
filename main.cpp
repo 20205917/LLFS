@@ -101,9 +101,17 @@ int main(){
     int state;//状态
     int fd=-1;//记录打开表
     //初始化
-    // initial();
     install();
     login("admin");
+    std::string test = "test";
+    std::string ok = "ok";
+    std::string root = "root";
+    mkdir(test);
+    chdir(test);
+    mkdir(ok);
+    chdir(root);
+
+
 
 
     string s;//作为string& 的参数
@@ -157,7 +165,7 @@ int main(){
                             case -3:cout<<endl<<"目录区满"<<endl;break;
                             case -4:cout<<endl<<"未找到空闲系统打开表项"<<endl;break;
                             case -5:cout<<endl<<"未找到空闲用户打开表项"<<endl;break;
-                            default: cout<<endl<<"打开成功,文件描述符为:" << state << endl;break;
+                            default: cout<<endl<<"打开成功,文件描述符为:"<<state<<endl;break;
                         }
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
@@ -176,7 +184,7 @@ int main(){
 
 
             case U("create")://创建文件
-                if(token.size()!=3)
+                if(token.size()!=2)
                     cout<<"指令格式错误"<<endl;
                 else{
                     try{
@@ -239,8 +247,7 @@ int main(){
                     cout<<"指令格式错误"<<endl;
                 else{
                   try{
-                        cout<<readFile(std::stoi(token[1]))<<endl;break;
-
+                        cout<<readFile(std::stoi(token[1] , token[2]))<<endl;break;
                     }catch(const std::invalid_argument& e){
                         cout<<"错误操作码"<<endl;
                     }
