@@ -608,10 +608,10 @@ int chdir(string &pathname) {
         }
         if(value==1)
             if(!strcmp(pathname.c_str(),"root/"))
-                cur_path="root>";
+                cur_path="root";
             else
-                cur_path=pathname+'>';
-        cur_path=cur_path.substr(0,cur_path.length()-2)+'/'+pathname+'>';
+                cur_path=pathname;
+        cur_path=cur_path.substr(0,cur_path.length())+'/'+pathname;
         cur_dir_inode = catalog;
     }
     return 1;

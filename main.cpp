@@ -9,6 +9,8 @@ using namespace std;
 
 
 bool Split(vector<char*>* token,char* order){
+    if(order[0] == 0)
+        return false;
     if(order[0]==' ')
         return false;
     token->push_back(std::strtok(order," "));
