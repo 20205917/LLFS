@@ -26,6 +26,7 @@ void initial() {
     file_system.s_rdinode = 2;
 
     file_system.s_free_block_size = 0;
+    file_system.s_pfree_block = 0;
     for (int i = FILEBLK; i > 1; i--) {
         bfree(i);
     }
@@ -164,7 +165,8 @@ void format() {
     file_system.s_pdinode = 0;
     file_system.s_rdinode = 2;
 
-    file_system.s_free_block_size = FILEBLK - 1;
+    file_system.s_free_block_size = 0;
+    file_system.s_pfree_block = 0;
     for (int i = FILEBLK; i > 1; i--) {
         bfree(i);
     }
@@ -865,7 +867,33 @@ bool writeFile(int fd, const string& content) {
     strcpy((char*)file_inode->content, content.c_str());
     return true;
 }
-
+int file_seek(int fd,int offset,int fseek_mode){
+    user_open_table *T = user_openfiles.find(cur_user)->second;
+    int cur_offset = T->items[fd].f_offset;
+    int file_capacity = T->items[fd].f_inode->dinode.di_size;
+    switch (fseek_mode)
+    {
+    case HEAD_FSEEK://从头移动
+        cur_offset = offset;
+        break;
+    case CUR_SEEK://从当前移动
+        cur_offset += offset;
+        break;
+    default:
+        break;
+    }
+    if(cur_offset>file_capacity){
+        file_capacity = cur_offset + 1;
+        T->items[fd].f_inode->dinode.di_size = file_capacity;
+        void *new_content = malloc(file_capacity);
+        memset(new_content,0,file_capacity);
+        strcpy((char *)new_content,(char *)T->items[fd].f_inode->content);
+        free(T->items[fd].f_inode->content);
+        T->items[fd].f_inode->content = new_content;
+    }
+    T->items[fd].f_offset = cur_offset;
+    return 1;
+}
 // 硬链接次数初始化为1
 // 需要考虑文件偏移量，此处未实现
 // int createFile(string pathname, int operation){
@@ -1065,8 +1093,8 @@ void show_user_opened_files(){
 // 显示所有用户打开的文件信息
 void show_opened_files(){
 
-    std::cout <<"uid" << "    filename" << "         fd" << "    count"<< "    offset" << std::endl;
-    for(const auto& user_openfile: user_openfiles){
+    std::cout <<"uid" << "    filename" << "         fd" << "    count" << std::endl;
+    for(auto user_openfile: user_openfiles){
         if(user_openfile.second == nullptr)
             continue;
         auto items = user_openfile.second->items;
@@ -1076,7 +1104,6 @@ void show_opened_files(){
                           << "    " << system_openfiles[items[i].index_to_sysopen].fcb.d_name
                           << " " << items[i].index_to_sysopen
                           << "    " << items[i].f_count
-                          << "    " << items[i].f_offset
                           << std::endl;
         }
     }
