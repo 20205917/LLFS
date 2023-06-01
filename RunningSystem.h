@@ -102,4 +102,9 @@ extern FILE *disk;                               //系统磁盘文件
 //查看某个磁盘i节点id对应的内存i节点是否存在
     inode* findHinode(int dinode_id);
 
+    void show_user_opened_files();
+    void show_opened_files();
+    void show_sys_opened_files();
+
+
 #endif //LLFS_RUNNINGSYSTEM_H
