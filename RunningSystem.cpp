@@ -74,6 +74,7 @@ void initial() {
     strcpy(pwds[1].password, "1");
     // 清空
     for (int i = 2; i < PWDNUM; i++) {
+        pwds[i].p_uid = 0;
         strcpy(pwds[i].password, "");
     }
     fseek(disk, 0, SEEK_SET);
@@ -202,6 +203,21 @@ void format() {
     addr = DATASTART + id * BLOCKSIZ;
     fseek(disk, addr, SEEK_SET);
     fread((char *) (&cur_dir_inode->content) + block_num * BLOCKSIZ, size - BLOCKSIZ * block_num, 1, disk);
+    // admin账户
+    pwds[0].p_uid = 0;
+    pwds[0].p_gid = 0;
+    strcpy(pwds[0].password, "admin");
+    // 一个普通账户
+    pwds[1].p_uid = 1;
+    pwds[1].p_gid = 1;
+    strcpy(pwds[1].password, "1");
+    // 清空
+    for (int i = 2; i < PWDNUM; i++) {
+        pwds[i].p_uid = 0;
+        strcpy(pwds[i].password, "");
+    }
+    fseek(disk, 0, SEEK_SET);
+    fwrite(pwds, sizeof(PWD), PWDNUM, disk);
 }
 
 // 关机并保存
@@ -230,6 +246,9 @@ void halt() {
     // 保存超级块
     fseek(disk, BLOCKSIZ, SEEK_SET);
     fwrite(&file_system, sizeof(struct super_block), 1, disk);
+
+    fseek(disk, 0, SEEK_SET);
+    fwrite(pwds, sizeof(PWD), PWDNUM, disk);
     // 关闭磁盘
     fclose(disk);
 }
@@ -242,8 +261,13 @@ int login(const string &pwd) {
         return -1;
 
     //检查是否已经登录
-    if (user_openfiles.find(pwd) != user_openfiles.end()) {
+    if(!strcmp(pwd.c_str(), cur_user.c_str()))
         return -2;
+
+    //
+    if (user_openfiles.find(pwd) != user_openfiles.end()) {
+        cur_user = pwd;
+        return -3;
     }
 
     //还有空位
@@ -913,4 +937,94 @@ int createFile(string pathname){
 
     }
     return 0;//创建成功
+}
+
+// 展示所有用户
+void show_all_users(){
+    std::cout << "uid" << "     gid" << "     pwd";
+    for(int i = 0; i < USERNUM; i++){
+        if(!strcmp(pwds[i].password, "")){
+            std::cout << pwds[i].p_uid << "     "
+            << pwds[i].p_gid << "     "
+            << pwds[i].password << std::endl;
+        }
+    }
+}
+
+// 展示所有登录用户
+void show_login_users(){
+    std::cout << "uid" << "     gid" << "     pwd";
+    for(const auto& user: user_openfiles){
+        for(int i = 0; i < USERNUM; i++){
+            if(!strcmp(pwds[i].password, user.first.c_str())){
+                std::cout << pwds[i].p_uid << "     "
+                          << pwds[i].p_gid << "     "
+                          << pwds[i].password << std::endl;
+            }
+        }
+    }
+}
+
+int switch_user(const string& pwd){
+    int i;
+    //检查是否有匹配的PWD
+    for (i = 0; i < PWDNUM && strcmp(pwd.c_str(), pwds[i].password) != 0; i++);
+    if (i == PWDNUM)
+        return -1; // pwd无效
+
+    //检查是否已经登录
+    if(!strcmp(pwd.c_str(), cur_user.c_str()))
+        return -2; // pwd即当前用户
+
+    //
+    if (user_openfiles.find(pwd) != user_openfiles.end()) {
+        cur_user = pwd;
+        return 0; // 切换用户成功
+    }
+}
+
+// 更改用户所在组
+int usermod(int uid, int gid){
+    for(int i = 0; i < USERNUM; i++){
+        if(!strcmp(pwds[i].password, "")){
+            continue;
+        }
+        if(uid == pwds[i].p_uid){
+            pwds[i].p_gid = gid;
+            return 0;
+        }
+    }
+    return -1; // uid无效
+}
+
+// 创建用户
+int useradd(int gid, const std::string& pwd){
+    int uid = 0;
+    int index = 0;
+    for(int i = 0; i < USERNUM; i++){
+        if(!strcmp(pwds[i].password, "")){
+            index = i;
+            continue;
+        }
+        if(uid <= pwds[i].p_uid){
+            uid = pwds[i].p_uid + 1;
+        }
+    }
+    if(index == 0){
+        return -1; // 用户达到上限
+    }
+    pwds[index].p_uid = uid;
+    pwds[index].p_gid = gid;
+    strcpy(pwds[index].password, pwd.c_str());
+    return 0; // 添加用户成功
+}
+
+int change_file_owner(string& pathname, int uid){
+
+    // 当前文件被占用
+
+}
+
+int change_file_group(){
+
 }

@@ -66,6 +66,11 @@ extern FILE *disk;                               //系统磁盘文件
     bool access(int operation, inode *file_inode);
     // 返回当前用户ss
     string whoami();
+    void show_all_users();
+    void show_login_users();
+    int switch_user(const string& pwd);
+    int usermod(int uid, int gid);
+    int useradd(int gid, const std::string& pwd);
 
     // 文件夹路径相关
     int mkdir(string& pathname);     //创建文件夹
