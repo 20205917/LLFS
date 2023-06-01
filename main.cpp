@@ -169,7 +169,11 @@ int main(){
     char order[50];
     while(1){
         cout<<cur_path << ">";
-        token.resize(0);
+        for(int i=0;i<token.size();i++){
+            free(token.back());
+            token.pop_back();
+        }
+        //token.resize(0);
         cin.getline(order, 50);
         if(!Split(&token,order)){
             cout<<"Î´ÕÒµ½Æ¥ÅäÖ¸Áî"<<endl;
