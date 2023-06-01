@@ -879,10 +879,14 @@ int file_seek(int fd,int offset,int fseek_mode){
     case CUR_SEEK://从当前移动
         cur_offset += offset;
         break;
+    case LAST_SEEK://从末尾移动
+        cur_offset = file_capacity + offset;
     default:
-        return -1;//输入格式错误
+        cur_offset += offset;
         break;
     }
+    if(cur_offset<0)
+        return -1;//移动偏移量出界
     if(cur_offset>file_capacity){
         file_capacity = cur_offset + 1;
         T->items[fd].f_inode->dinode.di_size = file_capacity;
@@ -893,7 +897,7 @@ int file_seek(int fd,int offset,int fseek_mode){
         T->items[fd].f_inode->content = new_content;
     }
     T->items[fd].f_offset = cur_offset;
-    return 1;
+    return cur_offset;
 }
 // 硬链接次数初始化为1
 // 需要考虑文件偏移量，此处未实现
