@@ -367,6 +367,9 @@ int open_file(string &pathname, int operation) {
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
+        if (catalog == nullptr) {
+            return -1;//无该路径，返回错误码
+        }
     }
     if (!access(READ, catalog))
         return -1;                                                  //权限不足，返回错误码
@@ -515,6 +518,8 @@ int hard_link(string &pathname,string &newname){
     if (pathname[0] == '/')
         pathname = "root" + pathname;
     filea = find_file(pathname);
+    if (filea == nullptr)
+            return -1;//无该路径，返回错误码
     if (!access(READ, filea))
         return -1;//权限不足，返回错误码
     int leisure = 0;
@@ -550,6 +555,8 @@ int rmdir(string &pathname) {
         filename = pathname.substr(pos);
     }
     inode *catalog = find_file(pathname);
+    if (catalog == nullptr)
+            return -1;//无该路径，返回错误码
     if (!access(CHANGE, father_catalog))
         return -1;//权限不足，返回错误码
     if (catalog == nullptr) {
@@ -707,6 +714,8 @@ int deleteFile(string pathname) {
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
+        if (catalog == nullptr)
+            return -1;//无该路径，返回错误码
     }
     if (!access(READ, catalog))
         return PERMISSION_DD;                                                  //权限不足，返回错误码
@@ -901,6 +910,8 @@ int createFile(string pathname){
         string father_path = pathname.substr(0, pos - 1);
         filename = pathname.substr(pos);
         catalog = find_file(father_path);//获取目录文件的内存索引节点
+        if (catalog == nullptr)
+            return -1;//无该路径，返回错误码
     }
     if (!access(Write, catalog))
         return -1;                                                  //权限不足，返回错误码
