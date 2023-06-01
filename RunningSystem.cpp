@@ -799,7 +799,7 @@ string readFile(int fd,int len) {
     string result = string((char*)file_inode->content+opened_file.f_offset,len);
 
     //修改offset
-    opened_file.f_offset +=len;
+    userOpenTable->items[fd].f_offset +=len;
 
     return result;
 }
@@ -844,7 +844,7 @@ inode *find_file(string addr) {
 
 // 权限未实现
 
-int writeFile(int fd, const string& content) {
+bool writeFile(int fd, const string& content) {
 
  //判断文件是否被用户打开
  // 获取用户的打开表
@@ -855,24 +855,16 @@ int writeFile(int fd, const string& content) {
     struct user_open_item opened_file = userOpenTable->items[fd];
     // 为0说明读取错误
     if(opened_file.f_count == 0)
-        return -1; // 文件标识符错误
+        return false;
 
     hinode file_inode = opened_file.f_inode;
     file_inode->ifChange = 1;
-    unsigned long offset = opened_file.f_offset;
-
+    file_inode->dinode.di_size = content.size() + 1;
 
     // 写文件
-    std::string tmp((char*)file_inode->content);
-    tmp = tmp.substr(0, offset);
-    tmp += content;
-
     free(file_inode->content);
-    file_inode->content = (char*) malloc(tmp.size() + 1);
-    strcpy((char*)file_inode->content, tmp.c_str());
-
-    file_inode->dinode.di_size = tmp.size() + 1;
-    userOpenTable->items[fd].f_offset = tmp.size();
+    file_inode->content = (char*) malloc(content.size() + 1);
+    strcpy((char*)file_inode->content, content.c_str());
     return true;
 }
 int file_seek(int fd,int offset,int fseek_mode){
@@ -887,14 +879,10 @@ int file_seek(int fd,int offset,int fseek_mode){
     case CUR_SEEK://从当前移动
         cur_offset += offset;
         break;
-    case LAST_SEEK://从末尾移动
-        cur_offset = file_capacity + offset;
     default:
-        cur_offset += offset;
+        return -1;//输入格式错误
         break;
     }
-    if(cur_offset<0)
-        return -1;//移动偏移量出界
     if(cur_offset>file_capacity){
         file_capacity = cur_offset + 1;
         T->items[fd].f_inode->dinode.di_size = file_capacity;
