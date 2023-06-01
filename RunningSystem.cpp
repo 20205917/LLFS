@@ -114,6 +114,7 @@ void install() {
     // 即第一个i节点
     // 初始化cur_dir_inode
     cur_dir_inode = iget(1);
+    cur_path = "root";
     int size = cur_dir_inode->dinode.di_size;
     int block_num = size / BLOCKSIZ;
     unsigned int id;
@@ -697,7 +698,7 @@ int deleteFile(string pathname) {
             break;
         }
     }
-    inode * file_inode;
+    inode *file_inode;
     if (i == DIRNUM) {//没查找成功
         return NOT_FOUND;//无该文件，删除失败，返回错误码
     }
@@ -706,23 +707,25 @@ int deleteFile(string pathname) {
     //修改系统打开文件表
     short sys_i = 0;
     for (; sys_i < SYSOPENFILE; sys_i++) {//找系统打开表的表项
-        if (system_openfiles[sys_i].fcb.d_index == file_index && system_openfiles[sys_i].i_count!=0) {
+        if (system_openfiles[sys_i].fcb.d_index == file_index && system_openfiles[sys_i].i_count != 0) {
             return -1;//该文件正在被系统打开
-        if (system_openfiles[sys_i].fcb.d_index == file_index) {
-            return -3;//该文件正在被系统打开
+            if (system_openfiles[sys_i].fcb.d_index == file_index) {
+                return -3;//该文件正在被系统打开
+            }
         }
+        //删除文件，若文件硬连接次数为0，则释放将索引节点中内容指针置为空
+        file_inode->dinode.di_number--;
+        if (file_inode->dinode.di_number == 0) {
+            free(file_inode->content);
+            file_inode->content = nullptr;
+            catalog_dir->files[i].d_index = 0;
+            catalog_dir->size--;
+            catalog->ifChange = 1;
+        }
+        file_inode->ifChange = 1;
+        return 0;//成功删除
     }
-    //删除文件，若文件硬连接次数为0，则释放将索引节点中内容指针置为空
-    file_inode->dinode.di_number--;
-    if(file_inode->dinode.di_number==0){
-        free(file_inode->content);
-        file_inode->content = nullptr;
-        catalog_dir->files[i].d_index=0;
-        catalog_dir->size--;
-        catalog->ifChange=1;
-    }
-    file_inode->ifChange = 1;
-    return 0;//成功删除
+    return -1;
 }
 
 // 关闭一个已经被用户打开了的文件

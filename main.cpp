@@ -48,22 +48,22 @@ void HelpOut2(char* order){
     switch(toUnicode(order)){
         case U("login"):
             cout<<"login [PWD]"<<endl;
-        
+
         case U("logout"):
             cout<<"logout [PWD]"<<endl;
 
         case U("create"):
             cout<<"create [pathname][operation]"<<endl;
-        
+
         case U("delete"):
             cout<<"delete [pathname][operation]"<<endl;
-        
+
         case U("open"):
             cout<<"open [pathname][operation]"<<endl;
-        
+
         case U("close"):
             cout<<"close [pathname]"<<endl;
-        
+
         case U("write"):
             cout<<"write [fd][content]"<<endl;
 
@@ -98,20 +98,21 @@ int main(){
     int fd=-1;//记录打开表
     //初始化
     install();
-    string path;
-    login("admin");
-    string file = "/aaa.txt";
-    string dirname2 = "bbb";
-    createFile(file);
-    mkdir(dirname2);
-    show_dir();
-    std::cout << std::endl;
-    string new_name = "b.txt";
-    hard_link(file,new_name);
-    show_dir();
-    show_whole_dir();
+//    string path;
+//    login("admin");
+//    string file = "/aaa.txt";
+//    string dirname2 = "bbb";
+//    createFile(file);
+//    mkdir(dirname2);
+//    show_dir();
+//    std::cout << std::endl;
+//    string new_name = "b.txt";
+//    hard_link(file,new_name);
+//    show_dir();
+//
+//    show_whole_dir();
 
-    return 0;
+    //return 0;
 //    int j = 1;
 //    for(int i =0 ;i<102 ; i++ ){
 //        j = ialloc(1);
@@ -240,109 +241,113 @@ int main(){
 //    }
 
 
-}
+
 
     vector<char*> token;
     char order[50];
     while(1){
-        cout<<cur_path;
+        cout<<cur_path << ">";
         token.resize(0);
-        cin.get(order,50);
-        if(Split(&token,order))
-            cout<<"未找到匹配指令"<<endl<<cur_path;
+        cin.getline(order, 50);
+        if(!Split(&token,order)){
+            cout<<"未找到匹配指令"<<endl;
+            continue;
+        }
 
         switch(toUnicode(token[0])){//匹配指令名
             case U("login")://用户登录
                 if(token.size()!=2)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl;
                 else{
                     state=login(std::string(token[1]));
                     if(state==-1)
-                        cout<<"未找到匹配口令"<<endl<<cur_path;
+                        cout<<"未找到匹配口令"<<endl;
                     else if(state==-2)
-                        cout<<"该用户已经处于登录状态"<<endl<<cur_path;
+                        cout<<"该用户已经处于登录状态"<<endl;
                     else if(state==0)
-                        cout<<"成功登录"<<endl<<cur_path;
+                        cout<<"成功登录"<<endl;
                     else
-                        cout<<"登录用户已达上限"<<endl<<cur_path;
+                        cout<<"登录用户已达上限"<<endl;
                 }
                 break;
 
 
             case U("logout")://用户登出
                 if(token.size()!=2)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl;
                 else{
                     logout(std::string(token[1]));
-                    cout<<cur_path;
                 }
                 break;
-            
+
             case U("open")://打开文件
                 if(token.size()!=3)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl;
                 else{
                     try{
-                        state=open_file(std::string(token[1]),std::stoi(token[2]));
+                        std::string tmp = std::string(token[1]);
+                        state=open_file(tmp,std::stoi(token[2]));
                         switch(state){
-                            case -1:cout<<endl<<"权限不足"<<endl<<cur_path;break;
-                            case -2:cout<<endl<<"未找到文件"<<endl<<cur_path;break;
-                            case -3:cout<<endl<<"目录区满"<<endl<<cur_path;break;
-                            case -4:cout<<endl<<"未找到空闲系统打开表项"<<endl<<cur_path;break;
-                            case -5:cout<<endl<<"未找到空闲用户打开表项"<<endl<<cur_path;break;
-                            default: cout<<endl<<"打开成功,文件描述符为:"+state<<endl<<cur_path;break;
+                            case -1:cout<<endl<<"权限不足"<<endl;break;
+                            case -2:cout<<endl<<"未找到文件"<<endl;break;
+                            case -3:cout<<endl<<"目录区满"<<endl;break;
+                            case -4:cout<<endl<<"未找到空闲系统打开表项"<<endl;break;
+                            case -5:cout<<endl<<"未找到空闲用户打开表项"<<endl;break;
+                            default: cout<<endl<<"打开成功,文件描述符为:"+state<<endl;break;
                         }
                     }catch(const std::invalid_argument& e){
-                        cout<<"错误操作码"<<endl<<cur_path;
+                        cout<<"错误操作码"<<endl;
                     }
- 
+
                 }
                 break;
 
             case U("close")://关闭文件
                 if(token.size()!=2)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl;
                 else{
                     closeFile(std::string(token[1]));
-                    cout<<cur_path;
+                    cout;
                 }
                 break;
 
 
             case U("create")://创建文件
                 if(token.size()!=3)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl;
                 else{
                     try{
-                        state=createFile(std::string(token[1]),std::stoi(token[2]));
+                        std::string tmp = std::string(token[1]);
+                        state=createFile(std::string(tmp ,std::stoi(token[2])));
                         switch(state){
-                            case -1:cout<<endl<<"权限不足"<<endl<<cur_path;break;
-                            case -2:cout<<endl<<"该文件名已存在"<<endl<<cur_path;break;
-                            case -3:cout<<endl<<"目录区已满"<<endl<<cur_path;break;
+                            case -1:cout<<endl<<"权限不足"<<endl;break;
+                            case -2:cout<<endl<<"该文件名已存在"<<endl;break;
+                            case -3:cout<<endl<<"目录区已满"<<endl;break;
                             default: continue;break;
                         }
                     }catch(const std::invalid_argument& e){
-                        cout<<"错误操作码"<<endl<<cur_path;
+                        cout<<"错误操作码"<<endl;
                     }
 
                 }
                 break;
-            
+
 
             case U("delete"):
-                if(token.size()!=3)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                if(token.size()!=2)
+                    cout<<"指令格式错误"<<endl;
                 else{
                     try{
-                        state=deleteFile(std::string(token[1]),std::stoi(token[2]));
+                        std::string tmp = std::string(token[1]);
+                        state=deleteFile(tmp);
                         switch(state){
-                            case -1:cout<<endl<<"权限不足"<<endl<<cur_path;break;
-                            case -2:cout<<endl<<"不存在该文件"<<endl<<cur_path;break;
-                            case -3:cout<<endl<<"文件正在被系统打开"<<endl<<cur_path;break;
+                            case -1:cout<<endl<<"权限不足"<<endl;break;
+                            case -2:cout<<endl<<"不存在该文件"<<endl;break;
+                            case -3:cout<<endl<<"文件正在被系统打开"<<endl;break;
                             default: continue;break;
                         }
                     }catch(const std::invalid_argument& e){
-                        cout<<"错误操作码"<<endl<<cur_path;
+                        cout<<"错误操作码"<<endl;
                     }
 
                 }
@@ -351,16 +356,16 @@ int main(){
 
             case U("write"):
                 if(token.size()!=3)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl;
                 else{
                   try{
                         state=writeFile(std::stoi(token[1]),std::string(token[2]));
                         switch(state){
-                            case 0:cout<<endl<<"读取错误"<<endl<<cur_path;break;
+                            case 0:cout<<endl<<"读取错误"<<endl;break;
                             default: continue;break;
                         }
                     }catch(const std::invalid_argument& e){
-                        cout<<"错误操作码"<<endl<<cur_path;
+                        cout<<"错误操作码"<<endl;
                     }
                 }
                 break;
@@ -368,45 +373,44 @@ int main(){
 
             case U("read"):
                 if(token.size()!=2)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl;
                 else{
                   try{
-                        cout<<readFile(std::stoi(token[1]))<<endl<<cur_path;break;
+                        cout<<readFile(std::stoi(token[1]))<<endl;break;
 
                     }catch(const std::invalid_argument& e){
-                        cout<<"错误操作码"<<endl<<cur_path;
-                    }        
+                        cout<<"错误操作码"<<endl;
+                    }
                 }
                 break;
 
-            
+
             case U("format")://格式化
                 if(token.size()!=1)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                    cout<<"指令格式错误"<<endl;
                 else
                     format();
                 break;
 
             case U("help")://帮助，打印命令和格式
-                if(token.size()!=1||token.size()!=2)
-                    cout<<"指令格式错误"<<endl<<cur_path;
+                if(token.size()!=1 && token.size()!=2)
+                    cout<<"指令格式错误"<<endl;
                 else{
-                    if(token.size()!=1)
+                    if(token.size() == 1)
                         HelpOut1();
                     else
                         HelpOut2(token[1]);
                 }
-                cout<<cur_path;
                 break;
-                        
 
-            
-            
-                
-                
+
+
+
+
+
 
         }
-        
+
     }
 
 }

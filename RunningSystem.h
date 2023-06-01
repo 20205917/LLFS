@@ -28,7 +28,7 @@ extern FILE *disk;                               //系统磁盘文件
     int hard_link(string &pathname,string &newname);
     // 打开文件
     int openFile(const string& pathname, unsigned short flags);
-    int open_file(string& pathname);
+    int open_file(string& pathname, int operation);
     // 关闭文件
     void closeFile(const string& pathname);
     int close_file(int fd);
