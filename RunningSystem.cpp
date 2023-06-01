@@ -559,9 +559,6 @@ int rmdir(string &pathname) {
             return -1;//无该路径，返回错误码
     if (!access(CHANGE, father_catalog))
         return -1;//权限不足，返回错误码
-    if (catalog == nullptr) {
-        return -1;//无该路径，返回错误码
-    }
     auto *catalog_dir = (dir *) catalog->content;//得到路径的目录dir数据
     auto *father_dir = (dir *) father_catalog->content;//得到父目录的dir数据
     if (catalog_dir->size > 2) {
